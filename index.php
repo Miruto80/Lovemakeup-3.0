@@ -1,5 +1,7 @@
 <?php
-die("El servidor si lee el index");
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
     require __DIR__ . '/vendor/autoload.php';
 
     // Iniciar sesión para validar acceso (si no está ya iniciada)
@@ -154,9 +156,5 @@ die("El servidor si lee el index");
     
     // Si todo está correcto, cargar el controlador
     require_once("controlador/".$pagina.".php");
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 ?>
