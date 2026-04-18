@@ -1,4 +1,5 @@
 <?php
+die("El servidor si lee el index");
     require __DIR__ . '/vendor/autoload.php';
 
     // Iniciar sesión para validar acceso (si no está ya iniciada)
