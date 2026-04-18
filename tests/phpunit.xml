@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+         bootstrap="C:\xampp2\htdocs\LoveMakeup\LoveMakeup-2.0\vendor\autoload.php"
+         colors="true"
+         verbose="true">
+    <testsuites>
+        <testsuite name="PHPUnit Tests">
+            <directory>pruebaPHPUnit</directory>
+        </testsuite>
+        <testsuite name="Selenium Tests">
+            <directory>pruebaSelenium</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
+

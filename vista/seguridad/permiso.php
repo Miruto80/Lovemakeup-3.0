@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head> 
+  <!-- php barra de navegacion-->
+  <?php include 'vista/complementos/head.php' ?> 
+  <title> Cambiar Permisos | LoveMakeup  </title>
+  <link rel="stylesheet" href="assets/css/formulario.css">
+  <style>
+  .text-g{
+    font-size: 15px;
+  }
+</style>
+
+</head>
+ 
+<body class="g-sidenav-show bg-gray-100">
+  
+<!-- php barra de navegacion-->
+<?php include 'vista/complementos/sidebar.php' ?>
+
+<main class="main-content position-relative border-radius-lg ">
+<!-- ||| Navbar ||-->
+<nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
+  <div class="container-fluid py-1 px-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="#">Administrar Usuario</a></li>
+        <li class="breadcrumb-item text-sm text-white active" aria-current="page">Usuario</li>
+      </ol>
+      <h6 class="font-weight-bolder text-white mb-0">Cambiar Permisos del Usuario</h6>
+    </nav>
+<!-- php barra de navegacion-->    
+<?php include 'vista/complementos/nav.php' ?>
+
+
+
+<div class="container-fluid py-4"> <!-- DIV CONTENIDO -->
+
+    <div class="row"> <!-- CARD PRINCIPAL-->  
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header pb-0 div-oscuro-2">  <!-- CARD N-1 --> 
+              
+            <div class="d-sm-flex align-items-center justify-content-between mb-3">
+              <h4 class="mb-0 texto-quinto"><i class="fa-solid fa-users-gear me-2" style="color: #f6c5b4;"></i>
+                Permiso de: <strong><?php echo $nombre_usuario; ?></strong></h4>
+           
+       <!-- Button que abre el Modal N1 Registro -->
+        <a href="?pagina=tipousuario" class="btn btn-primary"><i class="fa-solid fa-reply"></i> Regresar</a>
+
+      </div>
+
+<div class="info-box">
+  <div class="info-icon">
+    <i class="fa-solid fa-user-shield"></i>
+  </div>
+
+  <div class="info-content">
+    <strong>Permisos del Módulo:</strong>
+    <p>Este espacio permite asignar lo que cada usuario puede hacer: ver, registrar, editar, eliminar o usar funciones especiales en cada módulo del sistema.</p>
+  </div>
+
+  <div class="info-help">
+    <button class="help-btn" id="ayudapermiso" title="¿Necesitas ayuda?">
+      <i class="fa-solid fa-circle-question"></i>
+    </button>
+  </div>
+</div>
+
+
+       <form action="?pagina=tipousuario" method="POST" autocomplete="off" id="forpermiso">
+          
+      <div class="table-responsive">
+     <?php
+// Módulos permitidos para nivel 2
+$modulos_nivel_2 = [1, 3, 4, 5, 9];
+
+// Agrupar permisos por módulo
+$permisos_por_modulo = [];
+
+foreach ($modificar as $permiso) {
+    $modulo_id = $permiso['id_modulo'];
+    $modulo_nombre = $permiso['nombre'];
+    $id_permiso = $permiso['id_permiso']; // 1..5
+    $estado = $permiso['estado']; // 1 o 0
+    $id_permiso_rol = $permiso['id_permiso_rol'];
+
+    if (!isset($permisos_por_modulo[$modulo_id])) {
+        $permisos_por_modulo[$modulo_id] = [
+            'nombre' => $modulo_nombre,
+            'acciones' => [],
+            'ids' => []
+        ];
+    }
+
+    // Guardar estado e ID del permiso
+    $permisos_por_modulo[$modulo_id]['acciones'][$id_permiso] = $estado;
+    $permisos_por_modulo[$modulo_id]['ids'][$id_permiso] = $id_permiso_rol;
+}
+
+// Mapa de acciones → ID de permiso
+$mapa_acciones = [
+    'ver' => 1,
+    'registrar' => 2,
+    'editar' => 3,
+    'eliminar' => 4,
+    'especial' => 5
+];
+
+// Acciones válidas por módulo
+$acciones_por_modulo = [
+    1 => ['ver'],
+    2 => ['ver', 'registrar', 'editar'],
+    3 => ['ver', 'registrar'],
+    4 => ['ver', 'especial'],
+    5 => ['ver', 'especial'],
+    6 => ['ver', 'registrar', 'editar', 'eliminar', 'especial'],
+    7 => ['ver', 'registrar', 'editar', 'eliminar'],
+    8 => ['ver', 'registrar', 'editar', 'eliminar'],
+    9 => ['ver', 'registrar', 'editar', 'eliminar'],
+    10 => ['ver','editar'],
+    11 => ['ver', 'registrar', 'editar', 'eliminar'],
+    12 => ['ver', 'registrar', 'editar', 'eliminar'],
+    13 => ['ver', 'registrar', 'editar', 'eliminar'],
+    14 => ['ver','editar'],
+    15 => ['ver', 'eliminar'],
+    16 => ['ver', 'registrar', 'editar', 'eliminar'],
+    17 => ['ver', 'registrar', 'editar', 'eliminar', 'especial'],
+    18 => ['ver', 'especial'],
+    19 => ['ver', 'registrar', 'eliminar'],
+    20 => ['ver', 'editar', 'eliminar'],
+    21 => ['ver'],
+    22 => ['ver', 'registrar'],
+    23 => ['ver', 'registrar'],
+    24 => ['ver', 'registrar']
+];
+?>
+
+<table class="table table-bordered-m align-middle table-hover">
+    <thead class="table-color">
+        <tr>
+            <th class="text-white">#</th>
+            <th class="text-white modulo">Módulo</th>
+            <th class="text-white ver">Ver</th>
+            <th class="text-white registrar">Registrar</th>
+            <th class="text-white editar">Editar</th>
+            <th class="text-white eliminar">Eliminar</th>
+            <th class="text-white especial">Especial</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <?php
+        $contador = 1;
+        foreach ($permisos_por_modulo as $modulo_id => $info):
+
+            // Filtrar por nivel de usuario
+            if ($nivel_usuario == 2 && !in_array($modulo_id, $modulos_nivel_2)) {
+                continue;
+            }
+
+            $acciones_validas = $acciones_por_modulo[$modulo_id] ?? [];
+        ?>
+        <tr>
+            <td class="texto-secundario"><?= $contador++ ?></td>
+            <td class="texto-secundario"><?= htmlspecialchars($info['nombre']) ?></td>
+
+            <?php foreach (['ver', 'registrar', 'editar', 'eliminar', 'especial'] as $accion): ?>
+                <td>
+                    <?php if (in_array($accion, $acciones_validas)): ?>
+                        <?php
+                            $id_permiso = $mapa_acciones[$accion];
+                            $estado = $info['acciones'][$id_permiso] ?? 0;
+                            $id_permiso_rol = $info['ids'][$id_permiso] ?? '';
+                        ?>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox"
+                                   name="permiso[<?= $modulo_id ?>][<?= $id_permiso ?>]"
+                                   <?= $estado == 1 ? 'checked' : '' ?>>
+
+                            <input type="hidden"
+                                   name="permiso_id[<?= $modulo_id ?>][<?= $id_permiso ?>]"
+                                   value="<?= $id_permiso_rol ?>">
+                        </div>
+                    <?php endif; ?>
+                </td>
+            <?php endforeach; ?>
+
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+
+
+
+          <hr class="bg-primary">
+            <div class="text-center">
+               <button type="button" class="btn btn-success guardar btn-lg" name="actualizar_permisos" id="actualizar_permisos"> <i class="fa-solid fa-floppy-disk me-2"></i> Guardar</button>
+                
+            </div>
+        </div>
+   </form>
+        </div>
+            </div>
+
+ </div>
+            </div><!-- FIN CARD N-1 -->  
+    </div>
+    </div>  
+    </div><!-- FIN CARD PRINCIPAL-->  
+
+<!-- php barra de navegacion-->
+<?php include 'vista/complementos/footer.php' ?>
+<script src="assets/js/permiso.js"></script>
+
+
+
+</body>
+
+</html>
