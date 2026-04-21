@@ -221,7 +221,7 @@ foreach ($pedidos as &$p) {
 
 if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(5, 1)) {
     $pagina_actual = 'pedidoweb';
-    require_once 'vista/pedidoweb.php';
+    require_once 'vista/PedidoWeb.php';
 } else {
     require_once 'vista/seguridad/privilegio.php';
 }
