@@ -6,7 +6,7 @@ use LoveMakeup\Proyecto\Config\Conexion;
 
 /*||||||||||||||||||||||||||||||| TOTAL DE METODOS =  |||||||||||||||||||||||||  05  |||||*/    
 
-class Tasacambio extends Conexion
+class TasaCambio extends Conexion
 {
 
     function __construct() {
