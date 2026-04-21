@@ -1,5 +1,5 @@
 <?php
-use LoveMakeup\Proyecto\Modelo\Tasacambio;   
+use LoveMakeup\Proyecto\Modelo\TasaCambio;   
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -11,7 +11,7 @@ if (!empty($_SESSION['id'])) {
 
 require_once 'permiso.php';
 
-$objtasa = new Tasacambio();
+$objtasa = new TasaCambio();
 
 
 function validarEntradaSQL($input) {
@@ -231,8 +231,8 @@ if(isset($_POST['modificar'])){
     exit;
     
 } else if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(14, 1)) {
-     $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasacambio';
-    require_once 'vista/tasacambio.php'; // Asegúrate de tener esta vista
+     $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasaCambio';
+    require_once 'vista/tasaCambio.php'; // Asegúrate de tener esta vista
 } else {
     require_once 'vista/seguridad/privilegio.php';
 }
