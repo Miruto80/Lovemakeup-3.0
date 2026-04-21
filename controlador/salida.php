@@ -44,8 +44,8 @@ if (!$esAjaxRequest) {
 }
     
 // Cargar modelos necesarios
-require_once 'modelo/salida.php';
-require_once 'modelo/metodopago.php';
+require_once 'modelo/Salida.php';
+require_once 'modelo/MetodoPago.php';
 
 // Instanciar modelos
 $salida = new Salida();
@@ -189,7 +189,7 @@ function validarIdProductoSalida($id_producto) {
     }
     
     try {
-        require_once 'modelo/producto.php';
+        require_once 'modelo/Producto.php';
         $producto = new \LoveMakeup\Proyecto\Modelo\Producto();
         $productos_validos = $producto->ProductosActivos();
         
@@ -216,7 +216,7 @@ function validarIdMetodoPago($id_metodopago) {
     }
     
     try {
-        require_once 'modelo/metodopago.php';
+        require_once 'modelo/MetodoPago.php';
         $metodoPago = new \LoveMakeup\Proyecto\Modelo\MetodoPago();
         $metodos_validos = $metodoPago->consultar();
         
@@ -693,7 +693,7 @@ if (isset($_POST['registrar'])) {
         if ($respuesta['respuesta'] == 1) {
             // Registrar en bitácora (solo si no es AJAX para evitar problemas)
             try {
-                require_once 'modelo/bitacora.php';
+                require_once 'modelo/Bitacora.php';
                 $bitacora = [
                     'id_persona' => $_SESSION["id"],
                     'accion' => 'Registro de venta',
@@ -1133,7 +1133,7 @@ if (!$esAjaxRequest && $_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Registrar acceso al módulo en la bitácora
         try {
-            require_once 'modelo/bitacora.php';
+            require_once 'modelo/Bitacora.php';
             $bitacora = [
                 'id_persona' => $_SESSION["id"],
                 'accion' => 'Acceso a Módulo',

@@ -1,25 +1,15 @@
 <?php  
+use LoveMakeup\Proyecto\Modelo\Reservas;
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-if (empty($_SESSION["id"])) {
-    header("location:?pagina=login");
-    exit;
-}
+
 if (!empty($_SESSION['id'])) {
-        require_once 'verificarsession.php';
+    require_once 'verificarsession.php';
 } 
 
-if ($_SESSION["nivel_rol"] == 1) {
-        header("Location: ?pagina=catalogo");
-        exit();
-    }/*  Validacion cliente  */
-
 require_once 'permiso.php';
-
-
-use LoveMakeup\Proyecto\Modelo\Reservas;
 
 $objReservas = new Reservas();
 
