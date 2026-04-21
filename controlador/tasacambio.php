@@ -232,7 +232,7 @@ if(isset($_POST['modificar'])){
     
 } else if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(14, 1)) {
      $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasaCambio';
-    require_once 'vista/tasaCambio.php'; // Asegúrate de tener esta vista
+    require_once 'vista/tasacambio.php'; // Asegúrate de tener esta vista
 } else {
     require_once 'vista/seguridad/privilegio.php';
 }
