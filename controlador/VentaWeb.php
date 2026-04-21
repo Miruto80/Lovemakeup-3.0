@@ -180,4 +180,4 @@ foreach ($carrito as $item) {
     $total += $cantidad * $precioUnitario;
 }
 
-require_once 'vista/tienda/VentaWeb.php';
+require_once 'vista/tienda/verpedidoweb.php';
