@@ -15,7 +15,7 @@ class Conexion {
             $this->conex1->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
             // Segunda conexión
-            $this->conex2 = new \PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME_2.";charset=utf8", DB_USER_2, DB_PASS);
+            $this->conex2 = new \PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME_2.";charset=utf8", DB_USER, DB_PASS);
             $this->conex2->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         } catch (\PDOException $e) {

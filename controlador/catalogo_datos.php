@@ -1,6 +1,6 @@
 <?php  
 
-use LoveMakeup\Proyecto\Modelo\catalogo_datos;
+use LoveMakeup\Proyecto\Modelo\Catalogo_datos;
 
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
