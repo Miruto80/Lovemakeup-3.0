@@ -1,8 +1,6 @@
 <?php
 
 namespace LoveMakeup\Proyecto\Modelo;
-
-require_once(__DIR__ . '/../config/conexion.php');
 use LoveMakeup\Proyecto\Config\Conexion;
 
 class Reservas extends Conexion {
