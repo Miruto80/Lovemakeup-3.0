@@ -24,7 +24,10 @@ function validarExpresiones($tipo, $valor, $mensaje, $accion) {
         case 'rol':      $valido = preg_match('/^[0-9]{1,3}$/', $valor); break;//1
         case 'estatus':  $valido = preg_match('/^[0-9]{1}$/', $valor); break;//l
         case 'clave':  $valido = preg_match('/^[A-Za-z0-9\.\$\#\*\/]{8,16}$/', $valor); break;//l
-        case 'dolar':  $valido = !preg_match('/^\d{1,5}([.,]\d{1,3})?$/', $valor) || strlen(str_replace([',','.'],'',$valor)) < 4 || strlen(str_replace([',','.'],'',$valor)) > 8; break;//l
+        case 'codigo_ingresado':  $valido = preg_match('/^[0-9]{6}$/', $valor); break;//l
+        case 'nivel_acceso':  $valido = preg_match('/^[2-3]{1}$/', $valor); break;//l
+        case 'dolar':  $valido = preg_match('/^\d{1,5}([.,]\d{1,3})?$/', $valor) || strlen(str_replace([',','.'],'',$valor)) < 4 || strlen(str_replace([',','.'],'',$valor)) > 8; break;
+        case 'id_fk':  $valido = preg_match('/^[0-9]+$/', $valor); break;//l
     }
 
     if (!$valido) {

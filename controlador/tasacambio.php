@@ -1,5 +1,6 @@
 <?php
-use LoveMakeup\Proyecto\Modelo\Tasacambio;   
+use LoveMakeup\Proyecto\Modelo\Tasacambio;  
+use LoveMakeup\Proyecto\Modelo\Bitacora; 
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -10,58 +11,39 @@ if (!empty($_SESSION['id'])) {
 } 
 
 require_once 'permiso.php';
-
+require_once 'assets/ajuste/validaciones.php';
+//---
 $objtasa = new Tasacambio();
-
-
-function validarEntradaSQL($input) {
-        // Si es array → validar cada elemento
-        if (is_array($input)) {
-            foreach ($input as $valor) {
-                if (!validarEntradaSQL($valor)) { 
-                    return false;
-                }
-            }
-            return true;
-        }
-        // Convertir a string por seguridad
-        $input = (string)$input;
-
-        $blacklist = [
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
-            'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
-            'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
-            '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
-            'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
+//---
+   function registrarBitacora($accion, $descripcion) {
+        //FUNCION PARA REGISTRAR LA BITACORA
+        $datos = [
+            'id_persona'  => $_SESSION["id"],
+            'accion'      => $accion,
+            'descripcion' => $descripcion
         ];
-      
-        foreach ($blacklist as $prohibida) {
-            $pattern = '/\b' . preg_quote($prohibida, '/') . '\b/i'; 
-            if (preg_match($pattern, $input)) {
-                return false;
-            }
-        }
-        return true;
+
+        // Instanciamos y registramos
+        $bitacoraObj = new Bitacora();
+        return $bitacoraObj->registrarOperacion($accion, 'Tasa de Cambio', $datos);
     }
-
-
-
+//---
 $registro = $objtasa->consultar();
-
+//---
 if(isset($_POST['modificar'])){
+//---    
     if (isset($_SESSION['id']) && !empty($_SESSION['id'])) { /* V1 */
         if ($_SESSION["nivel_rol"] == 3 && tieneAcceso(14, 3)) { /* V2 */ 
             
             if (!empty($_POST['fecha']) && !empty($_POST['tasa']) && !empty($_POST['fuente'])) {  /* V3 */
 
                 // Validar y sanitizar datos
-                $fecha = isset($_POST['fecha']) ? filter_var($_POST['fecha'], FILTER_SANITIZE_STRING) : '';
+                $fecha = $_POST['fecha'];
                 $tasa = isset($_POST['tasa']) ? filter_var($_POST['tasa'], FILTER_VALIDATE_FLOAT) : false;
-                $fuente = isset($_POST['fuente']) ? filter_var($_POST['fuente'], FILTER_SANITIZE_STRING) : 'Manualmente';
-                
+                $fuente = $_POST['fuente'];
+
                 if ($tasa === false || $tasa <= 0) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => 'La tasa debe ser un número válido mayor a 0']);
-                    exit;
+                    MensajeJSON(0, 'modificar', 'La tasa debe ser un número válido mayor a 0');
                 }
 
                 $campos = [
@@ -73,22 +55,18 @@ if(isset($_POST['modificar'])){
                 /// Sanitización de Entradas
                     foreach ($campos as $nombre => $valor) {  /* V4 */ 
                         if (!validarEntradaSQL($valor)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => "#0400 - Entrada inválida detectada en el campo: $nombre"]);
-                            exit;
+                            MensajeJSON(0, 'modificar', "Entrada inválida detectada en el campo: $nombre");
                         }
                     }
                         // Validar formato de fecha
                         $fechaValidada = DateTime::createFromFormat('Y-m-d', $fecha);
                         if (!$fechaValidada || $fechaValidada->format('Y-m-d') !== $fecha) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => '#0510 - Formato de fecha inválido']);
-                            exit;
+                            echo "$fecha";
+                            MensajeJSON(0, 'modificar', 'Formato de fecha inválido - ERROR E520');
                         }
 
-                        if (!preg_match('/^\d{1,5}([.,]\d{1,3})?$/', $tasa) || strlen(str_replace([',','.'],'',$tasa)) < 4 || strlen(str_replace([',','.'],'',$tasa)) > 8) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => "#0510 - Tasa inválida ($tasa)"]);
-                            exit;
-                        }
-                
+                        validarExpresiones('dolar', $tasa, "Tasa (F) inválido", "modificar");
+
                         $datosTasa = [
                             'operacion' => 'modificar',
                             'datos' => [
@@ -106,21 +84,19 @@ if(isset($_POST['modificar'])){
                                         $_SESSION["tasa"]   = $resultado1;
                                     
                                     }
+                                RegistrarBitacora('Modificar Tasa de Cambio', "Se Modifico la tasa manualmente, a: {$tasa}");    
                             }
 
                         echo json_encode($resultado);
 
             } else{  /* V3 datos vacios */
-                echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => '#0300 - Datos Vacios']);
-                exit; 
+                MensajeJSON(0, 'modificar', 'Datos Vacios - ERROR E300');
             }    
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => '#0200 - No Tiene Permiso para realizar esta operacion']);
-            exit;
+            MensajeJSON(0, 'modificar', 'No Tiene Permiso para realizar esta operacion - ERROR E200');
         }      
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'modificar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'modificar', 'Session no encontrada - ERROR E100');
     } 
 
 } else if(isset($_POST['sincronizar'])){
@@ -130,19 +106,17 @@ if(isset($_POST['modificar'])){
             if (!empty($_POST['fecha']) && !empty($_POST['tasa']) && !empty($_POST['fuente'])) {  /* V3 */
 
                 // Validar y sanitizar datos
-                $fecha = isset($_POST['fecha']) ? filter_var($_POST['fecha'], FILTER_SANITIZE_STRING) : '';
+                $fecha = $_POST['fecha'];
                 $tasa = isset($_POST['tasa']) ? filter_var($_POST['tasa'], FILTER_VALIDATE_FLOAT) : false;
-                $fuente = isset($_POST['fuente']) ? filter_var($_POST['fuente'], FILTER_SANITIZE_STRING) : 'Via Internet';
+                $fuente = $_POST['fuente'];
                 
                 // Validaciones
                 if(empty($tasa) || $tasa === false){
-                    echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => 'Tasa no encontrada o inválida']);
-                    exit;
+                    MensajeJSON(0, 'sincronizar', 'Tasa no encontrada o inválida');
                 } 
                 
                 if($tasa <= 0){
-                    echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => 'Error: La tasa debe ser mayor a 0']);
-                    exit;
+                    MensajeJSON(0, 'sincronizar', 'La tasa debe ser mayor a 0');
                 }
                 
                 $campos = [
@@ -154,8 +128,8 @@ if(isset($_POST['modificar'])){
                 /// Sanitización de Entradas
                     foreach ($campos as $nombre => $valor) {  /* V4 */ 
                         if (!validarEntradaSQL($valor)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => "#0400 - Entrada inválida detectada en el campo: $nombre"]);
-                            exit;
+                            MensajeJSON(0, 'sincronizar', "Entrada inválida detectada en el campo: $nombre");
+
                         }
                     }
                         // Validar formato de fecha
@@ -165,10 +139,8 @@ if(isset($_POST['modificar'])){
                             exit;
                         }
 
-                        if (!preg_match('/^\d{1,5}([.,]\d{1,3})?$/', $tasa) || strlen(str_replace([',','.'],'',$tasa)) < 4 || strlen(str_replace([',','.'],'',$tasa)) > 8) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => "#0510 - Tasa inválida ($tasa)"]);
-                            exit;
-                        }
+                        validarExpresiones('dolar', $tasa, "Tasa (F) inválido", "sincronizar");
+
                              
                             $datosTasa = [
                                 'operacion' => 'sincronizar',
@@ -186,22 +158,21 @@ if(isset($_POST['modificar'])){
                                         $_SESSION["tasa"]   = $resultado1;
                                     
                                     }
+                                RegistrarBitacora('Modificar Tasa de Cambio', "Se Modifico la tasa via Internet, a: {$tasa}");    
                             }
                             echo json_encode($resultado);
+                            exit;
 
             } else{  /* V3 datos vacios */
-                echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => '#0300 - Datos Vacios']);
-                exit; 
+                MensajeJSON(0, 'sincronizar', 'Datos Vacios - ERROR E200');
             }
 
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => '#0200 - No Tiene Permiso para realizar esta operacion']);
-            exit;
+            MensajeJSON(0, 'sincronizar', 'No Tiene Permiso para realizar esta operacion - ERROR E200');
         }     
 
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'sincronizar', 'Session no encontrada - ERROR E100');
     } 
     
 } else if(isset($_POST['obtener_tasa_actual']) || (isset($_GET['obtener_tasa_actual']) && $_GET['obtener_tasa_actual'] == '1')) {
@@ -231,7 +202,8 @@ if(isset($_POST['modificar'])){
     exit;
     
 } else if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(14, 1)) {
-     $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasacambio';
+    RegistrarBitacora('Acceso a Módulo Tasa Cambio', "Entro al módulo de Tasa Cambio");
+    $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasacambio';
     require_once 'vista/tasacambio.php'; // Asegúrate de tener esta vista
 } else {
     require_once 'vista/seguridad/privilegio.php';

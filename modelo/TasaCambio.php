@@ -21,9 +21,7 @@ class Tasacambio extends Conexion
         
         try {
             // Validar y sanitizar datos
-            $datosProcesar['fecha'] = filter_var($datosProcesar['fecha'], FILTER_SANITIZE_STRING);
             $datosProcesar['tasa'] = filter_var($datosProcesar['tasa'], FILTER_VALIDATE_FLOAT);
-            $datosProcesar['fuente'] = filter_var($datosProcesar['fuente'], FILTER_SANITIZE_STRING);
             
             if ($datosProcesar['tasa'] === false || $datosProcesar['tasa'] <= 0) {
                 return ['respuesta' => 0, 'accion' => $operacion, 'text' => 'La tasa debe ser un número válido mayor a 0'];

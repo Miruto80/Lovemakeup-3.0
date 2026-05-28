@@ -11,49 +11,24 @@ use LoveMakeup\Proyecto\Modelo\Olvidoclave;
        header("location:?pagina=login");
     } /*  Validacion URL  */
     
-    if (!empty($_SESSION['id'])) {
+    if (!empty($_SESSION['iduser'])) {
         require_once 'verificarsession.php';
     } 
+    require_once 'assets/ajuste/validaciones.php';
   
   $objolvido = new Olvidoclave();
-  
-  function validarEntradaSQL($input) {
-    // Lista negra de palabras y símbolos comunes en SQL Injection
-    $blacklist = [
-        'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
-        'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
-        'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
-        '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
-        'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
-    ];
-
-    // Normalizar a mayúsculas para comparar
-    $inputUpper = strtoupper($input);
-
-    foreach ($blacklist as $prohibida) {
-        if (strpos($inputUpper, $prohibida) !== false) {
-            return false; // Contiene palabra prohibida
-        }
-    }
-    return true; // Seguro
-}
-  
-  if (isset($_POST['cerrarolvido'])) {    
+   
+if (isset($_POST['cerrarolvido'])) {    
       session_destroy(); 
       header('Location: ?pagina=login');
       exit;
-
 } else  if (isset($_POST['validar'])) {    
     if (isset($_SESSION['iduser']) && !empty($_SESSION['iduser'])) { /* V1 */
         if (!empty($_POST['correo'])) { 
                
                 $correo = strtolower($_POST['correo']);    $correodato = $_SESSION['correos'];
-                   
                 //validar datos
-                if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($correo) < 5 || strlen($correo) > 200) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'validar', 'text' => "#0310 - Correo inválido."]);
-                    exit;
-                }
+                validarExpresiones('correo', $correo, "Correo (F) inválida","validar");
 
                 if ($correo === $correodato) {
                     
@@ -62,23 +37,18 @@ use LoveMakeup\Proyecto\Modelo\Olvidoclave;
                     
                     // Enviar correo con el código
                     require_once 'modelo/enviarcorreo.php'; 
-                    
                     enviarCodigoRecuperacion($correo, $codigo_recuperacion);
                     
-                    echo json_encode(['respuesta' => 1, 'accion' => 'validar']);
-                    exit;
+                    MensajeJSON(1, 'validar', '');     
                 } else {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'validar', 'text' => 'El correo no encuentra en su registro.']);
-                    exit;
+                    MensajeJSON(0, 'validar', 'El correo no encuentra en su registro.');   
                 }
 
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'validar', 'text' => '#0200 - Datos Vacios']);
-            exit;
+            MensajeJSON(0,'validar','Datos Vacios - ERROR E300');
         }      
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'validar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'validar', 'Session no encontrada - ERROR E100');   
     }            
 
 }else if (isset($_POST['validarcodigo'])) {  
@@ -94,31 +64,23 @@ use LoveMakeup\Proyecto\Modelo\Olvidoclave;
                  /// Sanitización de Entradas
                 foreach ($campos as $nombre => $valor) {  /* V4 */ 
                     if (!validarEntradaSQL($valor)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'validarcodigo', 'text' => "#0300 - Entrada inválida detectada en el campo: $nombre"]);
-                        exit;
+                        MensajeJSON(0, 'validarcodigo', "Entrada inválida detectada en el campo: $nombre");   
                     }
                 } 
                     //// Validar Datos  V5
-                    if (!preg_match('/^[0-9]{6}$/', $codigo_ingresado)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'validarcodigo', 'text' => "#0410 - Formato inválido"]);
-                        exit;
-                    }
+                    validarExpresiones('codigo_ingresado', $codigo_ingresado, "Codigo Ingresado (F) inválida","validarcodigo");
 
                         if ($codigo_guardado && $codigo_ingresado == $codigo_guardado) {
-                            $res = array('respuesta' => 1, 'accion' => 'validarcodigo');
+                            MensajeJSON(1,'validarcodigo',''); // CORRECTO
                         } else {
-                            $res = array('respuesta' => 0, 'accion' => 'validarcodigo', 'text' => 'Código incorrecto.');
+                            MensajeJSON(0,'validarcodigo','Código incorrecto.'); // INCORRECTO
                         }
 
-                        echo json_encode($res);
-
         } else{  /* V2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'validarcodigo', 'text' => '#0200 - Datos Vacios']);
-            exit;
+            MensajeJSON(0,'validarcodigo','Datos Vacios - ERROR E300');
         }      
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'validarcodigo', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'validarcodigo', 'Session no encontrada - ERROR E100');   
     }  
 
 } else if (isset($_POST['btnReenviar'])) {
@@ -134,16 +96,14 @@ use LoveMakeup\Proyecto\Modelo\Olvidoclave;
             require_once 'modelo/enviarcorreo.php';
             enviarCodigoRecuperacion($correo, $codigo_recuperacion);
 
-            $res = array('respuesta' => 1, 'accion' => 'reenviar');
+            MensajeJSON(1,'reenviar',''); // CORRECTO
         } else {
             $res = array('respuesta' => 0, 'accion' => 'reenviar', 'text' => 'al obtener el correo');
+            MensajeJSON(0,'reenviar','al obtener el correo'); // INCORRECTO
         }
-        echo json_encode($res);
-        exit;
 
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'reenviar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'reenviar', 'Session no encontrada - ERROR E100');   
     } 
 
 } else if(isset($_POST['validarclave'])){
@@ -158,15 +118,11 @@ use LoveMakeup\Proyecto\Modelo\Olvidoclave;
                  /// Sanitización de Entradas
                 foreach ($campos as $nombre => $valor) {  /* V3 */ 
                     if (!validarEntradaSQL($valor)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0300 - Entrada inválida detectada en el campo: $nombre"]);
-                        exit;
+                       MensajeJSON(0, 'validarcodigo', "Entrada inválida detectada en el campo: $nombre");   
                     }
                 } 
                     //// Validar Datos  V4
-                    if (!preg_match('/^[A-Za-z0-9\.\$\#\*\/]{8,16}$/', $clavenueva)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Clave inválida"]);
-                        exit;
-                    }
+                    validarExpresiones('clave', $clavenueva, "Clave Nueva (F) inválida","actualizar");
 
                     $datosOlvido = [
                         'operacion' => 'actualizar',
@@ -181,12 +137,10 @@ use LoveMakeup\Proyecto\Modelo\Olvidoclave;
                     echo json_encode($resultado);
 
         } else{  /* V2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0200 - Datos Vacios']);
-            exit;
+           MensajeJSON(0,'actualizar','Datos Vacios - ERROR E300');
         }      
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+       MensajeJSON(0, 'actualizar', 'Session no encontrada - ERROR E100');   
     }  
     
 } else{

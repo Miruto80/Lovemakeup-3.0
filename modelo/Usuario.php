@@ -1,36 +1,38 @@
 <?php
-
 namespace LoveMakeup\Proyecto\Modelo;
-
 use LoveMakeup\Proyecto\Config\Conexion;
-
-/*||||||||||||||||||||||||||||||| METODO: TOTAL 14 ||||||||||||||||||||||||||||||*/
+use Dotenv\Dotenv;
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv::createImmutable(dirname(__DIR__), 'passconfig.env');
+$dotenv->load();
 
 class Usuario extends Conexion
 {
-    private $encryptionKey = "MotorLoveMakeup"; 
-    private $cipherMethod = "AES-256-CBC";
+    private $llaveprivada;
+    private $metodocifrado;
     private $objtipousuario; 
     
     function __construct() {
         parent::__construct();
+        $this->llaveprivada = $_ENV['SMTP_KEY'];
+        $this->metodocifrado = $_ENV['SMTP_METODO'];
         $this->objtipousuario = new TipoUsuario();
     }
 
 /*|||||||||||||||||||||||||||||||||||||| ENCRIPTACION DE CLAVE  |||||||||||||||||||||||||||||||||| 01 ||*/   
     private function encryptClave($clave) {
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->cipherMethod)); 
-        $encrypted = openssl_encrypt($clave, $this->cipherMethod, $this->encryptionKey, 0, $iv);
+        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->metodocifrado)); 
+        $encrypted = openssl_encrypt($clave, $this->metodocifrado, $this->llaveprivada, 0, $iv);
         return base64_encode($iv . $encrypted);
     }
 
     /*|||||||||||||||||||||||||||||||||||| DESINCRIPTACION DE CLAVE  ||||||||||||||||||||||||||||||||| 02 |||*/
     private function decryptClave($claveEncriptada) {
         $data = base64_decode($claveEncriptada);
-        $ivLength = openssl_cipher_iv_length($this->cipherMethod);
+        $ivLength = openssl_cipher_iv_length($this->metodocifrado);
         $iv = substr($data, 0, $ivLength);
         $encrypted = substr($data, $ivLength);
-        return openssl_decrypt($encrypted, $this->cipherMethod, $this->encryptionKey, 0, $iv);
+        return openssl_decrypt($encrypted, $this->metodocifrado, $this->llaveprivada, 0, $iv);
     }
 
 /*||||||||||||||||||||||||||||||||||||||||||||||||||  OPERACIONES  ||||||||||||||||||||||||||||||||||||||||| 03 ||||*/    
