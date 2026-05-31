@@ -125,10 +125,10 @@
       </div>
       <div class="row">
         <div class="col-md-6 copyright">
-          <p>© 2025 LoveMakeup C.A | Tienen todos los derechos revervados.</p>
+          <p>© 2026 LoveMakeup C.A | Tienen todos los derechos revervados.</p>
         </div>
         <div class="col-md-6 credit-link text-start text-md-end">
-          <p>Estudiantes UPTAEB T3 - 3113</a></p>
+          <p>Estudiantes UPTAEB T4</a></p>
         </div>
       </div>
     </div>
