@@ -11,12 +11,14 @@ if (!empty($_SESSION['id'])) {
 }
 //---- 
 require_once 'permiso.php';
+require_once 'assets/ajuste/validaciones.php';
+//--
 $objusuario = new Usuario();
 //-----
 if (!isset($_SESSION['limite_usuario'])) {
     $_SESSION['limite_usuario'] = 100;
 }
-//--------
+
 if (isset($_POST['ver_mas'])) {
     $_SESSION['limite_usuario'] += 100;
     header("location:?pagina=usuario");
@@ -28,80 +30,9 @@ $roll = $objusuario->obtenerRol();
 //----
 $registro = $objusuario->consultar($_SESSION['limite_usuario']);
 $total_registros = $objusuario->contarTotal(); 
-//--
-    function validarEntradaSQL($input) {
-        // Si es array → validar cada elemento
-        if (is_array($input)) {
-            foreach ($input as $valor) {
-                if (!validarEntradaSQL($valor)) { 
-                    return false;
-                }
-            }
-            return true;
-        }
-        // Convertir a string por seguridad
-        $input = (string)$input;
 
-        $blacklist = [
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
-            'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
-            'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
-            '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
-            'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
-        ];
-      
-        foreach ($blacklist as $prohibida) {
-            $pattern = '/\b' . preg_quote($prohibida, '/') . '\b/i'; 
-            if (preg_match($pattern, $input)) {
-                return false;
-            }
-        }
-        return true;
-    }
-//---- FUNCIONES DE SELECT
-    // Valida que el id_rol sea válido y exista en la base de datos
-    function validarIdRol($id_rol, $roles) {
-        if (empty($id_rol) || !is_numeric($id_rol)) {
-            return false;
-        }
-        $id_rol = (int)$id_rol;
-        foreach ($roles as $rol) {
-            if ($rol['id_rol'] == $id_rol && $rol['estatus'] >= 1 && $rol['id_rol'] > 1) {
-                return true;
-            }
-        }
-        return false;
-    }
-//----
-    // Valida que el nivel corresponda al id_rol seleccionado
-    function validarNivel($id_rol, $nivel, $roles) {
-        if (empty($nivel) || !is_numeric($nivel)) {
-            return false;
-        }
-        $nivel = (int)$nivel;
-        foreach ($roles as $rol) {
-            if ($rol['id_rol'] == $id_rol && $rol['nivel'] == $nivel) {
-                return true;
-            }
-        }
-        return false;
-    }
-//---
-    // Valida que el tipo_documento sea válido
-    function validarTipoDocumento($tipo_documento) {
-        $tipos_validos = ['V', 'E'];
-        return in_array($tipo_documento, $tipos_validos, true);
-    }
-//---   
-    // Valida que el estatus sea válido
-    function validarEstatus($estatus) {
-        if (empty($estatus) || !is_numeric($estatus)) {
-            return false;
-        }
-        $estatus = (int)$estatus;
-        $estatus_validos = [1, 2, 3];
-        return in_array($estatus, $estatus_validos, true);
-    }
+
+
 //---
     // Obtiene el nivel correspondiente a un id_rol
     function obtenerNivelPorRol($id_rol, $roles) {
@@ -112,6 +43,19 @@ $total_registros = $objusuario->contarTotal();
         }
         return null;
     }
+//-----
+function registrarBitacora($accion, $descripcion) {
+    //FUNCION PARA REGISTRAR LA BITACORA
+    $datos = [
+        'id_persona'  => $_SESSION["id"],
+        'accion'      => $accion,
+        'descripcion' => $descripcion
+    ];
+
+    // Instanciamos y registramos
+    $bitacoraObj = new Bitacora();
+    return $bitacoraObj->registrarOperacion($accion, 'usuario', $datos);
+}
 //---
 if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR USUARIO 
 //----    
@@ -137,81 +81,46 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                      /// Sanitización de Entradas
                     foreach ($campos as $nombree => $valor) {  /* V4 */ 
                         if (!validarEntradaSQL($valor)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "Entrada inválida detectada en el campo: $nombree"]);
-                            exit;
+                              MensajeJSON(0, 'incluir', "Entrada inválida detectada en el campo: $nombree");
                         }
                     } 
                         //// Validar Datos  V5
-                        if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Cedula inválida"]);
-                            exit;
-                        }
-                       
-                        if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($correo) < 5 || strlen($correo) > 200) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Correo inválido."]);
-                            exit;
-                        }
-                        
-                        if (!preg_match('/^[A-Za-z]{1}$/', $documento)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Documento inválido."]);
-                            exit;
-                        }
-                    
-                        if (!preg_match('/^[0-9]{1,3}$/', $id_rol)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - rol inválido"]);
-                            exit;
-                        }
-                        
-                        if (!preg_match('/^[A-Za-z0-9\.\$\#\*\/]{8,16}$/', $clave)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Clave inválida"]);
-                            exit;
-                        }
-                        
-                        if (!preg_match('/^[0-9]{4}-[0-9]{7}$/', $telefono)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Teléfono inválido"]);
-                            exit;
-                        }
-                        
-                        if (!preg_match('/^[A-Za-z]{3,20}$/', $nombre)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Nombre inválido"]);
-                            exit;
-                        }
-                        
-                        if (!preg_match('/^[A-Za-z]{3,20}$/', $apellido)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => "#0510 - Apellido inválido"]);
-                            exit;
-                        }
+                        validarExpresiones('cedula', $cedula, "Cédula (F) inválida","incluir");
+                        validarExpresiones('correo', $correo, "Correo (F) inválido","incluir");
+                        validarExpresiones('documento', $documento, "Documento (F) inválido","incluir");
+                        validarExpresiones('rol', $id_rol, "ROL (F) inválido","incluir");
+                        validarExpresiones('clave', $clave, "Clave (F) inválida","incluir");
+                        validarExpresiones('telefono', $telefono, "Telefono (F) inválido","incluir");
+                        validarExpresiones('nombre', $nombre, "Nombre (F) inválido","incluir");
+                        validarExpresiones('apellido', $apellido, "Apellido (F) inválido","incluir");
 
+                       
                         if (!validarTipoDocumento($_POST['tipo_documento'])) {   // Validar tipo_documento
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => 'El tipo de documento no es válido']);
-                            exit;
+                             MensajeJSON(0, 'incluir', 'El tipo de documento no es válido - ERROR520');     
                         }
 
                         // Validar y corregir nivel según el id_rol (por seguridad, ignoramos el nivel enviado y usamos el del rol)
                         $nivel_valido = obtenerNivelPorRol($_POST['id_rol'], $rol);
                         if ($nivel_valido === null) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => 'No se pudo obtener el nivel del rol']);
-                            exit;
+                            MensajeJSON(0, 'incluir', 'No se pudo obtener el nivel del rol - ERROR520');  
                         }
 
-                        //VALIDACION EXISTENTE
-                        // USUARIO EXISTE
-                        $datosUsuario = ['operacion' => 'verificar','datos' => ['cedula' => $cedula]  ];
-        
-                        $resultadoVerificacion = $objusuario->procesarUsuario(json_encode($datosUsuario));
-                        if ($resultadoVerificacion['respuesta'] == 1) {
-                             echo json_encode([ 'respuesta' => 0, 'accion' => 'incluir', 'text' => '530 - La cédula ya está registrada' ]);
-                              exit; 
-                        }
+                        // VALIDACION EXISTENTE ---------- PK O FK
+                            // USUARIO EXISTE
+                            $datosUsuario = ['operacion' => 'verificar','datos' => ['cedula' => $cedula]  ];
+            
+                            $resultadoVerificacion = $objusuario->procesarUsuario(json_encode($datosUsuario));
+                            if ($resultadoVerificacion['respuesta'] == 1) {
+                                 MensajeJSON(0, 'incluir', 'La cédula ya está registrada - ERROR530');  
+                            }
 
-                        // ROL EXISTE
-                        $datosUsuario = ['operacion' => 'verificarrol','datos' => ['id_rol' => $id_rol]  ];
-        
-                        $resultadoVerificacion1 = $objusuario->procesarUsuario(json_encode($datosUsuario));
-                        if ($resultadoVerificacion1['respuesta'] == 0) {
-                             echo json_encode([ 'respuesta' => 0, 'accion' => 'actualizar', 'text' => '530 - ROL no existente' ]);
-                              exit; 
-                        }
+                            // ROL EXISTE
+                            $datosUsuario = ['operacion' => 'verificarrol','datos' => ['id_rol' => $id_rol]  ];
+            
+                            $resultadoVerificacion1 = $objusuario->procesarUsuario(json_encode($datosUsuario));
+                            if ($resultadoVerificacion1['respuesta'] == 0) {
+                                 MensajeJSON(0, 'incluir', 'ROL no existente - ERROR530'); 
+                            }
 
                             $datosUsuario = [
                                 'operacion' => 'registrar',
@@ -230,32 +139,21 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
             
                             $resultadoRegistro = $objusuario->procesarUsuario(json_encode($datosUsuario));
                         
-                                if ($resultadoRegistro['respuesta'] == 1) {
-                                    $bitacora = [
-                                        'id_persona' => $_SESSION["id"],
-                                        'accion' => 'Modificación de usuario',
-                                        'descripcion' => 'Se Registrado el usuario: ' . 
-                                                    ' Cédula: ' . $datosUsuario['datos']['cedula'] . 
-                                                    ' Correo: ' . $datosUsuario['datos']['correo']
-                                    ];
-                                    $bitacoraObj = new Bitacora();
-                                    $bitacoraObj->registrarOperacion($bitacora['accion'], 'usuario', $bitacora);
+                                if ($resultadoRegistro['respuesta'] == 1) { // BITACORA
+                                    RegistrarBitacora('Registrado de usuario', "Se registro un nuevo usuario: {$documento}-{$cedula}, {$nombre}, {$apellido}, Correo:{$correo}");
                                 }
 
                             echo json_encode($resultadoRegistro); /// RESULTADO DE LA REGISTRO
                             exit;
 
-            } else{  /* V3 datos vacios */
-                echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => 'Datos Vacios']);
-                exit; 
+            } else{  /* V3 DATOS VACIOS*/
+                MensajeJSON(0, 'incluir', 'Datos Vacios');
             }
-        } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => 'No Tiene Permiso para realizar esta operacion']);
-            exit;
+        } else{  /* V2 NO TIENE PERMISO */ 
+            MensajeJSON(0, 'incluir', 'No Tiene Permiso para realizar esta operacion');
         }      
-    } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'text' => 'Session no encontrada']);
-        exit;
+    } else{ /* V1 SESSION NO ACTIVA*/ 
+        MensajeJSON(0, 'incluir', 'Session no encontrada');
     } 
 //---
 } else if(isset($_POST['actualizar'])){ //---------------------------- ACTUALIZAR DATOS DEL USUARIO
@@ -283,74 +181,26 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
             /// Sanitización de Entradas
                 foreach ($campos as $nombre => $valor) {  /* V4 */ 
                     if (!validarEntradaSQL($valor)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0400 - Entrada inválida detectada en el campo: $nombre"]);
-                        exit;
+                        MensajeJSON(0, 'actualizar', "Entrada inválida detectada en el campo: $nombre");
                     }
                 }
-
+                    
                     //// Validar Datos  V5
-                    if (!preg_match('/^[0-9]{1,8}$/', $id_persona)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar-', 'text' => "#0510 - (E) inválida"]);
-                        exit;
-                    }
-
-                    if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Cedula inválida"]);
-                        exit;
-                    }
-
-                    if (!preg_match('/^[0-9]{7,8}$/', $cedula_actual)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Cedula (A) inválida"]);
-                        exit;
-                    }
+                    validarExpresiones('id_usuario', $id_persona, "Usuario (F) inválido", "actualizar");
+                    validarExpresiones('cedula', $cedula, "Cédula (F) inválida", "actualizar");
+                    validarExpresiones('cedula', $cedula_actual, "Cédula A (F) inválida", "actualizar");
+                    validarExpresiones('correo', $correo, "Correo (F) inválida", "actualizar");
+                    validarExpresiones('correo', $correo_actual, "Correo A (F) inválida", "actualizar");
+                    validarExpresiones('estatus', $estatus, "Estatus (F) inválida", "actualizar");
+                    validarExpresiones('documento', $tipo_documento, "Tipo_documento (F) inválida", "actualizar");
+                    validarExpresiones('rol', $id_rol, "ROL (F) inválida", "actualizar");
+                    validarExpresiones('rol', $rol_actual, "ROL A (F) inválida", "actualizar");
                     
-                    if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($correo) < 5 || strlen($correo) > 200) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Correo inválido."]);
-                        exit;
-                    }
-
-                    if (!filter_var($correo_actual, FILTER_VALIDATE_EMAIL) || strlen($correo_actual) < 5 || strlen($correo_actual) > 200) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Correo (A) inválido."]);
-                        exit;
-                    }
-                    
-                    if (!preg_match('/^[0-9]{1}$/', $estatus)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Estatus inválido."]);
-                        exit;
-                    }
-                    
-                    if (!preg_match('/^[A-Za-z]{1}$/', $tipo_documento)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Documento inválido."]);
-                        exit;
-                    }
-                
-                    if (!preg_match('/^[0-9]{1,6}$/', $id_rol)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - rol inválido"]);
-                        exit;
-                    }
-
-                    if (!preg_match('/^[0-9]{1,6}$/', $rol_actual)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - rol inválido"]);
-                        exit;
-                    }
                  
-                        if (!validarTipoDocumento($_POST['tipo_documento'])) {    // Validar tipo_documento
-                            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0520 -El tipo de documento no es válido']);
-                            exit;
-                        }
+                    if (!validarTipoDocumento($_POST['tipo_documento'])) {    // Validar tipo_documento
+                        MensajeJSON(0, 'actualizar', 'El tipo de documento no es válido - ERROR520');
+                    }
 
-                        if (!validarEstatus($_POST['estatus'])) {    // Validar estatus
-                            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0520 - El estatus seleccionado no es válido']);
-                            exit;
-                        }
-
-                        // Validar y corregir nivel según el id_rol (por seguridad, ignoramos el nivel enviado y usamos el del rol)
-                       /* $nivel_valido = obtenerNivelPorRol($id_rol, $roll);
-                        
-                        if ($nivel_valido === null) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0520 -No se pudo obtener el nivel del rol']);
-                            exit;
-                        }*/
 
                         //VALIDACION EXISTENTE
                         // USUARIO EXISTE
@@ -358,8 +208,7 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
         
                         $resultadoVerificacion = $objusuario->procesarUsuario(json_encode($datosUsuario));
                         if ($resultadoVerificacion['respuesta'] == 0) {
-                             echo json_encode([ 'respuesta' => 0, 'accion' => 'actualizar', 'text' => '530 - Cedula no existente' ]);
-                              exit; 
+                            MensajeJSON(0, 'actualizar', 'Cedula no existente - ERROR 530');
                         }
                         
                         // ROL EXISTE
@@ -367,8 +216,7 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
         
                         $resultadoVerificacion1 = $objusuario->procesarUsuario(json_encode($datosUsuario));
                         if ($resultadoVerificacion1['respuesta'] == 0) {
-                             echo json_encode([ 'respuesta' => 0, 'accion' => 'actualizar', 'text' => '530 - ROL no existente' ]);
-                              exit; 
+                            MensajeJSON(0, 'actualizar', 'ROL no existente - ERROR 530');
                         } 
                             // ENVIO AL MODULO
                             $datosUsuario = [
@@ -389,27 +237,17 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                     
                                 if($datosUsuario['datos']['id_persona'] == 2) { 
                                     if($datosUsuario['datos']['id_rol'] != 4) {
-                                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'No puedes cambiar el Rol del usuario administrador']);
-                                        exit;
+                                        MensajeJSON(0, 'actualizar', 'No puedes cambiar el Rol del usuario administrador');
                                     }
                                     if($datosUsuario['datos']['estatus'] != 1) {
-                                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'No puedes cambiar el estatus del usuario administrador']);
-                                        exit;
+                                        MensajeJSON(0, 'actualizar', 'No puedes cambiar el Rol del usuario administrador');
                                     }
                                 }
                     
                                 $resultado = $objusuario->procesarUsuario(json_encode($datosUsuario));
                             
                                     if ($resultado['respuesta'] == 1) {
-                                        $bitacora = [
-                                            'id_persona' => $_SESSION["id"],
-                                            'accion' => 'Modificación de usuario',
-                                            'descripcion' => 'Se modificó el usuario con ID: ' . $datosUsuario['datos']['id_persona'] . 
-                                                        ' Cédula: ' . $datosUsuario['datos']['cedula'] . 
-                                                        ' Correo: ' . $datosUsuario['datos']['correo']
-                                        ];
-                                        $bitacoraObj = new Bitacora();
-                                        $bitacoraObj->registrarOperacion($bitacora['accion'], 'usuario', $bitacora);
+                                        registrarBitacora('Modificación de usuario', "Se modificó datos del usuario: {$tipo_documento}-{$cedula}, {$correo}");
                                     }
                     
                                 echo json_encode($resultado); /// RESULTADO DE LA ACTUALIZACION
@@ -417,16 +255,13 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                             //FIN DEL ENVIO    
 
             } else{  /* V3 datos vacios */
-                echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0300 - Datos Vacios']);
-                exit; 
+                MensajeJSON(0, 'actualizar', 'Datos Vacios - ERROR E300');
             }
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0200 - No Tiene Permiso para realizar esta operacion']);
-            exit;
+            MensajeJSON(0, 'actualizar', 'No Tiene Permiso para realizar esta operacion - ERROR E200');
         }      
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'actualizar', 'Session no encontrada - ERROR E100');
     } 
 //---------
 } else if(isset($_POST['eliminar'])){ //--------------------------------- ELIMINAR USUARIO
@@ -444,27 +279,21 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                 /// Sanitización de Entradas
                     foreach ($campos as $nombre => $valor) {  /* V4 */ 
                         if (!validarEntradaSQL($valor)) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => "#0400 - Entrada inválida detectada en el campo: $nombre"]);
-                            exit;
+                            MensajeJSON(0, 'actualizar', "Entrada inválida detectada en el campo: $nombre");
                         }
                     }
                 
                      //// Validar Datos  V5
-                    if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => "#0510 - Cedula inválida"]);
-                        exit;
-                    }
+                    validarExpresiones('cedula', $cedula, "Cédula  inválida (F)", "eliminar");
 
                     if (ctype_digit($cedula)) {
                 
                         if ($cedula == $_SESSION['id']) { /* NO ELIMINARSE ASI MISMO | ELIMINAR  */
-                            echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'No puedes eliminarte a ti mismo']);
-                            exit;
+                            MensajeJSON(0, 'eliminar', 'No puedes eliminarte a ti mismo');
                         }
 
-                        if($id_usuario == 2 || $id_usuario == 1){
-                            echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'Usuario restringido, no se puede elimimar']);
-                            exit;
+                        if ($id_usuario == 2 || $id_usuario == 1){
+                            MensajeJSON(0, 'eliminar', 'Usuario restringido, no se puede elimimar');
                         }
                         
                         //VALIDACION EXISTENTE
@@ -472,8 +301,7 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
         
                         $resultadoVerificacion = $objusuario->procesarUsuario(json_encode($datosUsuario));
                         if ($resultadoVerificacion['respuesta'] == 0) {
-                             echo json_encode([ 'respuesta' => 0, 'accion' => 'eliminar', 'text' => '530 - Cedula no existente' ]);
-                              exit; 
+                            MensajeJSON(0, 'eliminar', 'Cedula no existente - ERROR M530');
                         } 
                             // ENVIO AL METODO -----------
                                 $datosUsuario = [
@@ -486,13 +314,7 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                                 $resultado = $objusuario->procesarUsuario(json_encode($datosUsuario));
         
                                 if ($resultado['respuesta'] == 1) {
-                                    $bitacora = [
-                                        'id_persona' => $_SESSION["id"],
-                                        'accion' => 'Eliminación de usuario',
-                                        'descripcion' => 'Se eliminó el usuario con ID: ' . $cedula
-                                    ];
-                                    $bitacoraObj = new Bitacora();
-                                    $bitacoraObj->registrarOperacion($bitacora['accion'], 'usuario', $bitacora);
+                                   registrarBitacora('Eliminación de usuario', "Se eliminó al usuario con Cédula: {$cedula}");
                                 }
         
                                 echo json_encode($resultado); /* RESPUESTA | ELIMINAR  */
@@ -500,22 +322,16 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                             //FIN ENVIO ------------   
         
                     } else { /* CEDULA NO NUMERICA | ELIMINAR  */
-                        echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'La cédula no es válida. Debe contener solo números']);
-                        exit; 
+                        MensajeJSON(0, 'eliminar', 'La cédula no es válida. Debe contener solo números - ERROR E320');
                     }
-
             } else{  /* DATOS VACIOS | ELIMINAR  */
-                echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'Datos Vacios']);
-                exit; 
+                 MensajeJSON(0, 'eliminar', 'Datos Vacios - ERROR E300'); 
             }
-
-        } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'No Tiene Permiso para realizar esta operacion']);
-            exit;
+        } else{  /* V2 */ 
+             MensajeJSON(0, 'eliminar', 'No Tiene Permiso para realizar esta operacion - ERROR E200'); 
         }      
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'eliminar', 'Session no encontrada - ERROR E100'); 
     } 
 //-----------    
 } else if(isset($_POST['cedula'])){ //-------------------------------------------- VERIFICAR CEDULA
@@ -525,12 +341,10 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
 
             $cedulaValidar = $_POST['cedula'];
             // Validar V3
-            if (!preg_match('/^[0-9]{7,8}$/', $cedulaValidar)) {
-                echo json_encode(['respuesta' => 0, 'accion' => 'verificar', 'text' => "#0310 - Formato inválida"]);
-                exit;
-            }
+            validarExpresiones('cedula', $cedulaValidar, "Cédula  inválida (F)", "verificar");
             
             if (ctype_digit($cedulaValidar)) {
+                // ENVIO AL METODO -----------
                 $datosUsuario = [
                     'operacion' => 'verificar',
                         'datos' => [
@@ -541,18 +355,15 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                 $resultado = $objusuario->procesarUsuario(json_encode($datosUsuario));
                 echo json_encode($resultado);
                 exit;
+                 //FIN ENVIO ------------ 
             } else {
-                echo json_encode(['respuesta' => 0, 'accion' => 'verificar', 'text' => '#0320 - La cédula no es válida. Debe contener solo números']);
-                exit; 
+                MensajeJSON(0, 'verificar', 'La cédula no es válida. Debe contener solo números - ERROR E320');
             }
-
-        }else{ /* V2 DATOS VACIOS */
-            echo json_encode(['respuesta' => 0, 'accion' => 'verificar', 'text' => '#0200 - Datos Vacios']);
-            exit; 
+        } else{ /* V2 DATOS VACIOS */
+            MensajeJSON(0, 'verificar', 'Datos Vacios - ERROR E300'); 
         }
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'verificar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'verificar', 'Session no encontrada - ERROR E100'); 
     } 
 //------------    
 } else if(isset($_POST['correo'])){ //--------------------------- VERIFICAR CORREO
@@ -562,11 +373,9 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
 
             $correo = strtolower($_POST['correo']);
                 //validar | V3
-                if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($correo) < 5 || strlen($correo) > 200) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'verificarcorreo', 'text' => "#0310 - Correo inválido."]);
-                    exit;
-                }
-        
+                validarExpresiones('correo', $correo, "Correo  inválida (F)", "verificarcorreo");
+                
+                // ENVIO AL METODO -----------
                 $datosUsuario = [
                     'operacion' => 'verificarCorreo',
                     'datos' => [
@@ -577,14 +386,13 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                 $resultado = $objusuario->procesarUsuario(json_encode($datosUsuario));
                 echo json_encode($resultado);
                 exit; 
-          
+                //FIN ENVIO ------------ 
+
         }else{ /*2  DATOS VACIOS */
-            echo json_encode(['respuesta' => 0, 'accion' => 'verificarcorreo', 'text' => '#0200 - Datos Vacios']);
-            exit; 
+            MensajeJSON(0, 'eliminar', 'Datos Vacios - ERROR E300');  
         }
     } else{ /* 1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'verificarcorreo', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'verificarcorreo', 'Session no encontrada - ERROR E100'); 
     }
 //---------------    
 } else  if(isset($_POST['rol'])){ //-------------------------------------- VERIFICAR ROL
@@ -593,12 +401,13 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
         if (!empty($_POST['rol']) ) {  /* V2 */ 
 
             $rolValidar = $_POST['rol'];
+            
+            //validar | V3
+            validarExpresiones('rol', $rolValidar, "Correo  inválida (F)", "verifirol");
 
-            if (!preg_match('/^[0-9]{1,3}$/', $rolValidar)) {
-                echo json_encode(['respuesta' => 0, 'accion' => 'verifirol', 'text' => "#0310 - Rol inválida Formato"]);
-                exit;
-            }
                 if (ctype_digit($rolValidar)) {
+                    
+                        // ENVIO AL METODO -----------
                         $datosUsuario = [
                             'operacion' => 'verificarrol',
                             'datos' => [
@@ -609,30 +418,22 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
                         $resultado = $objusuario->procesarUsuario(json_encode($datosUsuario));
                         echo json_encode($resultado);
                         exit; 
+                        //FIN ENVIO ------------ 
+
                 } else {  /* FORMATO NO VALIDO | VERIFICAR ROL  */
-                    echo json_encode(['respuesta' => 0, 'accion' => 'verifirol', 'text' => '#0320 - Formato inválido']);
-                    exit; 
+                    MensajeJSON(0, 'verifirol', 'Formato inválido - ERROR E350'); 
                 }
         }else{ /* DATOS VACIOS | VERIFICAR ROL  */
-            echo json_encode(['respuesta' => 0, 'accion' => 'verifirol', 'text' => '#0200 - Datos Vacios']);
-            exit; 
+            MensajeJSON(0, 'verifirol', 'Datos Vacios - ERROR E300'); 
         }
     } else{ /* 1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'verifirol', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'verifirol', 'Session no encontrada - ERROR E100'); 
     } 
 //------    
 } else{ //----------------------- VISTA
 //------- 
     if ($_SESSION["nivel_rol"] == 3 && tieneAcceso(16, 1)) {
-            $bitacora = [
-                'id_persona' => $_SESSION["id"],
-                'accion' => 'Acceso a Módulo',
-                'descripcion' => 'módulo de Usuario'
-            ];
-            $bitacoraObj = new Bitacora();
-            $bitacoraObj->registrarOperacion($bitacora['accion'], 'Usuario', $bitacora);
-
+            registrarBitacora('Acceso a Usuario', "Entro al módulo de Usuario");
         $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'usuario';
         require_once 'vista/usuario.php';
     } else{

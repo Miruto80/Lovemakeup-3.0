@@ -3,6 +3,10 @@
 namespace LoveMakeup\Proyecto\Modelo;
 
 use LoveMakeup\Proyecto\Config\Conexion;
+use Dotenv\Dotenv;
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv::createImmutable(dirname(__DIR__), 'passconfig.env');
+$dotenv->load(); 
 
 class Catalogo_datos extends Conexion{
 private $objEntrega;
@@ -14,26 +18,26 @@ private $objEntrega;
 
     private function encryptClave($datos) {
         $config = [
-            'key' => "MotorLoveMakeup",
-            'method' => "AES-256-CBC"
+            'llaveprivada' => $_ENV['SMTP_KEY'],
+            'metodo' => $_ENV['SMTP_METODO']
         ];
         
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($config['method']));
-        $encrypted = openssl_encrypt($datos['clave'], $config['method'], $config['key'], 0, $iv);
+        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($config['metodo']));
+        $encrypted = openssl_encrypt($datos['clave'], $config['metodo'], $config['llaveprivada'], 0, $iv);
         return base64_encode($iv . $encrypted);
     }
 
     private function decryptClave($datos) {
         $config = [
-            'key' => "MotorLoveMakeup",
-            'method' => "AES-256-CBC"
+            'llaveprivada' => $_ENV['SMTP_KEY'],
+            'metodo' => $_ENV['SMTP_METODO']
         ];
         
         $data = base64_decode($datos['clave_encriptada']);
-        $ivLength = openssl_cipher_iv_length($config['method']);
+        $ivLength = openssl_cipher_iv_length($config['metodo']);
         $iv = substr($data, 0, $ivLength);
         $encrypted = substr($data, $ivLength);
-        return openssl_decrypt($encrypted, $config['method'], $config['key'], 0, $iv);
+        return openssl_decrypt($encrypted, $config['metodo'], $config['llaveprivada'], 0, $iv);
     }
 
 /*-----*/

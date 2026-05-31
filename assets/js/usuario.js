@@ -552,6 +552,15 @@ function enviaAjax(datos) {
         Swal.close();
         if (status == "timeout") {
           muestraMensaje("error", 2000, "Error", "Servidor ocupado, intente de nuevo");
+          desactivarLoaderBoton('#registrar');
+              desactivarLoaderBoton('#actualizar'); 
+              manejarAlerta('rolSelect', 'alertRol', true);
+                     manejarAlerta('correo', 'alertcorreo', false);
+                     manejarAlerta('cedula', 'alertcedula', false);
+                     desactivarLoaderBoton('#actualizar_permisos');
+                     desactivarLoaderBotonElemento(botonActivo);
+                        botonActivo = null; 
+
         } else {
           muestraMensaje("error", 2000, "Error", "ERROR: <br/>" + request + status + err);
         }

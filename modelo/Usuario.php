@@ -1,36 +1,38 @@
 <?php
-
 namespace LoveMakeup\Proyecto\Modelo;
-
 use LoveMakeup\Proyecto\Config\Conexion;
-
-/*||||||||||||||||||||||||||||||| METODO: TOTAL 14 ||||||||||||||||||||||||||||||*/
+use Dotenv\Dotenv;
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv::createImmutable(dirname(__DIR__), 'passconfig.env');
+$dotenv->load();
 
 class Usuario extends Conexion
 {
-    private $encryptionKey = "MotorLoveMakeup"; 
-    private $cipherMethod = "AES-256-CBC";
+    private $llaveprivada;
+    private $metodocifrado;
     private $objtipousuario; 
     
     function __construct() {
         parent::__construct();
+        $this->llaveprivada = $_ENV['SMTP_KEY'];
+        $this->metodocifrado = $_ENV['SMTP_METODO'];
         $this->objtipousuario = new TipoUsuario();
     }
 
 /*|||||||||||||||||||||||||||||||||||||| ENCRIPTACION DE CLAVE  |||||||||||||||||||||||||||||||||| 01 ||*/   
     private function encryptClave($clave) {
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->cipherMethod)); 
-        $encrypted = openssl_encrypt($clave, $this->cipherMethod, $this->encryptionKey, 0, $iv);
+        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->metodocifrado)); 
+        $encrypted = openssl_encrypt($clave, $this->metodocifrado, $this->llaveprivada, 0, $iv);
         return base64_encode($iv . $encrypted);
     }
 
     /*|||||||||||||||||||||||||||||||||||| DESINCRIPTACION DE CLAVE  ||||||||||||||||||||||||||||||||| 02 |||*/
     private function decryptClave($claveEncriptada) {
         $data = base64_decode($claveEncriptada);
-        $ivLength = openssl_cipher_iv_length($this->cipherMethod);
+        $ivLength = openssl_cipher_iv_length($this->metodocifrado);
         $iv = substr($data, 0, $ivLength);
         $encrypted = substr($data, $ivLength);
-        return openssl_decrypt($encrypted, $this->cipherMethod, $this->encryptionKey, 0, $iv);
+        return openssl_decrypt($encrypted, $this->metodocifrado, $this->llaveprivada, 0, $iv);
     }
 
 /*||||||||||||||||||||||||||||||||||||||||||||||||||  OPERACIONES  ||||||||||||||||||||||||||||||||||||||||| 03 ||||*/    
@@ -42,6 +44,7 @@ class Usuario extends Conexion
         try {
             switch ($operacion) {
                 case 'registrar':
+                      // VALIDAR ANTES DE REGISTRAR
                     if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                         return ['respuesta' => 0, 'accion' => 'incluir', 'text' => 'La cédula ya está registrada'];
                     }
@@ -51,11 +54,13 @@ class Usuario extends Conexion
                     if (!$this->verificarExistenciaROL(['id_rol' => $datosProcesar['id_rol']])) {
                         return ['respuesta' => 0,'accion' => 'incluir', 'text' => 'el rol no existe'];
                     } 
+                    // IR AL METODO DE REGISTRAR
                     $datosProcesar['clave'] = $this->encryptClave($datosProcesar['clave']);
                     return $this->ejecutarRegistro($datosProcesar);
                     
                case 'actualizar':
                    
+                    //VALIDAR ANTES DE MODIFICAR
                     if ($datosProcesar['cedula'] !== $datosProcesar['cedula_actual']) {
                         if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                             return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'La cédula ya está registrada'];
@@ -75,15 +80,18 @@ class Usuario extends Conexion
                     if (!$this->verificarExistenciaROL(['id_rol' => $datosProcesar['id_rol']])) {
                         return ['respuesta' => 0,'accion' => 'actualizar', 'text' => 'el rol no existe'];
                     } 
-                    
+
+                    // IR AL METODO DE ACTUALIZAR
                     return $this->ejecutarActualizacion($datosProcesar);
                     
                 case 'eliminar':
 
+                    //VALIDAR ANTES DE ELIMINAR
                     if (!$this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                         return ['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'el usuario no existe'];
                     }
 
+                    // IR AL METODO ELIMINAR
                     return $this->ejecutarEliminacion($datosProcesar);
 
                 case 'verificar':
@@ -246,33 +254,42 @@ class Usuario extends Conexion
 
 /*||||||||||||||||||||||||||||||| ELIMINAR USUARIO (LOGICO)  |||||||||||||||||||||||||| 06 ||||*/
     private function ejecutarEliminacion($datos) {
-        $conex = $this->getConex2();
-        try {
-            $conex->beginTransaction();
+    $conex = $this->getConex2();
+    try {
+        $conex->beginTransaction();
+
+        $sqlbloqueo = "SELECT cedula FROM usuario WHERE cedula = :cedula FOR UPDATE"; // BLOQUEO
+        $stmtbloqueo = $conex->prepare($sqlbloqueo);
+        $stmtbloqueo->execute($datos);
+        
+        if (!$stmtbloqueo->fetch()) {
+            $conex->rollBack();
+            return ['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'Registro no encontrado'];
+        }
+
+        $sql = "UPDATE usuario SET estatus = 0 WHERE cedula = :cedula"; // EJECUTA LA ACCION
+        $stmt = $conex->prepare($sql);
+        $resultado = $stmt->execute($datos);
+
+        if ($resultado) {
             
-            $sql = "UPDATE usuario SET estatus = 0 WHERE cedula = :cedula";
-            
-            $stmt = $conex->prepare($sql);
-            $resultado = $stmt->execute($datos);
-            
-            if ($resultado) {
-                $conex->commit();
-                $conex = null;
-                return ['respuesta' => 1, 'accion' => 'eliminar'];
-            }
-            
+            $conex->commit(); // Aquí se libera 
+            $conex = null;
+            return ['respuesta' => 1, 'accion' => 'eliminar'];
+        }
+
+        $conex->rollBack(); // Liberación en caso de fallo
+        $conex = null;
+        return ['respuesta' => 0, 'accion' => 'eliminar'];
+
+    } catch (\PDOException $e) {
+        if ($conex) {
             $conex->rollBack();
             $conex = null;
-            return ['respuesta' => 0, 'accion' => 'eliminar'];
-            
-        } catch (\PDOException $e) {
-            if ($conex) {
-                $conex->rollBack();
-                $conex = null;
-            }
-            throw $e;
         }
+        throw $e;
     }
+}
 
 /*||||||||||||||||||||||||||||||| VERIFICAR CEDULA Y CORREO  ||||||||||||||||||||||||| 07 |||||*/    
     private function verificarExistencia($datos) {
@@ -303,7 +320,7 @@ private function verificarExistenciaROL($datos) {
 
         $sql = "SELECT COUNT(*) FROM rol WHERE id_rol = :id_rol";
 
-         $paramUpdate = [
+        $paramUpdate = [
             'id_rol' => $datos['id_rol']
     
         ];
