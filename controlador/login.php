@@ -12,6 +12,19 @@ require_once 'assets/ajuste/validaciones.php';
 
 $objlogin = new Login();
 
+function registrarBitacora($accion, $descripcion) {
+    //FUNCION PARA REGISTRAR LA BITACORA
+    $datos = [
+        'id_persona'  => $_SESSION["id"],
+        'accion'      => $accion,
+        'descripcion' => $descripcion
+    ];
+
+    // Instanciamos y registramos
+    $bitacoraObj = new Bitacora();
+    return $bitacoraObj->registrarOperacion($accion, 'Login', $datos);
+}
+
 if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  INGRESAR AL SISTEMA */
     if (empty($_SESSION['id'])) { /* V1 */
         if ( !empty($_POST['fecha']) && !empty($_POST['usuario']) && !empty($_POST['clave'])&& !empty($_POST['tipo_documento'])) {
@@ -105,8 +118,8 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                                 MensajeJSON(1, 'ingresar', '');  
                                 
                             } else if ($_SESSION["nivel_rol"] == 2 || $_SESSION["nivel_rol"] == 3) {
+                                RegistrarBitacora('Acceso al sistema', "Entro al panel administrativo el usuario: {$_SESSION['documento']} - {$_SESSION["id"]}, {$_SESSION['nombre']} {$_SESSION["apellido"]}");
                                 MensajeJSON(2, 'ingresar', '');  
-
                             } else {
                                 MensajeJSON(0, 'ingresar', 'Su nivel de acceso no está definido.');  
                             }

@@ -12,3 +12,6 @@ passconfig.env
 # PHPUnit
 .phpunit.result.cache
 /tests/.phpunit.result.cache
+
+#Llaves privadas
+/config/jwt_private.pem
