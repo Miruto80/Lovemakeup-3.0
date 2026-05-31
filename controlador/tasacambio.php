@@ -1,6 +1,7 @@
 <?php
-use LoveMakeup\Proyecto\Modelo\Tasacambio;  
+use LoveMakeup\Proyecto\Modelo\TasaCambio;   
 use LoveMakeup\Proyecto\Modelo\Bitacora; 
+
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -12,24 +13,60 @@ if (!empty($_SESSION['id'])) {
 
 require_once 'permiso.php';
 require_once 'assets/ajuste/validaciones.php';
-//---
-$objtasa = new Tasacambio();
-//---
-   function registrarBitacora($accion, $descripcion) {
-        //FUNCION PARA REGISTRAR LA BITACORA
-        $datos = [
-            'id_persona'  => $_SESSION["id"],
-            'accion'      => $accion,
-            'descripcion' => $descripcion
-        ];
 
-        // Instanciamos y registramos
-        $bitacoraObj = new Bitacora();
-        return $bitacoraObj->registrarOperacion($accion, 'Tasa de Cambio', $datos);
+$objtasa = new TasaCambio();
+
+/**
+ * FUNCION PARA REGISTRAR LA BITACORA
+ */
+function registrarBitacora($accion, $descripcion) {
+    $datos = [
+        'id_persona'  => $_SESSION["id"],
+        'accion'      => $accion,
+        'descripcion' => $descripcion
+    ];
+
+    // Instanciamos y registramos
+    $bitacoraObj = new Bitacora();
+    return $bitacoraObj->registrarOperacion($accion, 'Tasa de Cambio', $datos);
+}
+
+/**
+ * FUNCION PARA VALIDAR ENTRADAS CONTRA INYECCION SQL
+ */
+function validarEntradaSQL($input) {
+    // Si es array → validar cada elemento
+    if (is_array($input)) {
+        foreach ($input as $valor) {
+            if (!validarEntradaSQL($valor)) { 
+                return false;
+            }
+        }
+        return true;
     }
+    // Convertir a string por seguridad
+    $input = (string)$input;
+
+    $blacklist = [
+        'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
+        'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
+        'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
+        '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
+        'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
+    ];
+
+    foreach ($blacklist as $keyword) {
+        if (stripos($input, $keyword) !== false) {
+            return false;
+        }
+    }
+    return true;
+}
+
 //---
 $registro = $objtasa->consultar();
 //---
+
 if(isset($_POST['modificar'])){
 //---    
     if (isset($_SESSION['id']) && !empty($_SESSION['id'])) { /* V1 */
@@ -53,41 +90,41 @@ if(isset($_POST['modificar'])){
                 ];
 
                 /// Sanitización de Entradas
-                    foreach ($campos as $nombre => $valor) {  /* V4 */ 
-                        if (!validarEntradaSQL($valor)) {
-                            MensajeJSON(0, 'modificar', "Entrada inválida detectada en el campo: $nombre");
-                        }
+                foreach ($campos as $nombre => $valor) {  /* V4 */ 
+                    if (!validarEntradaSQL($valor)) {
+                        MensajeJSON(0, 'modificar', "Entrada inválida detectada en el campo: $nombre");
                     }
-                        // Validar formato de fecha
-                        $fechaValidada = DateTime::createFromFormat('Y-m-d', $fecha);
-                        if (!$fechaValidada || $fechaValidada->format('Y-m-d') !== $fecha) {
-                            echo "$fecha";
-                            MensajeJSON(0, 'modificar', 'Formato de fecha inválido - ERROR E520');
-                        }
+                }
+                
+                // Validar formato de fecha
+                $fechaValidada = DateTime::createFromFormat('Y-m-d', $fecha);
+                if (!$fechaValidada || $fechaValidada->format('Y-m-d') !== $fecha) {
+                    echo "$fecha";
+                    MensajeJSON(0, 'modificar', 'Formato de fecha inválido - ERROR E520');
+                }
 
-                        validarExpresiones('dolar', $tasa, "Tasa (F) inválido", "modificar");
+                validarExpresiones('dolar', $tasa, "Tasa (F) inválido", "modificar");
 
-                        $datosTasa = [
-                            'operacion' => 'modificar',
-                            'datos' => [
-                                'fecha' => $fecha,
-                                'tasa' => $tasa,
-                                'fuente' => $fuente
-                            ]
-                        ]; 
+                $datosTasa = [
+                    'operacion' => 'modificar',
+                    'datos' => [
+                        'fecha' => $fecha,
+                        'tasa' => $tasa,
+                        'fuente' => $fuente
+                    ]
+                ]; 
 
-                        $resultado = $objtasa->procesarTasa(json_encode($datosTasa));
+                $resultado = $objtasa->procesarTasa(json_encode($datosTasa));
 
-                            if($resultado['respuesta'] == 1){
-                                $resultado1 = $objtasa->consultaTasaUltima();
-                                    if (!empty($resultado1)) {
-                                        $_SESSION["tasa"]   = $resultado1;
-                                    
-                                    }
-                                RegistrarBitacora('Modificar Tasa de Cambio', "Se Modifico la tasa manualmente, a: {$tasa}");    
-                            }
+                if($resultado['respuesta'] == 1){
+                    $resultado1 = $objtasa->consultaTasaUltima();
+                    if (!empty($resultado1)) {
+                        $_SESSION["tasa"] = $resultado1;
+                    }
+                    registrarBitacora('Modificar Tasa de Cambio', "Se Modifico la tasa manualmente, a: {$tasa}");    
+                }
 
-                        echo json_encode($resultado);
+                echo json_encode($resultado);
 
             } else{  /* V3 datos vacios */
                 MensajeJSON(0, 'modificar', 'Datos Vacios - ERROR E300');
@@ -126,42 +163,40 @@ if(isset($_POST['modificar'])){
                 ];
 
                 /// Sanitización de Entradas
-                    foreach ($campos as $nombre => $valor) {  /* V4 */ 
-                        if (!validarEntradaSQL($valor)) {
-                            MensajeJSON(0, 'sincronizar', "Entrada inválida detectada en el campo: $nombre");
-
-                        }
+                foreach ($campos as $nombre => $valor) {  /* V4 */ 
+                    if (!validarEntradaSQL($valor)) {
+                        MensajeJSON(0, 'sincronizar', "Entrada inválida detectada en el campo: $nombre");
                     }
-                        // Validar formato de fecha
-                        $fechaValidada = DateTime::createFromFormat('Y-m-d', $fecha);
-                        if (!$fechaValidada || $fechaValidada->format('Y-m-d') !== $fecha) {
-                            echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => 'Formato de fecha inválido']);
-                            exit;
-                        }
+                }
+                
+                // Validar formato de fecha
+                $fechaValidada = DateTime::createFromFormat('Y-m-d', $fecha);
+                if (!$fechaValidada || $fechaValidada->format('Y-m-d') !== $fecha) {
+                    echo json_encode(['respuesta' => 0, 'accion' => 'sincronizar', 'text' => 'Formato de fecha inválido']);
+                    exit;
+                }
 
-                        validarExpresiones('dolar', $tasa, "Tasa (F) inválido", "sincronizar");
+                validarExpresiones('dolar', $tasa, "Tasa (F) inválido", "sincronizar");
 
-                             
-                            $datosTasa = [
-                                'operacion' => 'sincronizar',
-                                'datos' => [
-                                    'fecha' => $fecha,
-                                    'tasa' => $tasa,
-                                    'fuente' => $fuente
-                                ]
-                            ]; 
+                $datosTasa = [
+                    'operacion' => 'sincronizar',
+                    'datos' => [
+                        'fecha' => $fecha,
+                        'tasa' => $tasa,
+                        'fuente' => $fuente
+                    ]
+                ]; 
 
-                            $resultado = $objtasa->procesarTasa(json_encode($datosTasa));
-                            if($resultado['respuesta'] == 1){
-                                $resultado1 = $objtasa->consultaTasaUltima();
-                                    if (!empty($resultado1)) {
-                                        $_SESSION["tasa"]   = $resultado1;
-                                    
-                                    }
-                                RegistrarBitacora('Modificar Tasa de Cambio', "Se Modifico la tasa via Internet, a: {$tasa}");    
-                            }
-                            echo json_encode($resultado);
-                            exit;
+                $resultado = $objtasa->procesarTasa(json_encode($datosTasa));
+                if($resultado['respuesta'] == 1){
+                    $resultado1 = $objtasa->consultaTasaUltima();
+                    if (!empty($resultado1)) {
+                        $_SESSION["tasa"] = $resultado1;
+                    }
+                    registrarBitacora('Modificar Tasa de Cambio', "Se Modifico la tasa via Internet, a: {$tasa}");    
+                }
+                echo json_encode($resultado);
+                exit;
 
             } else{  /* V3 datos vacios */
                 MensajeJSON(0, 'sincronizar', 'Datos Vacios - ERROR E200');
@@ -202,10 +237,9 @@ if(isset($_POST['modificar'])){
     exit;
     
 } else if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(14, 1)) {
-    RegistrarBitacora('Acceso a Módulo Tasa Cambio', "Entro al módulo de Tasa Cambio");
-    $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasacambio';
+    registrarBitacora('Acceso a Módulo Tasa Cambio', "Entro al módulo de Tasa Cambio");
+    $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'tasaCambio';
     require_once 'vista/tasacambio.php'; // Asegúrate de tener esta vista
 } else {
     require_once 'vista/seguridad/privilegio.php';
 }
-
