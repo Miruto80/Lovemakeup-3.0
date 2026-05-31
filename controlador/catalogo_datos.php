@@ -16,47 +16,11 @@ if (!empty($_SESSION['id'])) {
     require_once 'permiso.php';
 }
 
+require_once 'assets/ajuste/validaciones.php';
 $objdatos = new Catalogo_datos();
-
- function validarEntradaSQL($input) {
-        // Si es array → validar cada elemento
-        if (is_array($input)) {
-            foreach ($input as $valor) {
-                if (!validarEntradaSQL($valor)) { 
-                    return false;
-                }
-            }
-            return true;
-        }
-        // Convertir a string por seguridad
-        $input = (string)$input;
-
-        $blacklist = [
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
-            'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
-            'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
-            '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
-            'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
-        ];
-      
-        foreach ($blacklist as $prohibida) {
-            $pattern = '/\b' . preg_quote($prohibida, '/') . '\b/i'; 
-            if (preg_match($pattern, $input)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
-//Valida que el tipo_documento sea válido
-function validarTipoDocumento($tipo_documento) {
-    $tipos_validos = ['V', 'E'];
-    return in_array($tipo_documento, $tipos_validos, true);
-}
-
+//---------
 if (isset($_POST['actualizar'])) {
-
+//--------
     if (isset($_SESSION['id']) && !empty($_SESSION['id'])) { /* V1 */
         if ($_SESSION["nivel_rol"] == 1 && tieneAcceso(20, 3)) { 
 
@@ -78,46 +42,21 @@ if (isset($_POST['actualizar'])) {
                  /// Sanitización de Entradas
                 foreach ($campos as $nombree => $valor) {  /* V3 */ 
                     if (!validarEntradaSQL($valor)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0400 - Entrada inválida detectada en el campo: $nombree"]);
-                        exit;
+                        MensajeJSON(0,'actualizar',"Entrada inválida detectada en el campo: $nombree");
                     }
-                }   
-
+                }
+                
                 //Validar datos V4
-                if (!preg_match('/^[0-9]{7,8}$/', $cedula)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Cedula inválida"]);
-                    exit;
-                }
-               
-                if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($correo) < 5 || strlen($correo) > 200) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Correo inválido."]);
-                    exit;
-                }
-                
-                if (!preg_match('/^[A-Za-z]{1}$/', $documento)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Documento inválido."]);
-                    exit;
-                }
-
-                if (!preg_match('/^[0-9]{4}-[0-9]{7}$/', $telefono)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Teléfono inválido"]);
-                    exit;
-                }
-                
-                if (!preg_match('/^[A-Za-z]{3,20}$/', $nombre)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Nombre inválido"]);
-                    exit;
-                }
-                
-                if (!preg_match('/^[A-Za-z]{3,20}$/', $apellido)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0410 - Apellido inválido"]);
-                    exit;
-                }
+                validarExpresiones('cedula', $cedula, "Cedula (F) inválida","actualizar");
+                validarExpresiones('correo', $correo, "Correo (F) inválida","actualizar");
+                validarExpresiones('documento', $documento, "Tipo de Documento (F) inválida","actualizar");
+                validarExpresiones('telefono', $telefono, "Telefono (F) inválida","actualizar");
+                validarExpresiones('nombre', $nombre, "Nombre (F) inválida","actualizar");
+                validarExpresiones('apellido', $apellido, "Apellido (F) inválida","actualizar");
 
                 // Validar tipo_documento
                 if (!validarTipoDocumento($documento)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0420 - El tipo de documento no es válido']);
-                    exit;
+                    MensajeJSON(0,'actualizar','El tipo de documento no es válido - ERROR E520');
                 }
         
                     $datosCliente = [
@@ -131,11 +70,11 @@ if (isset($_POST['actualizar'])) {
                             'telefono' => $telefono,
                             'tipo_documento' => $documento,
                             'cedula_actual' =>$cedula_actual,
-                            'correo_actual' => $correo_actual                        ]
+                            'correo_actual' => $correo_actual                        
+                        ]
                     ];
 
                     $resultado = $objdatos->procesarCliente(json_encode($datosCliente));
-                
                         if ($resultado['respuesta'] == 1) {
                             $id_usuario = $_SESSION["id_usuario"];
                             $resultado1 = $objdatos->consultardatos($id_usuario);
@@ -152,26 +91,22 @@ if (isset($_POST['actualizar'])) {
                                     $_SESSION["id"]   = $datos["cedula"];
                                 }
                         } 
-                
                     echo json_encode($resultado);
                     exit;   
             } else{
-                echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0200 - Datos Vacios']);
-                exit; 
+                MensajeJSON(0,'actualizar','Datos Vacios - ERROR E300');
             }
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#3200 - No puedes realizar esta operacion, intente mas tarde']);
-            exit;
+            MensajeJSON(0,'actualizar','No puedes realizar esta operacion, intente mas tarde - ERROR E200');
         }  
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0,'actualizar','Session no encontrada - ERROR E100');
     }     
-
+//------------------------
 } else if(isset($_POST['eliminar'])){ // ||||||||||||||||||||||||||||||||||||||||||||||||||||||| ELIMINAR CLIENTE 
+//------------------------    
     if (isset($_SESSION['id']) && !empty($_SESSION['id'])) { /* V1 */
       if ($_SESSION["nivel_rol"] == 1 && tieneAcceso(20, 4)) { 
-
         if(!empty($_POST['persona'])){/* V2 */
             $persona = $_POST['persona']; 
         
@@ -181,19 +116,14 @@ if (isset($_POST['actualizar'])) {
                  /// Sanitización de Entradas
                 foreach ($campos as $nombree => $valor) {  /* V3 */ 
                     if (!validarEntradaSQL($valor)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => "#0300 - Entrada inválida detectada en el campo: $nombree"]);
-                        exit;
+                        MensajeJSON(0,'eliminar',"Entrada inválida detectada en el campo: $nombree");
                     }
                 }   
 
                 //Validar datos V4
-                if (!preg_match('/^[0-9]{7,8}$/', $persona)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => "#0410 - Datos invalidos"]);
-                    exit;
-                }
+                validarExpresiones('cedula', $persona, "Datos (F) inválida","actualizar");
 
                 if($persona === $_SESSION['id']){
-
                     $datosCliente = [
                             'operacion' => 'eliminar',
                             'datos' => [
@@ -203,44 +133,34 @@ if (isset($_POST['actualizar'])) {
                     ];
 
                     $resultado = $objdatos->procesarCliente(json_encode($datosCliente));
-                        
                         if ($resultado['respuesta'] == 1) {
-
                             echo json_encode($resultado);
                             session_destroy();
                             exit;
                         } else{
-
                             echo json_encode($resultado);
                             exit;
                         }
 
                 } else{
-                    echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'La datos de la persona no encontrados ']);
-                    exit; 
+                    MensajeJSON(0,'eliminar','La datos de la persona no encontrados');
                 }
-              
             } else{
-                echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => '#0200 - datos vacios']);
-                exit; 
+                MensajeJSON(0,'eliminar','Datos Vacios - ERROR E300');
             }
-
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => '#3200 - No puedes realizar esta operacion, intente mas tarde']);
-            exit;
+            MensajeJSON(0,'eliminar','No puedes realizar esta operacion, intente mas tarde - ERROR E200');
         }  
-    
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0,'eliminar','Session no encontrada - ERROR E100');
     }  
- 
+//------------------------- 
 } else if(isset($_POST['actualizarclave'])){ //||||||||||||||||||||||||||||||||||||||||||||||||||||| ACTUALIZAR CLAVE
+//-------------------------
     if (isset($_SESSION['id']) && !empty($_SESSION['id'])) { /* V1 */
      if ($_SESSION["nivel_rol"] == 1 && tieneAcceso(20, 3)) { 
 
         if(!empty($_POST['clave'])&&!empty($_POST['clavenueva'])){ 
-
             $clave = $_POST['clave']; $clavenueva = $_POST['clavenueva'];
 
             $campos = [
@@ -250,20 +170,12 @@ if (isset($_POST['actualizar'])) {
                  /// Sanitización de Entradas
                 foreach ($campos as $nombre => $valor) {  /* V3 */ 
                     if (!validarEntradaSQL($valor)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'clave', 'text' => "#0300 - Entrada inválida detectada en el campo: $nombre"]);
-                        exit;
+                        MensajeJSON(0,'clave',"Entrada inválida detectada en el campo: $nombre");
                     }
                 }   
                     //Validar datos V4
-                    if (!preg_match('/^[A-Za-z0-9\.\$\#\*\/]{8,16}$/', $clave)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'clave', 'text' => "#0410 - Clave inválida"]);
-                        exit;
-                    }
-
-                    if (!preg_match('/^[A-Za-z0-9\.\$\#\*\/]{8,16}$/', $clavenueva)) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'clave', 'text' => "#0410 - Clave (N) inválida"]);
-                        exit;
-                    }
+                    validarExpresiones('clave', $clave, "Clave (F) inválida","clave");
+                    validarExpresiones('clave', $clavenueva, "Clave Nueva(F) inválida","clave");
 
                         $datosCliente = [
                             'operacion' => 'actualizarclave',
@@ -275,26 +187,21 @@ if (isset($_POST['actualizar'])) {
                         ];
 
                         $resultado = $objdatos->procesarCliente(json_encode($datosCliente));
-
                         echo json_encode($resultado);
                         exit;
 
             }else{ // datos vacios
-                echo json_encode(['respuesta' => 0, 'accion' => 'clave', 'text' => '#0200 - Datos Vacios']);
-                exit;
+                MensajeJSON(0,'clave','Datos Vacios - ERROR E300');
             }
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'clave', 'text' => '#3200 - No puedes realizar esta operacion, intente mas tarde']);
-            exit;
+            MensajeJSON(0,'clave','No puedes realizar esta operacion, intente mas tarde - ERROR E200');
         }  
-
     } else{ /* V1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'clave', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0,'clave','Session no encontrada - ERROR E100');
     }  
      
-} if ($sesion_activa) {
-     if($_SESSION["nivel_rol"] == 1  && tieneAcceso(20, 1))  { 
+}else if ($sesion_activa) {
+    if($_SESSION["nivel_rol"] == 1  && tieneAcceso(20, 1))  { 
       require_once('vista/tienda/catalogo_datos.php');
     } else{
         header('Location: ?pagina=catalogo');

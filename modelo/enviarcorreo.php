@@ -19,7 +19,7 @@ function enviarCodigoRecuperacion($correo, $codigo) {
         $mail->Password   = $_ENV['SMTP_PASS']; 
         $mail->SMTPSecure = 'tls';
         $mail->Port = $_ENV['SMTP_PORT'];
-
+ 
         $mail->setFrom($_ENV['SMTP_USER'], 'Love Makeup');
         $mail->addAddress($correo);
         $mail->Subject = 'Codigo de Recuperacion de Clave';
@@ -99,7 +99,7 @@ function enviarCodigoRecuperacion($correo, $codigo) {
 
 
       <div class='footer'>
-        © 2025 LoveMakeup C.A. Todos los derechos reservados.
+        © 2026 Estudiantes UPTAEB T4 | LoveMakeup C.A . Todos los derechos reservados.
       </div>
     </div>
   </body>

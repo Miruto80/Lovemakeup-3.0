@@ -21,7 +21,8 @@ if (isset($_POST['ver_mas'])) {
     exit;
 }
 //---
-require_once 'permiso.php'; 
+require_once 'permiso.php';
+require_once 'assets/ajuste/validaciones.php';
 $objcliente = new Cliente();
 //---
 $registro = $objcliente->consultar($_SESSION['limite_cliente']);
@@ -42,40 +43,18 @@ $pedidos = $objcliente->consultarPedidos();
    
         return false;
     }
-//-----
-    function validarTipoDocumento($tipo_documento) {
-        $tipos_validos = ['V', 'E', 'J'];
-        return in_array($tipo_documento, $tipos_validos, true);
-    }
-//-----
-    function validarEntradaSQL($input) {
-        // Si es array → validar cada elemento
-        if (is_array($input)) {
-            foreach ($input as $valor) {
-                if (!validarEntradaSQL($valor)) { 
-                    return false;
-                }
-            }
-            return true;
-        }
-        // Convertir a string por seguridad
-        $input = (string)$input;
-
-        $blacklist = [
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
-            'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
-            'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
-            '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
-            'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
+    
+    function registrarBitacora($accion, $descripcion) {
+        //FUNCION PARA REGISTRAR LA BITACORA
+        $datos = [
+            'id_persona'  => $_SESSION["id"],
+            'accion'      => $accion,
+            'descripcion' => $descripcion
         ];
-      
-        foreach ($blacklist as $prohibida) {
-            $pattern = '/\b' . preg_quote($prohibida, '/') . '\b/i'; 
-            if (preg_match($pattern, $input)) {
-                return false;
-            }
-        }
-        return true;
+
+        // Instanciamos y registramos
+        $bitacoraObj = new Bitacora();
+        return $bitacoraObj->registrarOperacion($accion, 'Cliente', $datos);
     }
 //-----
 if(isset($_POST['actualizar'])){ //--------------------------------- ACTUALIZAR DATOS DEL CLIENTES
@@ -103,55 +82,28 @@ if(isset($_POST['actualizar'])){ //--------------------------------- ACTUALIZAR 
                     }
                 
                 //// Validar Datos - Validacion 5
-                if (!preg_match('/^[0-9]{7,8}$/', $Cedula)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Cedula inválida"]);
-                    exit;
-                }
-                
-                if (!filter_var($Correo, FILTER_VALIDATE_EMAIL) || strlen($Correo) < 5 || strlen($Correo) > 200) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Correo inválido."]);
-                    exit;
-                }
-                
-                if (!preg_match('/^[0-9]{1}$/', $Estatus)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Estatus inválido."]);
-                    exit;
-                }
-                
-                if (!preg_match('/^[A-Za-z]{1}$/', $Documento)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Documento inválido."]);
-                    exit;
-                }
-                
-                if (!preg_match('/^[0-9]{7,8}$/', $CedulaActual)) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Cedula inválido."]);
-                    exit;
-                }
-                
-                if (!filter_var($CorreoActual, FILTER_VALIDATE_EMAIL) || strlen($CorreoActual) < 5 || strlen($CorreoActual) > 200) {
-                    echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => "#0510 - Correo inválido."]);
-                    exit;
-                }
-                
+                validarExpresiones('cedula', $Cedula, "ROL (F) inválido", "actualizar");
+                validarExpresiones('cedula', $CedulaActual, "ROL (F) inválido", "actualizar");
+                validarExpresiones('correo', $CorreoActual, "ROL (F) inválido", "actualizar");
+                validarExpresiones('correo', $Correo, "ROL (F) inválido", "actualizar");
+                validarExpresiones('documento', $Documento, "ROL (F) inválido", "actualizar");
+                validarExpresiones('estatus', $Estatus, "ROL (F) inválido", "actualizar");
+
                     if (!validarTipoDocumento($Documento)) {  
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0520 - El tipo de documento no es válido']);
-                        exit;
+                        MensajeJSON(0, 'actualizar', 'El tipo de documento no es válido - ERROR E520');
                     }
-            
+        
                     if (!in_array($Estatus, [1, 2])) {
-                        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0520 - El estatus no es válido']);
-                        exit;
+                        MensajeJSON(0, 'actualizar', 'El estatus no es válido - ERROR E520');
                     }
 
-                        //VALIDACION EXISTENTE
+                        // VALIDACION EXISTENTE
                         $datosCliente = ['operacion' => 'verificar','datos' => ['cedula' => $CedulaActual]  ];
-        
-                        $resultadoVerificacion =$objcliente->procesarCliente(json_encode($datosCliente));
-                        if ($resultadoVerificacion['respuesta'] == 0) {
-                             echo json_encode([ 'respuesta' => 0, 'accion' => 'actualizar', 'text' => '530 - Cedula no existente' ]);
-                              exit; 
-                        } 
-                    
+                            $resultadoVerificacion =$objcliente->procesarCliente(json_encode($datosCliente));
+                                if ($resultadoVerificacion['respuesta'] == 0) {
+                                    MensajeJSON(0, 'actualizar', 'Cedula no existente - ERROR E530');
+                                }  // FIN
+                        
                             if (validarCorreoActual($registro, $CorreoActual)) { // Validar si la Correo actual si existe en la BD
                               
                                 // Envio al Modulo
@@ -168,49 +120,30 @@ if(isset($_POST['actualizar'])){ //--------------------------------- ACTUALIZAR 
                                 ];  
                     
                                 $resultado = $objcliente->procesarCliente(json_encode($datosCliente)); // Resultado 
-                        
                                     if ($resultado['respuesta'] == 1) {   // Bitacora
-                                        $bitacora = [
-                                            'id_persona' => $_SESSION["id"],
-                                            'accion' => 'Modificación de cliente',
-                                            'descripcion' => 'Se modificó el cliente con ID: ' . $datosCliente['datos']['cedula_actual'] . 
-                                                        ' Cédula: ' . $datosCliente['datos']['cedula'] . 
-                                                        ' Correo: ' . $datosCliente['datos']['correo']
-                                        ];
-                                        $bitacoraObj = new Bitacora();
-                                        $bitacoraObj->registrarOperacion($bitacora['accion'], 'cliente', $bitacora);
+                                        RegistrarBitacora('Actualizacion de cliente', "Se actualizaron los datos el cliente CI:{$CedulaActual}, cedula nueva: {$Documento}-{$Cedula}, Correo actual:
+                                                         {$CorreoActual} Correo Nuevo: {$Correo}, Estatus: {$Estatus}");
                                     }
-                    
                                 echo json_encode($resultado); /// RESULTADO DE LA MODIFICACION
-                                // Fin del envio modulo
-
+                                exit;  // Fin del envio modulo
+                               
                             } else { /// si la Correo actual no existia o esta protegida
-                                echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0530 - Correo no encontrada O protegida']);
-                                exit;
+                                MensajeJSON(0, 'actualizar', 'Correo no encontrada O protegida - ERROR E530');
                             }
 
             } else{  /* 3 */ 
-                echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0300 - Datos enviados estan vacios']);
-                exit;
+                MensajeJSON(0, 'actualizar', 'Datos Vacios - ERROR E300');
             }   
         } else{  /* 2 */ 
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0200 - No Tiene Permiso para realizar esta operacion']);
-            exit;
+            MensajeJSON(0, 'actualizar', 'No Tiene Permiso para realizar esta operacion - ERROR E200');
         }  
     } else{ /* 1 */ 
-        echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'text' => '#0100 - Session no encontrada']);
-        exit;
+        MensajeJSON(0, 'actualizar', 'Session no encontrada - ERROR E100');
     }
 //-----------
 } else if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(10, 1)) { //------------ VISTA
 //-----------    
-            $bitacora = [
-                'id_persona' => $_SESSION["id"],
-                'accion' => 'Acceso a Módulo',
-                'descripcion' => 'módulo de Cliente'
-            ];
-            $bitacoraObj = new Bitacora();
-            $bitacoraObj->registrarOperacion($bitacora['accion'], 'cliente', $bitacora);
+        RegistrarBitacora('Acceso a Módulo Cliente', "Entro al módulo de Cliente");
         $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'cliente';
         require_once 'vista/cliente.php';
 //---------        

@@ -3,7 +3,7 @@
     <div class="row justify-content-center">
       <div class="col-12">
         <div class="copyright text-center text-muted texto-secundario">
-          © 2025, ESTUDIANTE UPTAEB T3-3113 | LOVEMAKEUP C.A | Todos los derechos Reservados.
+          © 2026 ESTUDIANTE UPTAEB T4 | LOVEMAKEUP C.A | Todos los derechos Reservados.
         </div>
       </div>
     </div>
