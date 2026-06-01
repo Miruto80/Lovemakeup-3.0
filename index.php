@@ -3,7 +3,28 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
     require __DIR__ . '/vendor/autoload.php';
+    
+    use Seguridad\FileRateLimiter;
 
+    // --- INICIO DE PROTECCIÓN ---
+    
+    $limiter = new FileRateLimiter(10, 60); 
+    
+    if (!$limiter->check($_SERVER['REMOTE_ADDR'])) {
+        // 1. Limpiamos cualquier buffer de salida previo
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        // 2. Forzamos el código de estado en la cabecera real
+        header('HTTP/1.1 429 Too Many Requests', true, 429);
+        http_response_code(429);
+        
+        // 3. Imprimimos el mensaje y matamos el proceso
+        echo '<h1>429 Too Many Requests</h1><p>Has excedido el limite de seguridad.</p>';
+        flush(); // Fuerza a Apache a enviar la respuesta al cliente YA
+        exit();
+    }
     // Iniciar sesión para validar acceso (si no está ya iniciada)
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
