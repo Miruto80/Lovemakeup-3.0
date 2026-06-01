@@ -403,7 +403,7 @@ if (isset($_POST['registrar'])) { //---------------------------------- REGISTRAR
             $rolValidar = $_POST['rol'];
             
             //validar | V3
-            validarExpresiones('rol', $rolValidar, "Correo  inválida (F)", "verifirol");
+            validarExpresiones('id_fk', $rolValidar, "ROL  inválida (F)", "verifirol");
 
                 if (ctype_digit($rolValidar)) {
                     

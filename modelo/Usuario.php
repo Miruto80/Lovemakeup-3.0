@@ -45,81 +45,75 @@ class Usuario extends Conexion
             switch ($operacion) {
                 case 'registrar':
                       // VALIDAR ANTES DE REGISTRAR
-                    if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
+                    if ($this->verificarExistencia(['tabla' =>'persona','campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                         return ['respuesta' => 0, 'accion' => 'incluir', 'text' => 'La cédula ya está registrada'];
                     }
-                    if ($this->verificarExistencia(['campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
+                    if ($this->verificarExistencia(['tabla' =>'persona','campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
                         return ['respuesta' => 0, 'accion' => 'incluir', 'text' => 'El correo electrónico ya está registrado'];
                     }
-                    if (!$this->verificarExistenciaROL(['id_rol' => $datosProcesar['id_rol']])) {
-                        return ['respuesta' => 0,'accion' => 'incluir', 'text' => 'el rol no existe'];
-                    } 
+                    if ($this->verificarExistencia(['tabla' =>'rol','campo' => 'id_rol', 'valor' => $datosProcesar['id_rol']])) {
+                        return ['respuesta' => 0, 'accion' => 'incluir', 'text' => 'el rol no existe'];
+                    }
                     // IR AL METODO DE REGISTRAR
                     $datosProcesar['clave'] = $this->encryptClave($datosProcesar['clave']);
                     return $this->ejecutarRegistro($datosProcesar);
                     
                case 'actualizar':
-                   
                     //VALIDAR ANTES DE MODIFICAR
                     if ($datosProcesar['cedula'] !== $datosProcesar['cedula_actual']) {
-                        if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
+                        if ($this->verificarExistencia(['tabla' =>'persona','campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                             return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'La cédula ya está registrada'];
                         }
                     }
-
                     if ($datosProcesar['correo'] !== $datosProcesar['correo_actual']) {
-                        if ($this->verificarExistencia(['campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
+                        if ($this->verificarExistencia(['tabla' =>'persona','campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
                             return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'El correo electrónico ya está registrado'];
                         }
                     }
-
-                    if (!$this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula_actual']])) {
+                    if (!$this->verificarExistencia(['tabla' =>'persona','campo' => 'cedula', 'valor' => $datosProcesar['cedula_actual']])) {
                         return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'el usuario no existe'];
                     }
-                    
-                    if (!$this->verificarExistenciaROL(['id_rol' => $datosProcesar['id_rol']])) {
-                        return ['respuesta' => 0,'accion' => 'actualizar', 'text' => 'el rol no existe'];
-                    } 
 
+                    if (!$this->verificarExistencia(['tabla' =>'rol','campo' => 'id_rol', 'valor' => $datosProcesar['id_rol']])) {
+                        return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'el rol no existe'];
+                    } 
                     // IR AL METODO DE ACTUALIZAR
                     return $this->ejecutarActualizacion($datosProcesar);
                     
                 case 'eliminar':
-
                     //VALIDAR ANTES DE ELIMINAR
-                    if (!$this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
+                    if (!$this->verificarExistencia(['tabla' =>'persona', 'campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                         return ['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'el usuario no existe'];
                     }
-
                     // IR AL METODO ELIMINAR
                     return $this->ejecutarEliminacion($datosProcesar);
 
                 case 'verificar':
-                  if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
+                  if ($this->verificarExistencia(['tabla' =>'persona','campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                         return ['respuesta' => 1,'accion' => 'verificar','text' => 'La cédula ya está registrada' ];
                     } else {
                         return [ 'respuesta' => 0,'accion' => 'verificar','text' => 'La cédula no se encuentra registrada'];
                     }
 
                  case 'verificarCorreo':
-                    if ($this->verificarExistencia(['campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
+                    if ($this->verificarExistencia(['tabla' =>'persona','campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
                             return ['respuesta' => 1, 'accion' => 'verificarcorreo', 'text' => 'La correo ya está registrada' ];
                         } else {
                             return [ 'respuesta' => 0, 'accion' => 'verificarcorreo', 'text' => 'La correo no se encuentra registrada'  ];
                         } 
 
                 case 'verificarrol':
-                  if ($this->verificarExistenciaROL($datosProcesar)) {
-                        return ['respuesta' => 1,'accion' => 'verifirol'];
+                 if ($this->verificarExistencia(['tabla' =>'rol','campo' => 'id_rol', 'valor' => $datosProcesar['id_rol']])) {
+                        return ['respuesta' => 1, 'accion' => 'verifirol' ];
                     } else {
-                        return [ 'respuesta' => 0,'accion' => 'verifirol','text' => 'Error, no se encuentra un rol registrado'];
-                    }        
+                        return [ 'respuesta' => 0, 'accion' => 'verifirol', 'text' => 'no se encuentra un rol registrado'  ];
+                    }         
 
                 default:
                     return ['respuesta' => 0, 'accion' => 'verifirol', 'mensaje' => 'Operación no válida'];
             }
         } catch (\Exception $e) {
-            return ['respuesta' => 0, 'accion' => 'verifirol', 'mensaje' => $e->getMessage()];
+            return ['respuesta' => 0, 'accion' => 'verifirol', 'text' => $e->getMessage()];
         }
     }
 
@@ -161,7 +155,6 @@ class Usuario extends Conexion
 
     } catch (\PDOException $e) {
         if ($conex) {
-             
             $conex->rollBack();
             $conex = null;
             return ['respuesta' => 0, 'accion' => 'incluir', 'text' => $e->getMessage()];
@@ -170,14 +163,18 @@ class Usuario extends Conexion
     }
 }
 
-
 /*||||||||||||||||||||||||||||||| ACTUALIZAR DATOS DEL USUARIO  ||||||||||||||||||||||||||| 05 |||*/
    private function ejecutarActualizacion($datos) { 
     $conex = $this->getConex2();
     try {
         $conex->beginTransaction();
 
-        // 1. Actualizar datos en la tabla persona
+        // 0 - Bloqueo
+        $sqlbloqueo = "SELECT cedula  FROM persona WHERE cedula = :cedula_actual FOR UPDATE";
+        $stmtbloqueo = $conex->prepare($sqlbloqueo);
+        $stmtbloqueo->execute(['cedula_actual' => $datos['cedula_actual']]);
+
+          // 1 - Actualizar datos en la tabla persona
         $sqlPersona = "UPDATE persona 
                        SET cedula = :cedula_nueva, 
                            correo = :correo, 
@@ -190,43 +187,40 @@ class Usuario extends Conexion
             'tipo_documento' => $datos['tipo_documento'],
             'cedula_actual' => $datos['cedula_actual']
         ];
-
         $stmtPersona = $conex->prepare($sqlPersona);
         $stmtPersona->execute($paramPersona);
 
-        // 2. Actualizar datos en la tabla usuario
-        $sqlUsuario = "UPDATE usuario 
+        if ($datos['cedula'] !== $datos['cedula_actual']) {
+            // 2.2 - Actualizar la bitacora en la tabla permiso
+                $sqlbitacoraUpdate = "UPDATE bitacora 
+                                    SET cedula = :cedula_nueva 
+                                    WHERE cedula = :cedula_actual";
+
+                $datosbitacora = [
+                    'cedula_nueva' => $datos['cedula'],
+                    'cedula_actual' => $datos['cedula_actual']
+                ];
+
+                $stmtbitacoraUpdate = $conex->prepare($sqlbitacoraUpdate);
+                $stmtbitacoraUpdate->execute($datosbitacora);
+
+                $sqlUsuario = "UPDATE usuario 
                        SET cedula = :cedula_nueva
                        WHERE cedula = :cedula_actual";
 
-        $paramUsuario = [
-            'cedula_nueva' => $datos['cedula'],
-            'cedula_actual' => $datos['cedula_actual']
-        ];
+                $paramUsuario = [
+                    'cedula_nueva' => $datos['cedula'],
+                    'cedula_actual' => $datos['cedula_actual']
+                ];
 
-        
-        $stmtUsuario = $conex->prepare($sqlUsuario);
-        $stmtUsuario->execute($paramUsuario);
+                $stmtUsuario = $conex->prepare($sqlUsuario);
+                $stmtUsuario->execute($paramUsuario);
+        }
 
-         if ($datos['cedula'] !== $datos['cedula_actual']) {
-             // 2.1 Actualizar la cédula en la tabla permiso
-            $sqlPermisoUpdate = "UPDATE permiso 
-                                SET cedula = :cedula_nueva 
-                                WHERE cedula = :cedula_actual";
-
-            $paramPermisoUpdate = [
-                'cedula_nueva' => $datos['cedula'],
-                'cedula_actual' => $datos['cedula_actual']
-            ];
-
-            $stmtPermisoUpdate = $conex->prepare($sqlPermisoUpdate);
-            $stmtPermisoUpdate->execute($paramPermisoUpdate);
-         }
-
-        // 3. Actualizar datos en la tabla usuario
+        // 3 - Actualizar datos en la tabla usuario
         $sqlUsuario2 = "UPDATE usuario 
                        SET estatus = :estatus, 
-                           id_rol = :id_rol 
+                            id_rol = :id_rol 
                        WHERE cedula = :cedula_nueva";
 
         $paramUsuario2 = [
@@ -246,6 +240,7 @@ class Usuario extends Conexion
         if ($conex) {
             $conex->rollBack();
             $conex = null;
+            return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => $e->getMessage()];
         }
         throw $e;
     }
@@ -255,49 +250,48 @@ class Usuario extends Conexion
 /*||||||||||||||||||||||||||||||| ELIMINAR USUARIO (LOGICO)  |||||||||||||||||||||||||| 06 ||||*/
     private function ejecutarEliminacion($datos) {
     $conex = $this->getConex2();
-    try {
-        $conex->beginTransaction();
+        try {
+            $conex->beginTransaction();
 
-        $sqlbloqueo = "SELECT cedula FROM usuario WHERE cedula = :cedula FOR UPDATE"; // BLOQUEO
-        $stmtbloqueo = $conex->prepare($sqlbloqueo);
-        $stmtbloqueo->execute($datos);
-        
-        if (!$stmtbloqueo->fetch()) {
-            $conex->rollBack();
-            return ['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'Registro no encontrado'];
-        }
-
-        $sql = "UPDATE usuario SET estatus = 0 WHERE cedula = :cedula"; // EJECUTA LA ACCION
-        $stmt = $conex->prepare($sql);
-        $resultado = $stmt->execute($datos);
-
-        if ($resultado) {
+            $sqlbloqueo = "SELECT cedula FROM usuario WHERE cedula = :cedula FOR UPDATE"; // BLOQUEO
+            $stmtbloqueo = $conex->prepare($sqlbloqueo);
+            $stmtbloqueo->execute($datos);
             
-            $conex->commit(); // Aquí se libera 
-            $conex = null;
-            return ['respuesta' => 1, 'accion' => 'eliminar'];
-        }
+            if (!$stmtbloqueo->fetch()) {
+                $conex->rollBack();
+                return ['respuesta' => 0, 'accion' => 'eliminar', 'text' => 'Registro no encontrado'];
+            }
 
-        $conex->rollBack(); // Liberación en caso de fallo
-        $conex = null;
-        return ['respuesta' => 0, 'accion' => 'eliminar'];
+            $sql = "UPDATE usuario SET estatus = 0 WHERE cedula = :cedula"; // EJECUTA LA ACCION
+            $stmt = $conex->prepare($sql);
+            $resultado = $stmt->execute($datos);
 
-    } catch (\PDOException $e) {
-        if ($conex) {
-            $conex->rollBack();
+            if ($resultado) {
+                $conex->commit(); // Aquí se libera 
+                $conex = null;
+                return ['respuesta' => 1, 'accion' => 'eliminar'];
+            }
+
+            $conex->rollBack(); // Liberación en caso de fallo
             $conex = null;
+            return ['respuesta' => 0, 'accion' => 'eliminar'];
+
+        } catch (\PDOException $e) {
+            if ($conex) {
+                $conex->rollBack();
+                $conex = null;
+            }
+            throw $e;
         }
-        throw $e;
     }
-}
 
 /*||||||||||||||||||||||||||||||| VERIFICAR CEDULA Y CORREO  ||||||||||||||||||||||||| 07 |||||*/    
     private function verificarExistencia($datos) {
     $conex = $this->getConex2();
     try {
         $conex->beginTransaction();
-        $sql = "SELECT COUNT(*) FROM persona 
-                WHERE ({$datos['campo']} = :valor)";
+        $sql = "SELECT COUNT(*) 
+                FROM {$datos['tabla']} WHERE {$datos['campo']} = :valor FOR UPDATE";
 
         $stmt = $conex->prepare($sql);
         $stmt->execute(['valor' => $datos['valor']]);
@@ -307,34 +301,8 @@ class Usuario extends Conexion
         $conex = null;
         return $existe;
     } catch (\PDOException $e) {
-        if ($conex) $conex = null;
-        throw $e;
-    }
-}
-
-
-private function verificarExistenciaROL($datos) {
-    $conex = $this->getConex2();
-    try {
-        $conex->beginTransaction();
-
-        $sql = "SELECT COUNT(*) FROM rol WHERE id_rol = :id_rol";
-
-        $paramUpdate = [
-            'id_rol' => $datos['id_rol']
-    
-        ];
-
-        $stmt = $conex->prepare($sql);
-        $stmt->execute($paramUpdate);
-        $existe = $stmt->fetchColumn() > 0;
-
-        $conex->commit();
+        if ($conex) 
         $conex = null;
-        return $existe;
-
-    } catch (\PDOException $e) {
-        if ($conex) $conex = null; 
         throw $e;
     }
 }
@@ -343,7 +311,6 @@ private function verificarExistenciaROL($datos) {
     public function consultar($limite = 100) {
         $conex = $this->getConex2();
         try {
-            $conex->beginTransaction();
             $sql = "SELECT  
                         per.*, 
                         ru.id_rol, 
@@ -359,11 +326,10 @@ private function verificarExistenciaROL($datos) {
                     ORDER BY u.id_usuario DESC LIMIT :limite";
                     
             $stmt = $conex->prepare($sql);
-           $stmt->bindParam(':limite', $limite, \PDO::PARAM_INT);
-
+            $stmt->bindParam(':limite', $limite, \PDO::PARAM_INT);
             $stmt->execute();
+
             $resultado = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $conex->commit();
             $conex = null;
             return $resultado;
         } catch (\PDOException $e) {
