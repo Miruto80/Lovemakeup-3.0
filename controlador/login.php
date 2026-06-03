@@ -86,9 +86,15 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                         $_SESSION["id"] = $resultado->cedula;
                         $_SESSION["rol"] = $resultado->id_rol;
 
+                        // VERIFICAMOS LOS PERMISOS
                         $id_persona = $_SESSION["rol"]; 
                         $resultadopermiso = $objlogin->consultar($id_persona);
-                        $_SESSION["permisos"] = $resultadopermiso;
+                        if (!$resultadopermiso || empty($resultadopermiso)) {
+                            session_destroy();
+                            MensajeJSON(0, 'ingresar', 'No tienes un Cargo asignados. Por favor, contacta al administrador..');  
+                        } else {
+                            $_SESSION["permisos"] = $resultadopermiso;
+                        }
 
                         $_SESSION['id_usuario']= $resultado->id_usuario;
                         $_SESSION['documento']= $resultado->tipo_documento;
@@ -99,7 +105,7 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                         $_SESSION["telefono"] = $resultado->telefono;
                         $_SESSION["correo"] = $resultado->correo;
 
-                            if($dolar >= 1){
+                            if($dolar >= 1){ // la tasa del dolar se actualiza
                                 $datosLogin = [
                                     'operacion' => 'dolar',
                                     'datos' => [
