@@ -15,9 +15,8 @@ class Olvidoclave extends Conexion{
        parent::__construct(); // Llama al constructor de la clase padre
       
     }
-
-/*||||||||||||||||||||||||||||||| ENCRIPTACION DE CLAVE  |||||||||||||||||||||||||  01  |||||*/        
-     private function encryptClave($datos) {
+//--------------------      
+     private function encryptClave($datos) { //------------------------------------------------------- [CIFRAR CLAVE]
             $config = [
                 'llaveprivada' => $_ENV['SMTP_KEY'],
                 'metodo' => $_ENV['SMTP_METODO']
@@ -27,9 +26,8 @@ class Olvidoclave extends Conexion{
             $encrypted = openssl_encrypt($datos['clave'], $config['metodo'], $config['llaveprivada'], 0, $iv);
             return base64_encode($iv . $encrypted);
     }
-
-/*||||||||||||||||||||||||||||||| DESINCRIPTACION DE CLAVE   |||||||||||||||||||||||||  02  |||||*/        
-    private function decryptClave($datos) {
+//---------------     
+    private function decryptClave($datos) { //---------------------------------------------[DECIFRAR CLAVE]
         $config = [
             'llaveprivada' => $_ENV['SMTP_KEY'],
             'metodo' => $_ENV['SMTP_METODO']
@@ -41,10 +39,8 @@ class Olvidoclave extends Conexion{
         $encrypted = substr($data, $ivLength);
         return openssl_decrypt($encrypted, $config['metodo'], $config['llaveprivada'], 0, $iv);
     }
-
-
-/*||||||||||||||||||||||||||||||| OPERACIONES  |||||||||||||||||||||||||  03  |||||*/         
-   public function procesarOlvido($jsonDatos) {
+//-----------------
+   public function procesarOlvido($jsonDatos) { //------------------------------------ [ OPERACIONES ]
         $datos = json_decode($jsonDatos, true);
         $operacion = $datos['operacion'];
         $datosProcesar = $datos['datos'];
@@ -66,13 +62,15 @@ class Olvidoclave extends Conexion{
             return ['respuesta' => 0, 'mensaje' => $e->getMessage()];
         }
     }
-
-
-/*||||||||||||||||||||||||||||||| ACTUALIZAR DE CLAVE USUARIO  |||||||||||||||||||||||||  06  |||||*/        
-     protected function ejecutarActualizacionUsuario($datos) {
+//-------------------
+    private function ejecutarActualizacionUsuario($datos) { //-------------------------------- [ ACTULIZAR CLAVE ] 
         $conex = $this->getConex2();
         try {
             $conex->beginTransaction();
+
+            $sqlbloqueo = "SELECT cedula FROM usuario WHERE cedula = :cedula FOR UPDATE";
+            $stmtbloqueo = $conex->prepare($sqlbloqueo);
+            $stmtbloqueo->execute(['cedula' => $datos['cedula']]);
             
             $sql = "UPDATE usuario 
                         SET  clave = :clave
@@ -86,32 +84,26 @@ class Olvidoclave extends Conexion{
             $stmt = $conex->prepare($sql);
             $resultado = $stmt->execute($parametros);
             
-            if ($resultado) {
-                $conex->commit();
-                $conex = null;
-                return ['respuesta' => 1, 'accion' => 'actualizar'];
-            }
-            
-            $conex->rollBack();
+            $conex->commit();
             $conex = null;
-            return ['respuesta' => 0, 'accion' => 'actualizar'];
+            return ['respuesta' => 1, 'accion' => 'actualizar'];
             
         } catch (\PDOException $e) {
             if ($conex) {
-                return ['respuesta' => 0, 'accion' => 'actualizar'];
                 $conex->rollBack();
                 $conex = null;
+                return ['respuesta' => 0, 'accion' => 'actualizar', 'text'=>$e->getMessage()];
             }
             throw $e;
         }
     }
-
-    private function verificarExistencia($datos) {
+//---------------------
+    private function verificarExistencia($datos) { //------------------------[ VERIFICAR EXISTENCIA ]
         $conex = $this->getConex2();
         try {
             $conex->beginTransaction();
             $sql = "SELECT COUNT(*) FROM persona 
-                    WHERE ({$datos['campo']} = :valor)";
+                    WHERE ({$datos['campo']} = :valor) FOR UPDATE";
 
             $stmt = $conex->prepare($sql);
             $stmt->execute(['valor' => $datos['valor']]);
@@ -125,6 +117,6 @@ class Olvidoclave extends Conexion{
             throw $e;
         }
     }
-   
+ //----------------  
   
 }

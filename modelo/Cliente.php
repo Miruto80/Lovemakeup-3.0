@@ -53,12 +53,143 @@ class Cliente extends Conexion{
                     return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'Operación no válida'];
             }
         } catch (\Exception $e) {
-            return ['respuesta' => 0, 'mensaje' => $e->getMessage()];
+            return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => $e->getMessage()];
         }
     }
+//-------------------
+    private function ejecutarActualizacion($datos) {//----------------------- [ ACTULIZAR DATOS DEL CLIENTE ]
+        $conex  = $this->getConex2(); // BD principal (persona, usuario)
+        $conex2 = $this->getConex1(); // BD tienda (pedido, direccion)
 
-/*||||||||||||||||||||||||||||||| CONSULTAR DATOS  |||||||||||||||||||||||||  02  |||||*/        
-        public function consultar($limite = 100) {
+        try {
+            // INICIAR TRANSACCIONES
+            $conex->beginTransaction();
+            $conex2->beginTransaction();
+
+            // BLOQUEAR LA FILA DE PERSONA 
+            $sqlLock = "SELECT cedula 
+                        FROM persona 
+                        WHERE cedula = :cedula_actual
+                        FOR UPDATE";
+            $stmtLock = $conex->prepare($sqlLock);
+            $stmtLock->execute(['cedula_actual' => $datos['cedula_actual']]);
+
+            // BLOQUEAR PEDIDOS Y DIRECCIONES (si existen)
+            $sqlLockPedidos = "SELECT id_pedido 
+                            FROM pedido 
+                            WHERE cedula = :cedula_actual
+                            FOR UPDATE";
+            $stmtLP = $conex2->prepare($sqlLockPedidos);
+            $stmtLP->execute(['cedula_actual' => $datos['cedula_actual']]);
+
+            $sqlLockDir = "SELECT id_direccion 
+                        FROM direccion 
+                        WHERE cedula = :cedula_actual
+                        FOR UPDATE";
+            $stmtLD = $conex2->prepare($sqlLockDir);
+            $stmtLD->execute(['cedula_actual' => $datos['cedula_actual']]);
+
+
+            // ACTUALIZAR PERSONA 
+            $sqlPersona = "UPDATE persona 
+                        SET cedula = :cedula_nueva,
+                            correo = :correo,
+                            tipo_documento = :tipo_documento
+                        WHERE cedula = :cedula_actual";
+            $stmtPersona = $conex->prepare($sqlPersona);
+            $stmtPersona->execute([
+                'cedula_nueva' => $datos['cedula'],
+                'correo' => $datos['correo'],
+                'tipo_documento' => $datos['tipo_documento'],
+                'cedula_actual' => $datos['cedula_actual']
+            ]);
+
+            //  ACTUALIZAR USUARIO (cédula)
+            $sqlUsuario = "UPDATE usuario 
+                        SET cedula = :cedula_nueva
+                        WHERE cedula = :cedula_actual";
+            $stmtUsuario = $conex->prepare($sqlUsuario);
+            $stmtUsuario->execute([
+                'cedula_nueva' => $datos['cedula'],
+                'cedula_actual' => $datos['cedula_actual']
+            ]);
+
+            // ACTUALIZAR USUARIO (estatus)
+            $sqlUsuario2 = "UPDATE usuario 
+                            SET estatus = :estatus
+                            WHERE cedula = :cedula_nueva";
+            $stmtUsuario2 = $conex->prepare($sqlUsuario2);
+            $stmtUsuario2->execute([
+                'cedula_nueva' => $datos['cedula'],
+                'estatus' => $datos['estatus']
+            ]);
+
+            //  SI LA CÉDULA CAMBIA - ACTUALIZAR OTRO TABLAS
+            if ($datos['cedula'] !== $datos['cedula_actual']) {
+                // PEDIDOS
+                $sqlPedido = "UPDATE pedido 
+                            SET cedula = :cedula_nueva 
+                            WHERE cedula = :cedula_actual";
+                $stmtPedido = $conex2->prepare($sqlPedido);
+                $stmtPedido->execute([
+                    'cedula_nueva' => $datos['cedula'],
+                    'cedula_actual' => $datos['cedula_actual']
+                ]);
+
+                // DIRECCIONES
+                $sqlDireccion = "UPDATE direccion 
+                                SET cedula = :cedula_nueva 
+                                WHERE cedula = :cedula_actual";
+                $stmtDireccion = $conex2->prepare($sqlDireccion);
+                $stmtDireccion->execute([
+                    'cedula_nueva' => $datos['cedula'],
+                    'cedula_actual' => $datos['cedula_actual']
+                ]);
+            }
+
+            
+
+            // CONFIRMAR AMBAS TRANSACCIONES
+            $conex->commit();
+            $conex2->commit();
+            $conex = null;
+            $conex2 = null;
+
+            return ['respuesta' => 1, 'accion' => 'actualizar'];
+
+        } catch (\PDOException $e) {
+            if ($conex){
+                $conex->rollBack();
+                $conex2 = null;
+            }  
+            if ($conex2) {
+                $conex2->rollBack(); 
+                $conex2 = null;
+            }
+            
+            return [ 'respuesta' => 0, 'accion' => 'actualizar', 'text' => $e->getMessage()];
+        }
+    }
+//-------------------
+   private function verificarExistencia($datos) { //------------------------- [ VERIFICAR SI EXISTE EN LA BD ] 
+    $conex = $this->getConex2();
+    try {
+        $sql = "SELECT COUNT(*) FROM persona 
+                WHERE ({$datos['campo']} = :valor) FOR UPDATE";
+
+        $stmt = $conex->prepare($sql);
+        $stmt->execute(['valor' => $datos['valor']]);
+        $existe = $stmt->fetchColumn() > 0;
+
+        $conex = null;
+        return $existe;
+    } catch (\PDOException $e) {
+        if ($conex) $conex = null;
+        throw $e;
+    }
+}
+//--------------
+    public function consultar($limite = 100) { // ------------------------ [ CONSULTA GENERAL PARA LA VISTA ]
             $conex = $this->getConex2();
             try {
                 $sql = "SELECT 
@@ -87,161 +218,23 @@ class Cliente extends Conexion{
                 }
                 throw $e;
             }
-        }
-
-        public function contarTotal(){
-            $conex = $this->getConex2();
+    }
+//-------------
+    public function contarTotal(){ //----------------------- [CONTAR PARA LIMITAR] 
+    $conex = $this->getConex2();
+        try {
             $sql = "SELECT COUNT(*) AS total FROM usuario WHERE estatus >= 1 AND id_rol = 2";
             $consulta = $conex->prepare($sql);
             $consulta->execute();
+
             $fila = $consulta->fetch(\PDO::FETCH_ASSOC);
             return $fila['total'];
-        }
-
-         public function consultarPedidos() {
-            $conex = $this->getConex1();
-            try {
-                $sql = "SELECT * FROM pedido";
-                        
-                $stmt = $conex->prepare($sql);
-                $stmt->execute();
-                $resultado = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            if ($conex) {
                 $conex = null;
-                return $resultado;
-            } catch (\PDOException $e) {
-                if ($conex) {
-                    $conex = null;
-                }
-                throw $e;
             }
+            throw $e;
         }
-
-/*||||||||||||||||||||||||||||||| ACTUALIZAR DATOS DEL CLIENTE  |||||||||||||||||||||||||  03  |||||*/    
-   private function ejecutarActualizacion($datos) {
-    $conex = $this->getConex2();
-     $conex2 = $this->getConex1();
-    try {
-        $conex->beginTransaction();
-        $conex2->beginTransaction();
-
-        // 1. Actualizar datos en la tabla persona
-        $sqlPersona = "UPDATE persona 
-                       SET cedula = :cedula_nueva, 
-                           correo = :correo, 
-                           tipo_documento = :tipo_documento 
-                       WHERE cedula = :cedula_actual";
-
-        $paramPersona = [
-            'cedula_nueva' => $datos['cedula'],
-            'correo' => $datos['correo'],
-            'tipo_documento' => $datos['tipo_documento'],
-            'cedula_actual' => $datos['cedula_actual']
-        ];
-
-        $stmtPersona = $conex->prepare($sqlPersona);
-        $stmtPersona->execute($paramPersona);
-
-        // 2. Actualizar datos en la tabla usuario
-        $sqlUsuario = "UPDATE usuario 
-                       SET cedula = :cedula_nueva 
-                     WHERE cedula = :cedula_actual";
-
-        $paramUsuario = [
-            'cedula_nueva' => $datos['cedula'],
-            'cedula_actual' => $datos['cedula_actual']
-        ];
-
-        $stmtUsuario = $conex->prepare($sqlUsuario);
-        $stmtUsuario->execute($paramUsuario);
-
-          // 2. Actualizar datos en la tabla usuario
-        $sqlUsuario2 = "UPDATE usuario 
-                       SET estatus = :estatus
-                     WHERE cedula = :cedula_nueva";
-
-        $paramUsuario2 = [
-            'cedula_nueva' => $datos['cedula'],
-            'estatus' => $datos['estatus']
-        ];
-
-        $stmtUsuario2 = $conex->prepare($sqlUsuario2);
-        $stmtUsuario2->execute($paramUsuario2);
-
-        if ($datos['cedula'] !== $datos['cedula_actual']) {
-          
-            // Verificar si hay pedidos con la cédula actual
-            $sqlCheckPedido = "SELECT COUNT(*) FROM pedido WHERE cedula = :cedula_actual";
-            $stmtCheckPedido = $conex2->prepare($sqlCheckPedido);
-            $stmtCheckPedido->execute(['cedula_actual' => $datos['cedula_actual']]);
-            $hayPedidos = $stmtCheckPedido->fetchColumn() > 0;
-
-            // Verificar si hay direcciones con la cédula actual
-            $sqlCheckDireccion = "SELECT COUNT(*) FROM direccion WHERE cedula = :cedula_actual";
-            $stmtCheckDireccion = $conex2->prepare($sqlCheckDireccion);
-            $stmtCheckDireccion->execute(['cedula_actual' => $datos['cedula_actual']]);
-            $hayDirecciones = $stmtCheckDireccion->fetchColumn() > 0;
-
-            // Solo actualizar si hay registros en ambas tablas
-            if ($hayPedidos || $hayDirecciones) {
-                // Actualizar pedidos
-                $sqlPedido = "UPDATE pedido SET cedula = :cedula_nueva WHERE cedula = :cedula_actual";
-                $stmtPedido = $conex2->prepare($sqlPedido);
-                $stmtPedido->execute([
-                    'cedula_nueva' => $datos['cedula'],
-                    'cedula_actual' => $datos['cedula_actual']
-                ]);
-
-                // Actualizar direcciones
-                $sqlDireccion = "UPDATE direccion SET cedula = :cedula_nueva WHERE cedula = :cedula_actual";
-                $stmtDireccion = $conex2->prepare($sqlDireccion);
-                $stmtDireccion->execute([
-                    'cedula_nueva' => $datos['cedula'],
-                    'cedula_actual' => $datos['cedula_actual']
-                ]);
-            } 
-        }
-
-        $conex->commit();
-        $conex2->commit();
-        $conex = null;
-        $conex2 = null;
-        return ['respuesta' => 1, 'accion' => 'actualizar'];
-
-    } catch (\PDOException $e) {
-        if ($conex) {
-            $conex->rollBack();
-            $conex = null;
-        }
-        if ($conex2) {
-
-            $conex2->rollBack();
-            $conex2 = null;
-        }
-        return ['respuesta' => 0, 'text' => $e->getMessage()];
     }
-}
-
-
-/*||||||||||||||||||||||||||||||| VERIFICAR CEDULA Y CORREO  |||||||||||||||||||||||||  04  |||||*/        
-   private function verificarExistencia($datos) {
-    $conex = $this->getConex2();
-    try {
-        $conex->beginTransaction();
-        $sql = "SELECT COUNT(*) FROM persona 
-                WHERE ({$datos['campo']} = :valor)";
-
-        $stmt = $conex->prepare($sql);
-        $stmt->execute(['valor' => $datos['valor']]);
-        $existe = $stmt->fetchColumn() > 0;
-
-        $conex->commit();
-        $conex = null;
-        return $existe;
-    } catch (\PDOException $e) {
-        if ($conex) $conex = null;
-        throw $e;
-    }
-}
-
-
+//--------------
 }

@@ -3,7 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
     require __DIR__ . '/vendor/autoload.php';
-    
+    /*
     use Seguridad\FileRateLimiter;
 
     // --- INICIO DE PROTECCIÓN ---
@@ -25,6 +25,8 @@ error_reporting(E_ALL);
         flush(); // Fuerza a Apache a enviar la respuesta al cliente YA
         exit();
     }
+
+    */
     // Iniciar sesión para validar acceso (si no está ya iniciada)
     if (session_status() === PHP_SESSION_NONE) {
         session_start();

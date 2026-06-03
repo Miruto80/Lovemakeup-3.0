@@ -57,7 +57,7 @@ if (isset($_POST['registrar'])) { //--------------------------------------------
                         }
                     } 
                     // VALIDAR EXPRESIONES 
-                    validarExpresiones('nombre', $nombre, "Nombre (F) inválido","registrar");
+                    validarExpresiones('nombre_numero_e', $nombre, "Nombre (F) inválido","registrar");
                     validarExpresiones('nivel_acceso', $nivel, "Nivel (F) inválido","registrar");
 
                     $datosRol = [
@@ -227,7 +227,7 @@ if (isset($_POST['registrar'])) { //--------------------------------------------
                         }
                     } 
 
-                    validarExpresiones('nombre', $nombre, "Nombre (F) inválido", "actualizar");
+                    validarExpresiones('nombre_numero_e', $nombre, "Nombre (F) inválido", "actualizar");
                     validarExpresiones('nivel_acceso', $nivel, "Nivel (F) inválido", "actualizar");
                     validarExpresiones('nivel_acceso', $nivel_actual, "Nivel actual (F) inválido", "actualizar");
                     validarExpresiones('id_fk', $id_rol, "ROL (F) inválido", "actualizar");
