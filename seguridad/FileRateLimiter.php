@@ -16,25 +16,42 @@ class FileRateLimiter {
         }
     }
 
-    public function check($ip) {
-        $file = $this->storagePath . md5($ip) . '.json';
+    public function check($ip = null) {
+        // 1. Detección de IP real (Quitamos el truco de test_ip)
+        if (!$ip) {
+            if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $ip = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+            } else {
+                $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            }
+        }
+    
+     
+    
+        $file = $this->storagePath . hash('sha256', $ip) . '.json';
         $now = time();
         $data = ['count' => 1, 'start' => $now];
-
-        if (file_exists($file)) {
-            $handle = fopen($file, 'c+');
-            if ($handle && flock($handle, LOCK_EX)) {
+    
+        // 2. Operación con el archivo (Sin mensajes en pantalla)
+        $handle = fopen($file, 'c+');
+        
+        if ($handle) {
+            if (flock($handle, LOCK_EX)) {
                 $content = stream_get_contents($handle);
+                
                 if (!empty($content)) {
-                    $data = json_decode($content, true) ?: $data;
+                    $decoded = json_decode($content, true);
+                    if ($decoded) {
+                        $data = $decoded;
+                    }
+    
+                    if (($now - $data['start']) > $this->window) {
+                        $data = ['count' => 1, 'start' => $now];
+                    } else {
+                        $data['count']++;
+                    }
                 }
-
-                if (($now - $data['start']) > $this->window) {
-                    $data = ['count' => 1, 'start' => $now];
-                } else {
-                    $data['count']++;
-                }
-
+    
                 ftruncate($handle, 0);
                 rewind($handle);
                 fwrite($handle, json_encode($data));
@@ -42,10 +59,8 @@ class FileRateLimiter {
                 flock($handle, LOCK_UN);
             }
             fclose($handle);
-        } else {
-            file_put_contents($file, json_encode($data));
         }
-
+    
         return $data['count'] <= $this->limit;
     }
 }

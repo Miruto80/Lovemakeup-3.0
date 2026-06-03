@@ -7,7 +7,7 @@ error_reporting(E_ALL);
     use Seguridad\FileRateLimiter;
 
     // --- INICIO DE PROTECCIÓN ---
-    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $limiter = new FileRateLimiter(10, 60); 
     
     if (!$limiter->check($_SERVER['REMOTE_ADDR'])) {
@@ -25,6 +25,7 @@ error_reporting(E_ALL);
         flush(); // Fuerza a Apache a enviar la respuesta al cliente YA
         exit();
     }
+}
     // Iniciar sesión para validar acceso (si no está ya iniciada)
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
