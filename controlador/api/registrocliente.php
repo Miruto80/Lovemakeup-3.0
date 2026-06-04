@@ -70,7 +70,7 @@ try {
         http_response_code(400);
         echo json_encode([
             'respuesta' => 0, 
-            'mensaje'   => isset($resultado->mensaje) ? $resultado->mensaje : 'No se pudo completar el registro.'
+            'mensaje'   => isset($resultado->text) ? $resultado->text : 'No se pudo completar el registro.'
         ]);
     }
 
