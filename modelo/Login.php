@@ -180,21 +180,16 @@ class Login extends Conexion {
             $stmtUsuario = $conex->prepare($sqlUsuario);
             $stmtUsuario->execute($paramUsuario); 
             
-            if ($stmtUsuario) {
-                $conex->commit();
-                $conex = null;
-             
-                return ['respuesta' => 1, 'accion' => 'incluir'];
-            }
-              
-            $conex->rollBack();
+           
+            $conex->commit();
             $conex = null;
-            return ['respuesta' => 0, 'accion' => 'incluir'];
+            return ['respuesta' => 1, 'accion' => 'incluir'];
             
         } catch (\PDOException $e) {
             if ($conex) {
                 $conex->rollBack();
                 $conex = null;
+                return ['respuesta' => 1, 'accion' => 'incluir', 'text' => $e->getMessage()];
             }
             throw $e;
         }

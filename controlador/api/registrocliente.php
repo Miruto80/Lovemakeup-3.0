@@ -57,8 +57,6 @@ try {
         $resultado = json_decode($resultado);
     }
 
-    // REVISIÓN DE ÉXITO: 
-    // Cambiamos la condición para que sea específica al éxito del registro
     if ($resultado && (isset($resultado->respuesta) && ((int)$resultado->respuesta == 1 || $resultado->respuesta == 'exito'))) {
         http_response_code(200);
         echo json_encode([
@@ -66,9 +64,10 @@ try {
             'mensaje'   => '¡Bienvenido! Registro completado con éxito.'
         ]);
         exit;
+
     } else {
         // Si no fue éxito, extraemos el mensaje real del modelo (ej: "Cédula duplicada")
-        $errorReal = $resultado->mensaje ?? 'La cédula o el correo ya se encuentran registrados.';
+        $errorReal = $resultado->text ?? 'La cédula o el correo ya se encuentran registrados.';
         http_response_code(400);
         echo json_encode([
             'respuesta' => 0,
