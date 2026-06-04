@@ -54,24 +54,30 @@ $datosRegistro = [
 ];
 
 try {
-    // 5. Enviamos al modelo procesarLogin (que maneja el JSON de registro)
     $resultado = $objlogin->procesarLogin(json_encode($datosRegistro));
 
-    // 6. Manejo de la respuesta del modelo
-    // Nota: Ajusta 'exito' según lo que devuelva tu procedimiento almacenado/modelo
-    if ($resultado && ($resultado->respuesta == 1 || $resultado->respuesta == 'exito')) {
-        http_response_code(201); // 201 significa "Creado"
-        echo json_encode([
-            'respuesta' => 1,
-            'mensaje'   => 'Usuario registrado correctamente.'
-        ]);
-    } else {
-        // Si el modelo devuelve un error (ej: Cédula ya existe)
+    if ($resultado) {
+        // Verificamos si la respuesta es exitosa (1)
+        if (isset($resultado->respuesta) && ($resultado->respuesta == 1 || $resultado->respuesta == 'exito')) {
+            http_response_code(201);
+            echo json_encode([
+                'respuesta' => 1,
+                'mensaje'   => 'Usuario registrado correctamente.'
+            ]);
+            exit;
+        } 
+        
+        // Si el modelo devolvió un error específico (como "Cédula ya existe")
+        // IMPORTANTE: Algunos modelos usan ->mensaje, otros ->error, otros ->msj
+        $mensajeError = $resultado->mensaje ?? $resultado->error ?? $resultado->msj ??  $resultado->text ?? 'Datos inválidos o duplicados';
+        
         http_response_code(400);
         echo json_encode([
             'respuesta' => 0, 
-            'mensaje'   => isset($resultado->text) ? $resultado->text : 'No se pudo completar el registro.'
+            'mensaje'   => $mensajeError
         ]);
+    } else {
+        throw new Exception("El modelo no devolvió ninguna respuesta.");
     }
 
 } catch (Exception $e) {
