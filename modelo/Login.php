@@ -189,7 +189,7 @@ class Login extends Conexion {
             if ($conex) {
                 $conex->rollBack();
                 $conex = null;
-                return ['respuesta' => 1, 'accion' => 'incluir', 'text' => $e->getMessage()];
+                return ['respuesta' => 0, 'accion' => 'incluir', 'text' => $e->getMessage()];
             }
             throw $e;
         }
