@@ -9,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// 1. Cargar el modelo (idéntico a tu login)
 $autoload = __DIR__ . '/../../vendor/autoload.php';
 if (file_exists($autoload)) {
     require_once $autoload;
@@ -19,27 +18,24 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\Login;
 
-// 2. Solo procesamos peticiones POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
     exit;
 }
 
-// 3. Leer el JSON que manda React Native (Axios)
 $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
 
-// Validamos que vengan los datos necesarios
+// Validación de entrada
 if (!$dataJson || !isset($dataJson['cedula']) || !isset($dataJson['nombre']) || !isset($dataJson['clave'])) {
     http_response_code(400);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos para el registro']);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos']);
     exit;
 }
 
 $objlogin = new Login();
 
-// 4. Estructuramos el array según lo espera tu modelo para la operación 'registrar'
 $datosRegistro = [
     'operacion' => 'registrar',
     'datos' => [
@@ -56,34 +52,32 @@ $datosRegistro = [
 try {
     $resultado = $objlogin->procesarLogin(json_encode($datosRegistro));
 
-    if ($resultado) {
-        // Verificamos si la respuesta es exitosa (1)
-        if (isset($resultado->respuesta) && ($resultado->respuesta == 1 || $resultado->respuesta == 'exito')) {
-            http_response_code(201);
-            echo json_encode([
-                'respuesta' => 1,
-                'mensaje'   => 'Usuario registrado correctamente.'
-            ]);
-            exit;
-        } 
-        
-        // Si el modelo devolvió un error específico (como "Cédula ya existe")
-        // IMPORTANTE: Algunos modelos usan ->mensaje, otros ->error, otros ->msj
-        $mensajeError = $resultado->mensaje ?? $resultado->error ?? $resultado->msj ??  $resultado->text ?? 'Datos inválidos o duplicados';
-        
+   
+    if (is_string($resultado)) {
+        $resultado = json_decode($resultado);
+    }
+
+    // REVISIÓN DE ÉXITO: 
+    // Cambiamos la condición para que sea específica al éxito del registro
+    if ($resultado && (isset($resultado->respuesta) && ((int)$resultado->respuesta == 1 || $resultado->respuesta == 'exito'))) {
+        http_response_code(200);
+        echo json_encode([
+            'respuesta' => 1,
+            'mensaje'   => '¡Bienvenido! Registro completado con éxito.'
+        ]);
+        exit;
+    } else {
+        // Si no fue éxito, extraemos el mensaje real del modelo (ej: "Cédula duplicada")
+        $errorReal = $resultado->mensaje ?? 'La cédula o el correo ya se encuentran registrados.';
         http_response_code(400);
         echo json_encode([
-            'respuesta' => 0, 
-            'mensaje'   => $mensajeError
+            'respuesta' => 0,
+            'mensaje'   => $errorReal
         ]);
-    } else {
-        throw new Exception("El modelo no devolvió ninguna respuesta.");
+        exit;
     }
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode([
-        'respuesta' => 0, 
-        'mensaje'   => 'Error en el servidor: ' . $e->getMessage()
-    ]);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Error de servidor: ' . $e->getMessage()]);
 }
