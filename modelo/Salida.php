@@ -94,12 +94,21 @@ class Salida extends Conexion {
                 if (!isset($detalle['precio_unitario']) || $detalle['precio_unitario'] <= 0) {
                     throw new \Exception('Precio unitario no válido en detalle');
                 }
-                // Verificar stock
-                $stock = $this->verificarStock($detalle['id_producto']);
-                if ($stock < $detalle['cantidad']) {
+
+                // Bloquear fila de producto y verificar stock en la misma transacción
+                $sql_verificar_producto = "SELECT stock_disponible FROM producto WHERE id_producto = :id_producto AND estatus = 1 FOR UPDATE";
+                $stmt_verificar_producto = $conex1->prepare($sql_verificar_producto);
+                $stmt_verificar_producto->execute(['id_producto' => $detalle['id_producto']]);
+                $stock_disponible = $stmt_verificar_producto->fetchColumn();
+
+                if ($stock_disponible === false) {
+                    throw new \Exception('El producto no existe o está inactivo');
+                }
+
+                if (intval($stock_disponible) < $detalle['cantidad']) {
                     throw new \Exception('Stock insuficiente para el producto ID: ' . $detalle['id_producto']);
                 }
-                
+
                 // Insertar detalle del pedido
                 $sql_detalle = "INSERT INTO pedido_detalles(id_pedido, id_producto, cantidad, precio_unitario) 
                                    VALUES (:id_pedido, :id_producto, :cantidad, :precio_unitario)";
@@ -110,15 +119,19 @@ class Salida extends Conexion {
                     'cantidad' => $detalle['cantidad'],
                     'precio_unitario' => $detalle['precio_unitario']
                 ]);
-                
+
                 // Actualizar stock
                 $sql_stock = "UPDATE producto SET stock_disponible = stock_disponible - :cantidad 
-                                   WHERE id_producto = :id_producto";
+                                   WHERE id_producto = :id_producto AND stock_disponible >= :cantidad";
                 $stmt_stock = $conex1->prepare($sql_stock);
                 $stmt_stock->execute([
                     'cantidad' => $detalle['cantidad'],
                     'id_producto' => $detalle['id_producto']
                 ]);
+
+                if ($stmt_stock->rowCount() === 0) {
+                    throw new \Exception('No se pudo actualizar el stock para el producto ID: ' . $detalle['id_producto']);
+                }
             }
             $conex1->commit();
             $conex1 = null;
@@ -893,8 +906,8 @@ ORDER BY p.id_pedido DESC;";
                     throw new \Exception('Precio unitario no válido en detalle');
                 }
 
-                // Verificar que el producto existe y tiene stock
-                $sql_verificar_producto = "SELECT stock_disponible, nombre FROM producto WHERE id_producto = ? AND estatus = 1";
+                // Bloquear fila de producto y verificar stock dentro de la transacción
+                $sql_verificar_producto = "SELECT stock_disponible, nombre FROM producto WHERE id_producto = ? AND estatus = 1 FOR UPDATE";
                 $stmt_verificar_producto = $conex1->prepare($sql_verificar_producto);
                 $stmt_verificar_producto->execute([$detalle['id_producto']]);
                 $producto = $stmt_verificar_producto->fetch(\PDO::FETCH_ASSOC);
@@ -925,9 +938,13 @@ ORDER BY p.id_pedido DESC;";
                 error_log("Detalle insertado para producto ID: " . $detalle['id_producto']);
 
                 // Actualizar stock
-                $sql_stock = "UPDATE producto SET stock_disponible = stock_disponible - ? WHERE id_producto = ?";
+                $sql_stock = "UPDATE producto SET stock_disponible = stock_disponible - ? WHERE id_producto = ? AND stock_disponible >= ?";
                 $stmt_stock = $conex1->prepare($sql_stock);
-                $stmt_stock->execute([$detalle['cantidad'], $detalle['id_producto']]);
+                $stmt_stock->execute([$detalle['cantidad'], $detalle['id_producto'], $detalle['cantidad']]);
+                //rowCount para asegurar que la resta se aplico
+                if ($stmt_stock->rowCount() === 0) {
+                    throw new \Exception('No se pudo actualizar el stock para el producto: ' . $producto['nombre']);
+                }
             }
 
             // Registrar métodos de pago si existen
