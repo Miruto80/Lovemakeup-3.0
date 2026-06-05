@@ -174,7 +174,7 @@ class Entrada extends Conexion {
                 }
                 
                 // Validar que el producto exista y esté activo
-                $sql = "SELECT stock_disponible, stock_maximo FROM producto WHERE id_producto = :id_producto AND estatus = 1";
+                $sql = "SELECT stock_disponible, stock_maximo FROM producto WHERE id_producto = :id_producto AND estatus = 1 LOCK IN SHARE MODE";
                 $stmt = $conex->prepare($sql);
                 $stmt->execute(['id_producto' => $id_producto]);
                 $prod_info = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -323,11 +323,10 @@ class Entrada extends Conexion {
                 }
                 
                 // Validar que el producto exista y esté activo
-                $sql = "SELECT p.stock_disponible, p.stock_maximo, COALESCE(cd.cantidad, 0) as cantidad_actual 
-                       FROM producto p 
-                       LEFT JOIN compra_detalles cd ON cd.id_producto = p.id_producto 
-                       AND cd.id_compra = :id_compra 
-                       WHERE p.id_producto = :id_producto AND p.estatus = 1";
+               $sql = "SELECT p.stock_disponible, p.stock_maximo, COALESCE(cd.cantidad, 0) as cantidad_actual 
+               FROM producto p 
+               LEFT JOIN compra_detalles cd ON cd.id_producto = p.id_producto AND cd.id_compra = :id_compra 
+               WHERE p.id_producto = :id_producto AND p.estatus = 1 LOCK IN SHARE MODE";
                 $stmt = $conex->prepare($sql);
                 $stmt->execute([
                     'id_compra' => $id_compra,
