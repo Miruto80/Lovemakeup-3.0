@@ -128,7 +128,7 @@ class Salida extends Conexion {
                     'cantidad' => $detalle['cantidad'],
                     'id_producto' => $detalle['id_producto']
                 ]);
-
+                //bloqueo rowCount para asegurar que la resta se aplico
                 if ($stmt_stock->rowCount() === 0) {
                     throw new \Exception('No se pudo actualizar el stock para el producto ID: ' . $detalle['id_producto']);
                 }
@@ -941,7 +941,7 @@ ORDER BY p.id_pedido DESC;";
                 $sql_stock = "UPDATE producto SET stock_disponible = stock_disponible - ? WHERE id_producto = ? AND stock_disponible >= ?";
                 $stmt_stock = $conex1->prepare($sql_stock);
                 $stmt_stock->execute([$detalle['cantidad'], $detalle['id_producto'], $detalle['cantidad']]);
-                //rowCount para asegurar que la resta se aplico
+                //bloqueo rowCount para asegurar que la resta se aplico
                 if ($stmt_stock->rowCount() === 0) {
                     throw new \Exception('No se pudo actualizar el stock para el producto: ' . $producto['nombre']);
                 }
