@@ -15,7 +15,6 @@ require_once 'permiso.php';
 require_once 'assets/ajuste/validaciones.php';
 
 $objtasa = new TasaCambio();
-
 /**
  * FUNCION PARA REGISTRAR LA BITACORA
  */
@@ -30,43 +29,9 @@ function registrarBitacora($accion, $descripcion) {
     $bitacoraObj = new Bitacora();
     return $bitacoraObj->registrarOperacion($accion, 'Tasa de Cambio', $datos);
 }
-
-/**
- * FUNCION PARA VALIDAR ENTRADAS CONTRA INYECCION SQL
- */
-function validarEntradaSQL($input) {
-    // Si es array → validar cada elemento
-    if (is_array($input)) {
-        foreach ($input as $valor) {
-            if (!validarEntradaSQL($valor)) { 
-                return false;
-            }
-        }
-        return true;
-    }
-    // Convertir a string por seguridad
-    $input = (string)$input;
-
-    $blacklist = [
-        'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER',
-        'CREATE', 'RENAME', 'REPLACE', 'UNION', 'JOIN', 'WHERE', 'HAVING',
-        'FROM', 'TABLE', 'DATABASE', 'SCHEMA', 'GRANT', 'REVOKE',
-        '--', ';', '#', '/*', '*/', '@@', '@', 'CHAR', 'CAST', 'CONVERT',
-        'EXEC', 'EXECUTE', 'xp_', 'sp_', 'OR', 'AND'
-    ];
-
-    foreach ($blacklist as $keyword) {
-        if (stripos($input, $keyword) !== false) {
-            return false;
-        }
-    }
-    return true;
-}
-
 //---
 $registro = $objtasa->consultar();
 //---
-
 if(isset($_POST['modificar'])){
 //---    
     if (isset($_SESSION['id']) && !empty($_SESSION['id'])) { /* V1 */
@@ -99,7 +64,6 @@ if(isset($_POST['modificar'])){
                 // Validar formato de fecha
                 $fechaValidada = DateTime::createFromFormat('Y-m-d', $fecha);
                 if (!$fechaValidada || $fechaValidada->format('Y-m-d') !== $fecha) {
-                    echo "$fecha";
                     MensajeJSON(0, 'modificar', 'Formato de fecha inválido - ERROR E520');
                 }
 

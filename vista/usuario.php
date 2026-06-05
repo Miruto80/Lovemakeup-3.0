@@ -142,6 +142,9 @@
                             <?php if ($dato['id_usuario'] == 2): ?>
                               <i class="fa-solid fa-circle-check text-primary ms-1" title="Jefa Lovemakeup C.A"></i>
                             <?php endif; ?>
+                            <?php if ($dato['id_usuario'] == $_SESSION['id_usuario']): ?>
+                              <i class="fa-solid fa-user-check text-success ms-1" title="Tu mismo"></i>
+                            <?php endif; ?>
                           </b>
                         </div>
                         <div class="texto-tercero">N° Cédula:  <?php echo $dato['tipo_documento'].'-'.$dato['cedula']; ?></div>

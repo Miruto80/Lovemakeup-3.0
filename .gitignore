@@ -15,3 +15,5 @@ passconfig.env
 
 #Llaves privadas
 /config/jwt_private.pem
+
+seguridad/data/

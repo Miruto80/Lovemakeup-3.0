@@ -19,6 +19,7 @@ function validarExpresiones($tipo, $valor, $mensaje, $accion) {
         case 'documento':      $valido = preg_match('/^[A-Za-z]{1}$/', $valor); break;//l
         case 'apellido': $valido = preg_match('/^[A-Za-z]{3,20}$/', $valor); break;//l
         case 'nombre':   $valido = preg_match('/^[A-Za-z]{3,20}$/', $valor); break;//l
+        case 'nombre_numero_e':   $valido = preg_match('/^[A-Za-z0-9 ]{3,20}$/', $valor); break;//l
         case 'correo':   $valido = filter_var($valor, FILTER_VALIDATE_EMAIL) && strlen($valor) >= 5 && strlen($valor) <= 200; break;//l
         case 'telefono': $valido = preg_match('/^[0-9]{4}-[0-9]{7}$/', $valor); break;//l
         case 'rol':      $valido = preg_match('/^[0-9]{1,3}$/', $valor); break;//1

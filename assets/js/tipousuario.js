@@ -86,7 +86,7 @@ mensaje){
 /* ||| FUNCION PARA VALIDAR ENVIO REGISTRO ||| */
 function validarCampos() {
   
-    let nombreValido = /^[a-zA-Z]{3,30}$/.test($("#nombre").val()); 
+    let nombreValido = /^[A-Za-z0-9\b\s]*$/.test($("#nombre").val()); 
     let nivelValido = $("#nivel").val() !== "";
 
     function aplicarEstado(input, valido, feedback, mensaje = "") {
@@ -112,12 +112,13 @@ $(document).ready(function() {
   });
 
   $("#nombre").on("keypress", function (e) {
-    validarkeypress(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+  validarkeypress(/^[A-Za-z0-9\b\s]*$/, e);
   });
 
   $("#nombre").on("keyup", function () {
-    validarCampo($(this),/^[a-zA-Z]{3,30}$/,
-    $("#snombre"), "El formato debe ser solo letras");
+    validarCampo( $(this),  /^[A-Za-z0-9\s]{3,30}$/,
+      $("#snombre"), "El formato debe ser letras, números y espacios (sin tildes ni Ñ)"
+    );
   });
 
   /*||| ENVIO AJAX FORMULARIO |||*/

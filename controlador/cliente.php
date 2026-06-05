@@ -27,7 +27,6 @@ $objcliente = new Cliente();
 //---
 $registro = $objcliente->consultar($_SESSION['limite_cliente']);
 $total_registros = $objcliente->contarTotal();
-$pedidos = $objcliente->consultarPedidos();
 //----
     function validarCorreoActual(array $registro, string $correoActual): bool {
         foreach ($registro as $usuario) {

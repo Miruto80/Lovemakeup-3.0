@@ -517,11 +517,11 @@ function enviaAjax(datos) {
       timeout: 10000,
       success: function (respuesta) {
         console.log(respuesta);
-         try {
+        try {
         // Eliminar contenido HTML en caso de que aparezca
         var respuestaLimpiada = respuesta.split("<!DOCTYPE html>")[0].trim();
         var lee = JSON.parse(respuestaLimpiada);
-        console.log("JSON parseado correctamente:", lee);
+             console.log("JSON parseado correctamente:", lee);
         } catch (error) {
             console.error("Error al parsear JSON:", error.message);
         }
@@ -547,7 +547,13 @@ function enviaAjax(datos) {
                 setTimeout(() => {
                     cambiarVistaConfirmacion();
                 }, 2200);
-            } else {
+            } else if (lee.respuesta === 2) {
+                muestraMensaje("error", 2000,"Error", lee.text);
+                  desactivarLoaderBoton('#validarNuevo');
+                       setTimeout(function () {
+                     location = '?pagina=login';
+                  }, 2200);
+            }else {
                 muestraMensaje("error", 2000, lee.text, "");
                  desactivarLoaderBoton('#validarNuevo');
                  }
@@ -574,7 +580,7 @@ function enviaAjax(datos) {
         }
   
         } catch (e) {
-          alert("Error en JSON " + e.name);
+             muestraMensaje("error",2000,"Error","Error en JSON " + e.name);
         }
       },
       error: function (request, status, err) {
