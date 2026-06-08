@@ -174,7 +174,7 @@ class Marca extends Conexion {
             $conex->beginTransaction();
 
            
-            $sqlCheck  = "SELECT COUNT(*) FROM marca WHERE id_marca = :id";
+            $sqlCheck  = "SELECT COUNT(*) FROM marca WHERE id_marca = :id FOR UPDATE";
             $stmtCheck = $conex->prepare($sqlCheck);
             $stmtCheck->execute(['id' => $id_marca]);
             $existe = $stmtCheck->fetchColumn();
