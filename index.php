@@ -7,8 +7,9 @@ error_reporting(E_ALL);
     use Seguridad\FileRateLimiter;
 
     // --- INICIO DE PROTECCIÓN ---
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $limiter = new FileRateLimiter(10, 60); 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $limiter = new FileRateLimiter(3, 30); 
     
     if (!$limiter->check($_SERVER['REMOTE_ADDR'])) {
         // 1. Limpiamos cualquier buffer de salida previo
@@ -20,12 +21,15 @@ error_reporting(E_ALL);
         header('HTTP/1.1 429 Too Many Requests', true, 429);
         http_response_code(429);
         
-        // 3. Imprimimos el mensaje y matamos el proceso
-        echo '<h1>429 Too Many Requests</h1><p>Has excedido el limite de seguridad.</p>';
-        flush(); // Fuerza a Apache a enviar la respuesta al cliente YA
+        // 3. Personalizamos la alerta para el error 429
+        echo '
+        <script>
+            alert("Has excedido el límite de intentos. Por favor, espera unos momentos antes de intentarlo de nuevo.");
+            window.location.href = "?pagina=login"; // Redirigir al login
+        </script>';
         exit();
     }
-    }
+}
     
     // Iniciar sesión para validar acceso (si no está ya iniciada)
     if (session_status() === PHP_SESSION_NONE) {
