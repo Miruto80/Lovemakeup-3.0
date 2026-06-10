@@ -8,28 +8,30 @@ error_reporting(E_ALL);
 
     // --- INICIO DE PROTECCIÓN ---
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $limiter = new FileRateLimiter(3, 30); 
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $limiter = new FileRateLimiter(3, 30); 
+        
+        $checkResult = $limiter->check($_SERVER['REMOTE_ADDR']);
+        
+        
+        if ($checkResult !== true) {
+            // Si el resultado no es `true`, es el tiempo restante en la blacklist
+            $timeRemaining = is_numeric($checkResult) ? $checkResult : 0;
     
-    if (!$limiter->check($_SERVER['REMOTE_ADDR'])) {
-        // 1. Limpiamos cualquier buffer de salida previo
-        if (ob_get_level() > 0) {
-            ob_end_clean();
+            // 1. Limpiamos cualquier buffer de salida previo
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            
+            // 2. Forzamos el código de estado en la cabecera real
+            header('HTTP/1.1 429 Has excedido el limite de solicitudes. Por favor, espera '. gmdate("H:i:s", $timeRemaining) . ' antes de intentarlo de nuevo.', true, 429);
+            http_response_code(429);
+            
+     
+        
+            exit();
         }
-        
-        // 2. Forzamos el código de estado en la cabecera real
-        header('HTTP/1.1 429 Too Many Requests', true, 429);
-        http_response_code(429);
-        
-        // 3. Personalizamos la alerta para el error 429
-        echo '
-        <script>
-            alert("Has excedido el límite de intentos. Por favor, espera unos momentos antes de intentarlo de nuevo.");
-            window.location.href = "?pagina=login"; // Redirigir al login
-        </script>';
-        exit();
     }
-}
     
     // Iniciar sesión para validar acceso (si no está ya iniciada)
     if (session_status() === PHP_SESSION_NONE) {
