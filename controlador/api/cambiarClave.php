@@ -14,10 +14,10 @@ $autoload = __DIR__ . '/../../vendor/autoload.php';
 if (file_exists($autoload)) {
     require_once $autoload;
 } else {
-    require_once __DIR__ . '/../../modelo/Login.php';
+    require_once __DIR__ . '/../../modelo/Datos.php';
 }
 
-use LoveMakeup\Proyecto\Modelo\Login;
+use LoveMakeup\Proyecto\Modelo\Datos;
 
 // Ruta de la clave pública para verificar tokens firmados por la app
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
@@ -108,7 +108,7 @@ if (isset($payload['exp']) && time() > (int)$payload['exp']) {
 $userCedula = isset($payload['sub']) ? $payload['sub'] : null;
 $userData = isset($payload['data']) ? $payload['data'] : null;
 
-if (!$userCedula && !$userData) {
+if ((!$userCedula && !$userData) || empty($userData['id_usuario'])) {
     http_response_code(401);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'Token sin información de usuario']);
     exit;
@@ -126,16 +126,16 @@ if (!$dataJson || !isset($dataJson['clave_actual']) || !isset($dataJson['clave_n
 $claveActual = $dataJson['clave_actual'];
 $claveNueva  = $dataJson['clave_nueva'];
 
-// Llamamos al modelo (reutilizamos Login por compatibilidad)
-$objLogin = new Login();
+// Llamamos al modelo correcto para cambiar la contraseña
+$objDatos = new Datos();
 
-// Estructuramos el request interno — adapta operación según tu modelo
+// Estructuramos el request interno usando la operación que ya existe en modelo/Datos.php
 $datosCambio = [
-    'operacion' => 'cambiar_clave',
+    'operacion' => 'actualizarclave',
     'datos' => [
-        'cedula' => $userCedula ?: ($userData['id_usuario'] ?? null),
+        'id_usuario' => $userData['id_usuario'],
         'clave_actual' => $claveActual,
-        'clave_nueva' => $claveNueva
+        'clave' => $claveNueva
     ]
 ];
 
