@@ -142,21 +142,24 @@ $datosCambio = [
 try {
     $resultado = $objDatos->procesarUsuario(json_encode($datosCambio));
 
-    if ($resultado && isset($resultado->resultado) && (int)$resultado->resultado === 1) {
-        http_response_code(200);
-        echo json_encode(['respuesta' => 1, 'mensaje' => $resultado->mensaje ?? 'Contraseña actualizada']);
-        exit;
+    if (is_string($resultado)) {
+        $resultado = json_decode($resultado, true);
     }
 
-    // Si el modelo devuelve una estructura distinta, tratamos casos comunes
-    if ($resultado && isset($resultado->respuesta) && $resultado->respuesta == 1) {
+    if (isset($resultado['respuesta']) && (int)$resultado['respuesta'] === 1) {
         http_response_code(200);
-        echo json_encode(['respuesta' => 1, 'mensaje' => $resultado->mensaje ?? 'Contraseña actualizada']);
+        echo json_encode([
+            'respuesta' => 1,
+            'mensaje' => $resultado['mensaje'] ?? $resultado['text'] ?? 'Contraseña actualizada'
+        ]);
         exit;
     }
 
     http_response_code(400);
-    echo json_encode(['respuesta' => 0, 'mensaje' => $resultado->mensaje ?? 'No se pudo actualizar la contraseña']);
+    echo json_encode([
+        'respuesta' => 0,
+        'mensaje' => $resultado['text'] ?? $resultado['mensaje'] ?? 'No se pudo actualizar la contraseña'
+    ]);
     exit;
 } catch (Exception $e) {
     http_response_code(500);
