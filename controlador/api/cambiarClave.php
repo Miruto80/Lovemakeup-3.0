@@ -140,7 +140,7 @@ $datosCambio = [
 ];
 
 try {
-    $resultado = $objLogin->procesarLogin(json_encode($datosCambio));
+    $resultado = $objDatos->procesarUsuario(json_encode($datosCambio));
 
     if ($resultado && isset($resultado->resultado) && (int)$resultado->resultado === 1) {
         http_response_code(200);
