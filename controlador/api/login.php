@@ -94,6 +94,7 @@ try {
                 'exp'  => time() + $duration,
                 'data' => [ // Data útil para que tu frontend o endpoints identifiquen al usuario
                     'id_usuario' => $resultado->id_usuario,
+                    'cedula'     => $resultado->cedula,
                     'nombre'     => $resultado->nombre,
                     'apellido'   => $resultado->apellido,
                     'id_rol'     => $resultado->id_rol,
@@ -117,6 +118,7 @@ try {
                 'respuesta' => 1,
                 'token'     => $jwt,
                 'usuario'   => [
+                    'cedula'   => $resultado->cedula,
                     'nombre'   => $resultado->nombre,
                     'apellido' => $resultado->apellido,
                     'rol'      => $resultado->nombre_rol
