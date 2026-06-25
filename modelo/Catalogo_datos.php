@@ -136,6 +136,17 @@ private $objEntrega;
             $stmtCheckDireccion->execute(['cedula_actual' => $datos['cedula_actual']]);
             $hayDirecciones = $stmtCheckDireccion->fetchColumn() > 0;
 
+            $paramUsuario = [
+                'cedula_nueva' => $datos['cedula'],
+                'cedula_actual' => $datos['cedula_actual']
+            ];
+
+            $sqlUsuario = "UPDATE usuario 
+                          SET cedula = :cedula_nueva 
+                          WHERE cedula = :cedula_actual";
+            $stmtUsuario = $conex2->prepare($sqlUsuario);
+            $stmtUsuario->execute($paramUsuario);
+
             if ($hayPedidos) {
                 $sqlPedido = "UPDATE pedido 
                               SET cedula = :cedula_nueva 
