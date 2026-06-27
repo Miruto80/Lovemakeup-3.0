@@ -47,6 +47,13 @@ class Olvidoclave extends Conexion{
         
         try {
             switch ($operacion) {
+                case 'verificar':
+                    if (!$this->verificarExistencia(['campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
+                        return ['respuesta' => 0, 'accion' => 'verificar', 'text' => 'El correo no registrado'];
+                    }
+
+                    return $this->datospersona($datosProcesar);
+
                  case 'actualizar':
 
                     if (!$this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
@@ -118,5 +125,28 @@ class Olvidoclave extends Conexion{
         }
     }
  //----------------  
+    private function datospersona($datos) { //------------------------[ VERIFICAR EXISTENCIA POR CORREO ]
+        $conex = $this->getConex2();
+        try {
+            
+            $sql = "SELECT cedula FROM persona 
+                    WHERE correo = :correo FOR UPDATE";
+
+            $stmt = $conex->prepare($sql);
+                    $stmt->execute(['correo' => $datos['correo']]);
+            
+            $cedula = $stmt->fetchColumn();
+
+            $conex = null;
+            return $cedula !== false;
+            
+        } catch (\PDOException $e) {
+            if ($conex) {
+                $conex = null;
+            }
+            throw $e;
+        }
+    }
+//-----------
   
 }
