@@ -43,6 +43,7 @@ if (!$dataJson || !isset($dataJson['correo'])) {
 $correo = trim($dataJson['correo']);
 $objolvido = new Olvidoclave();
 
+// Mantenemos la estructura idéntica a tu otra función pasando el valor
 $datosRegistro = [
     'operacion' => 'verificar',
     'datos' => [
@@ -51,36 +52,36 @@ $datosRegistro = [
 ];
 
 try {
+    // Ejecutar el modelo
+    $resultado = $objolvido->procesarOlvido(json_encode($datosRegistro));
 
-    // 1️⃣ Ejecutar el modelo
-    $datosUsuario = $objolvido->procesarOlvido(json_encode($datosRegistro));
-
-    // 2️⃣ Convertir string JSON → array
-    if (is_string($datosUsuario)) {
-        $datosUsuario = json_decode($datosUsuario, true);
+    //  Convertir string JSON → array (Igual que en tu ejemplo de Login)
+    if (is_string($resultado)) {
+        $resultado = json_decode($resultado, true);
     }
 
-    // 3️⃣ Convertir objeto → array
-    if (is_object($datosUsuario)) {
-        $datosUsuario = (array)$datosUsuario;
-    }
-
-    // 4️⃣ Validar que exista la cédula
-    if (!$datosUsuario || !isset($datosUsuario['cedula'])) {
+    // Validar la respuesta del modelo usando la sintaxis de ARRAY
+    // Tu modelo debe devolver la cédula en una clave si el correo existe
+    if (!isset($resultado['respuesta']) || $resultado['respuesta'] != 1 || !isset($resultado['cedula'])) {
+        http_response_code(400);
         echo json_encode([
             'respuesta' => 0,
-            'mensaje'   => 'Este correo no está registrado'
+            'mensaje'   => 'Este correo no está registrado en el sistema.'
         ]);
         exit;
     }
 
-    // Generar código
+    // Si pasó el IF, significa que el usuario existe y tenemos su cédula
+    $cedulaUsuario = $resultado['cedula'];
+
+    // Generar código numérico
     $codigo_recuperacion = rand(100000, 999999);
 
     // Enviar correo
     $enviado = enviarCodigoRecuperacion($correo, $codigo_recuperacion);
 
     if (!$enviado) {
+        http_response_code(500); // Error de servidor si el SMTP falla
         echo json_encode([
             'respuesta' => 2,
             'mensaje'   => 'Error al enviar el correo de recuperación'
@@ -93,11 +94,11 @@ try {
     $duration = 600;
 
     $payload = [
-        'sub'  => $datosUsuario['cedula'],
+        'sub'  => $cedulaUsuario,
         'iat'  => time(),
         'exp'  => time() + $duration,
         'data' => [
-            'cedula' => $datosUsuario['cedula'],
+            'cedula' => $cedulaUsuario,
             'codigo' => $codigo_recuperacion
         ]
     ];
@@ -112,7 +113,8 @@ try {
 
     $jwt = $signingInput . '.' . base64url_encode($signature);
 
-    // Respuesta final
+    // Respuesta final exitosa (Código 200)
+    http_response_code(200);
     echo json_encode([
         'respuesta' => 1,
         'token'     => $jwt
@@ -120,10 +122,10 @@ try {
     exit;
 
 } catch (Exception $e) {
-    http_response_code(200); // Forzamos 200 temporalmente para leer el error en la app
+    http_response_code(500);
     echo json_encode([
         'respuesta' => 0,
-        'mensaje'   => 'Error crítico: ' . $e->getMessage() . ' en línea ' . $e->getLine() . ' del archivo ' . $e->getFile()
+        'mensaje'   => 'Error crítico: ' . $e->getMessage()
     ]);
     exit;
 }

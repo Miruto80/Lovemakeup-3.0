@@ -48,7 +48,7 @@ class Olvidoclave extends Conexion{
         try {
             switch ($operacion) {
                 case 'verificar':
-                    if (!$this->verificarExistencia(['campo' => 'correo', 'valor' => $datosProcesar['correo']])) {
+                    if (!$this->verificarExistencia(['campo' => 'correo', 'valor' => $datosProcesar['valor']])) {
                         return ['respuesta' => 0, 'accion' => 'verificar', 'text' => 'El correo no registrado'];
                     }
 
@@ -125,30 +125,36 @@ class Olvidoclave extends Conexion{
         }
     }
  //----------------  
-    private function datospersona($datos) { //------------------------[ VERIFICAR EXISTENCIA POR CORREO ]
-        $conex = $this->getConex2();
-        try {
-            
-            $sql = "SELECT cedula FROM persona 
-                    WHERE correo = :correo FOR UPDATE";
-
-            $stmt = $conex->prepare($sql);
-            $correoFinal = isset($datos['valor']) ? $datos['valor'] : ($datos['correo'] ?? null);
-
-            $stmt->execute(['correo' => $correoFinal]);
-            
-            $cedula = $stmt->fetchColumn();
-
-            $conex = null;
-            return $cedula ? ['cedula' => $cedula] : false;            
+    private function datospersona($datos) { 
+    $conex = $this->getConex2();
+    try {
+        $conex->beginTransaction();
         
-            } catch (\PDOException $e) {
-            if ($conex) {
-                $conex = null;
-            }
-            throw $e;
+        $sql = "SELECT cedula FROM persona WHERE correo = :correo FOR UPDATE";
+        
+        $stmt = $conex->prepare($sql);
+        $stmt->execute(['correo' => $datos['valor']]);
+        $cedula = $stmt->fetchColumn();
+
+        $conex->commit();
+        $conex = null;
+        
+        if ($cedula) {
+            // Retornamos la estructura esperada por el controlador
+            return ['respuesta' => 1, 'cedula' => $cedula];
+        } else {
+            return ['respuesta' => 0, 'mensaje' => 'No encontrado'];
         }
+        
+    } catch (\PDOException $e) {
+        if ($conex) {
+            if ($conex->inTransaction()) $conex->rollBack();
+            $conex = null;
+        }
+        // Retornamos el error estructurado igual que en tu Login exitoso
+        return ['respuesta' => 0, 'text' => $e->getMessage()];
     }
+}
 //-----------
   
 }
