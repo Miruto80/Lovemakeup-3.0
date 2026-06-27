@@ -46,26 +46,26 @@ $objolvido = new Olvidoclave();
 $datosRegistro = [
     'operacion' => 'verificar',
     'datos' => [
-        'correo' => $correo
+        'valor' => $correo
     ]
 ];
 
 try {
 
-    // Ejecutar el modelo
+    // 1️⃣ Ejecutar el modelo
     $datosUsuario = $objolvido->procesarOlvido(json_encode($datosRegistro));
 
-    // Convertir string JSON → array
+    // 2️⃣ Convertir string JSON → array
     if (is_string($datosUsuario)) {
         $datosUsuario = json_decode($datosUsuario, true);
     }
 
-    // Convertir objeto → array
+    // 3️⃣ Convertir objeto → array
     if (is_object($datosUsuario)) {
         $datosUsuario = (array)$datosUsuario;
     }
 
-    // Validar que exista la cédula
+    // 4️⃣ Validar que exista la cédula
     if (!$datosUsuario || !isset($datosUsuario['cedula'])) {
         echo json_encode([
             'respuesta' => 0,

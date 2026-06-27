@@ -133,14 +133,16 @@ class Olvidoclave extends Conexion{
                     WHERE correo = :correo FOR UPDATE";
 
             $stmt = $conex->prepare($sql);
-                    $stmt->execute(['correo' => $datos['correo']]);
+            $correoFinal = isset($datos['valor']) ? $datos['valor'] : ($datos['correo'] ?? null);
+
+            $stmt->execute(['correo' => $correoFinal]);
             
             $cedula = $stmt->fetchColumn();
 
             $conex = null;
-            return $cedula !== false;
-            
-        } catch (\PDOException $e) {
+            return $cedula ? ['cedula' => $cedula] : false;            
+        
+            } catch (\PDOException $e) {
             if ($conex) {
                 $conex = null;
             }
