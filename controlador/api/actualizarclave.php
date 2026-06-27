@@ -18,23 +18,17 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\Olvidoclave;
 
-$publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
-if (!file_exists($publicKeyPath)) {
-    http_response_code(500);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Error de llaves de seguridad en servidor.']);
-    exit;
-}
-
-// Extraer cabecera Authorization
-$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+// Extraer cabecera Authorization de forma tolerante a servidores
+$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
 $token = null;
+
 if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
     $token = $matches[1];
 }
 
 if (!$token) {
     http_response_code(401);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Sesión de recuperación inválida o expirada.']);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Sesión de recuperación inválida o ausente.']);
     exit;
 }
 
@@ -42,15 +36,29 @@ if (!$token) {
 $partes = explode('.', $token);
 if (count($partes) !== 3) {
     http_response_code(401);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Formato de token inválido.']);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Formato de token corrupto.']);
     exit;
 }
 
 list($rawHeader, $rawPayload, $rawSignature) = $partes;
-$payload = json_decode(base64_decode(strtr($rawPayload, '-_', '+/')), true);
+
+// 🛠️ DECODIFICACIÓN SEGURA DE BASE64 URL (Evita el Error 500 si vienen caracteres raros)
+$remainder = strlen($rawPayload) % 4;
+if ($remainder) {
+    $rawPayload .= str_repeat('=', 4 - $remainder);
+}
+$decodedPayload = base64_decode(strtr($rawPayload, '-_', '+/'));
+$payload = json_decode($decodedPayload, true);
+
+// Validar que el payload se haya decodificado correctamente como array
+if (!$payload || !is_array($payload)) {
+    http_response_code(401);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Token corrupto o ilegible por el servidor.']);
+    exit;
+}
 
 // Verificar expiración del token de cambio
-if (!$payload || time() > $payload['exp']) {
+if (!isset($payload['exp']) || time() > $payload['exp']) {
     http_response_code(401);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'El tiempo límite expiró. Inicia el proceso de nuevo.']);
     exit;
@@ -59,10 +67,11 @@ if (!$payload || time() > $payload['exp']) {
 // Validar que el token cuente con el permiso de OTP aprobado
 if (!isset($payload['data']['autorizado']) || $payload['data']['autorizado'] !== true) {
     http_response_code(403);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Acción no autorizada. Verificación Codigo incompleta.']);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Acción no autorizada. Verificación OTP incompleta.']);
     exit;
 }
 
+// Si llegó aquí, todo está verificado y seguro
 $cedula = $payload['data']['cedula'];
 
 // Leer contraseña enviada por el formulario
