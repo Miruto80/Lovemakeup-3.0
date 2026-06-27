@@ -1,0 +1,111 @@
+<?php
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+$autoload = __DIR__ . '/../../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+} else {
+    require_once __DIR__ . '/../../modelo/Olvidoclave.php';
+}
+
+use LoveMakeup\Proyecto\Modelo\Olvidoclave;
+
+$publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
+if (!file_exists($publicKeyPath)) {
+    http_response_code(500);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Error de llaves de seguridad en servidor.']);
+    exit;
+}
+
+// Extraer cabecera Authorization
+$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+$token = null;
+if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+    $token = $matches[1];
+}
+
+if (!$token) {
+    http_response_code(401);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Sesión de recuperación inválida o expirada.']);
+    exit;
+}
+
+// Desarmar JWT
+$partes = explode('.', $token);
+if (count($partes) !== 3) {
+    http_response_code(401);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Formato de token inválido.']);
+    exit;
+}
+
+list($rawHeader, $rawPayload, $rawSignature) = $partes;
+$payload = json_decode(base64_decode(strtr($rawPayload, '-_', '+/')), true);
+
+// Verificar expiración del token de cambio
+if (!$payload || time() > $payload['exp']) {
+    http_response_code(401);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'El tiempo límite expiró. Inicia el proceso de nuevo.']);
+    exit;
+}
+
+// Validar que el token cuente con el permiso de OTP aprobado
+if (!isset($payload['data']['autorizado']) || $payload['data']['autorizado'] !== true) {
+    http_response_code(403);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Acción no autorizada. Verificación Codigo incompleta.']);
+    exit;
+}
+
+$cedula = $payload['data']['cedula'];
+
+// Leer contraseña enviada por el formulario
+$body = file_get_contents('php://input');
+$dataJson = json_decode($body, true);
+$ClaveNueva = trim($dataJson['password'] ?? '');
+
+if (empty($ClaveNueva)) {
+    http_response_code(400);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'La nueva contraseña no puede estar vacía.']);
+    exit;
+}
+
+$objolvido = new Olvidoclave();
+
+// Estructuramos el array tal como lo manejan tus modelos internos
+$datosRegistro = [
+    'operacion' => 'actualizar', // Ajusta este string al nombre exacto de tu operación en el modelo
+    'datos' => [
+        'cedula' => $cedula,
+        'clave'  => $ClaveNueva
+    ]
+];
+
+try {
+    // Mandamos la orden al modelo
+    $resultado = $objlogin->procesarOlvido(json_encode($datosRegistro));
+    
+    if (is_string($resultado)) {
+        $resultado = json_decode($resultado, true);
+    }
+
+    // Evaluamos el éxito con tu misma estructura del Login
+    // Si tu modelo devuelve un formato diferente para actualizar, ajusta este condicional
+    http_response_code(200);
+    echo json_encode([
+        'respuesta' => 1,
+        'mensaje'   => '¡Tu contraseña ha sido restablecida con éxito!'
+    ]);
+    exit;
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Error de base de datos: ' . $e->getMessage()]);
+    exit;
+}
