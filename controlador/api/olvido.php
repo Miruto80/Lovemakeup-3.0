@@ -17,7 +17,7 @@ if (file_exists($autoload)) {
 }
 
 require_once __DIR__ . '/../../modelo/enviarcorreo.php';
-require_once __DIR__ . '/../../config/private_key.php'; // tu clave privada
+require_once __DIR__ . '/../../config/private_key.php';
 
 use LoveMakeup\Proyecto\Modelo\Olvidoclave;
 
@@ -46,15 +46,26 @@ $objolvido = new Olvidoclave();
 $datosRegistro = [
     'operacion' => 'verificar',
     'datos' => [
-        'correo'         => $correo
+        'correo' => $correo
     ]
 ];
 
 try {
 
-    // Verificar si existe el correo
+    // Ejecutar el modelo
     $datosUsuario = $objolvido->procesarOlvido(json_encode($datosRegistro));
 
+    // Convertir string JSON → array
+    if (is_string($datosUsuario)) {
+        $datosUsuario = json_decode($datosUsuario, true);
+    }
+
+    // Convertir objeto → array
+    if (is_object($datosUsuario)) {
+        $datosUsuario = (array)$datosUsuario;
+    }
+
+    // Validar que exista la cédula
     if (!$datosUsuario || !isset($datosUsuario['cedula'])) {
         echo json_encode([
             'respuesta' => 0,
@@ -63,21 +74,23 @@ try {
         exit;
     }
 
+    // Generar código
     $codigo_recuperacion = rand(100000, 999999);
 
+    // Enviar correo
     $enviado = enviarCodigoRecuperacion($correo, $codigo_recuperacion);
 
-        if (!$enviado) {
-            echo json_encode([
-                'respuesta' => 2,
-                'mensaje'   => 'Error al enviar el correo de recuperación'
-            ]);
-            exit;
-        }
+    if (!$enviado) {
+        echo json_encode([
+            'respuesta' => 2,
+            'mensaje'   => 'Error al enviar el correo de recuperación'
+        ]);
+        exit;
+    }
 
-    // 4️⃣ Generar JWT RS256 (igual que tu login)
+    // Generar JWT RS256
     $header = ['alg' => 'RS256', 'typ' => 'JWT'];
-    $duration = 600; // 10 minutos
+    $duration = 600;
 
     $payload = [
         'sub'  => $datosUsuario['cedula'],
@@ -99,6 +112,7 @@ try {
 
     $jwt = $signingInput . '.' . base64url_encode($signature);
 
+    // Respuesta final
     echo json_encode([
         'respuesta' => 1,
         'token'     => $jwt
