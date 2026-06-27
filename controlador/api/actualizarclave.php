@@ -18,25 +18,44 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\Olvidoclave;
 
-// Extraer cabecera Authorization de forma tolerante a servidores
+// 1. Buscamos el token de todas las formas posibles en el servidor
 $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-$token = null;
 
-if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-    $token = $matches[1];
+if (empty($authHeader) && function_exists('apache_request_headers')) {
+    $headers = apache_request_headers();
+    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
 }
 
-if (!$token) {
+$token = null;
+
+// 2. Extraemos el JWT puro limpiando la palabra "Bearer" si existe
+if (!empty($authHeader)) {
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    } else {
+        $token = trim($authHeader);
+    }
+}
+
+// 3. Si no hay nada, detenemos con un mensaje claro
+if (!$token || trim($token) === '') {
     http_response_code(401);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Sesión de recuperación inválida o ausente.']);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'No se recibió ningún token en el servidor.']);
     exit;
 }
 
-// Desarmar JWT
+// 4. Limpiamos comillas o espacios raros invisibles
+$token = trim($token, '"\' ');
+
+// 5. Ahora sí, picamos el token en 3 partes de forma segura
 $partes = explode('.', $token);
 if (count($partes) !== 3) {
     http_response_code(401);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Formato de token corrupto.']);
+    echo json_encode([
+        'respuesta' => 0, 
+        'mensaje' => 'Formato de token corrupto.',
+        'debug' => "Recibido: " . substr($token, 0, 15) . "..." // Para ver qué llegó en el log
+    ]);
     exit;
 }
 
