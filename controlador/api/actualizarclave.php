@@ -117,8 +117,8 @@ $datosRegistro = [
 
 try {
     // Mandamos la orden al modelo
-    $resultado = $objlogin->procesarOlvido(json_encode($datosRegistro));
-    
+    $resultado = $objolvido->procesarOlvido(json_encode($datosRegistro));
+
     if (is_string($resultado)) {
         $resultado = json_decode($resultado, true);
     }
