@@ -120,10 +120,10 @@ try {
     exit;
 
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(200); // Forzamos 200 temporalmente para leer el error en la app
     echo json_encode([
         'respuesta' => 0,
-        'mensaje'   => 'Error crítico: ' . $e->getMessage()
+        'mensaje'   => 'Error crítico: ' . $e->getMessage() . ' en línea ' . $e->getLine() . ' del archivo ' . $e->getFile()
     ]);
     exit;
 }
