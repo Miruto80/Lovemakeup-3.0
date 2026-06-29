@@ -97,6 +97,8 @@ try {
                     'cedula'     => $resultado->cedula,
                     'nombre'     => $resultado->nombre,
                     'apellido'   => $resultado->apellido,
+                    'correo'     => $resultado->correo,
+                    'telefono'   => $resultado->telefono,
                     'id_rol'     => $resultado->id_rol,
                     'nivel_rol'  => $resultado->nivel
                 ]
