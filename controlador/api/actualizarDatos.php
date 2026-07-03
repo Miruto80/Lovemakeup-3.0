@@ -110,8 +110,18 @@ if (!$userData || empty($userData['id_usuario'])) {
 
 $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
+
+if (!$dataJson) {
+    http_response_code(400);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos o JSON inválido']);
+    exit;
+}
+
+if (isset($dataJson['datos']) && is_array($dataJson['datos'])) {
+    $dataJson = array_merge($dataJson, $dataJson['datos']);
+}
+
 if (
-    !$dataJson ||
     !isset($dataJson['cedula']) ||
     !isset($dataJson['nombre']) ||
     !isset($dataJson['apellido']) ||
