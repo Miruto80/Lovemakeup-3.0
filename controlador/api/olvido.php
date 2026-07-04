@@ -19,7 +19,6 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\Olvidoclave;
 
-// 🔑 RUTA EXACTA DEL PRIVATE KEY (Igual que en tu Login)
 $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
 if (!file_exists($privateKeyPath)) {
     http_response_code(500);
@@ -112,8 +111,10 @@ try {
             'iat'  => time(),
             'exp'  => time() + $duration,
             'data' => [ 
+                'correo' => $correo,
                 'cedula' => $cedulaFinal,
-                'codigo' => $codigo_recuperacion
+                'codigo' => $codigo_recuperacion,
+                'intento' => 0
             ]
         ];
 

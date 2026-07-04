@@ -76,7 +76,7 @@ try {
             if (strpos($resultado['text'], 'Duplicate entry') !== false) {
                 $msj = 'Esta cédula o correo ya está en uso.';
             } else {
-                $msj = 'Error de BD: ' . $resultado['text'];
+                $msj =  $resultado['text'];
             }
         }
 

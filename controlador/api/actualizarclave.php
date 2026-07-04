@@ -61,7 +61,6 @@ if (count($partes) !== 3) {
 
 list($rawHeader, $rawPayload, $rawSignature) = $partes;
 
-// 🛠️ DECODIFICACIÓN SEGURA DE BASE64 URL (Evita el Error 500 si vienen caracteres raros)
 $remainder = strlen($rawPayload) % 4;
 if ($remainder) {
     $rawPayload .= str_repeat('=', 4 - $remainder);

@@ -59,9 +59,10 @@ $codigoIngresado = trim($dataJson['codigo'] ?? '');
 
 $codigoCorrecto = $payload['data']['codigo'];
 $cedula = $payload['data']['cedula'];
+$cedula = $payload['data']['correo'];
 
 // Controlar los 3 intentos usando el estado del payload (o inicializarlo si no viene)
-$intentosFallidos = $payload['data']['intentos_fallidos'] ?? 0;
+$intentosFallidos = $payload['data']['intentos'] ?? 0;
 
 function base64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -100,7 +101,7 @@ if ($codigoIngresado == $codigoCorrecto) {
         http_response_code(403);
         echo json_encode([
             'respuesta' => -2, // Código especial para decirle a la app que regrese al Home
-            'mensaje'   => 'Has excedido los 3 intentos permitidos. Tu solicitud fue cancelada.'
+            'mensaje'   => 'Por seguridad tu solicitud fue cancelada.'
         ]);
         exit;
     }
