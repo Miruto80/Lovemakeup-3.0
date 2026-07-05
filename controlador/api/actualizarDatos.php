@@ -172,12 +172,6 @@ $datosCambio = [
 ];
 
 try {
-    /*
-    echo "<pre>";
-    print_r($datosCambio);
-    echo "</pre>";
-    exit;
-*/
     $resultado = $objDatos->procesarCliente(json_encode($datosCambio));
     if (is_string($resultado)) {
         $resultado = json_decode($resultado, true);

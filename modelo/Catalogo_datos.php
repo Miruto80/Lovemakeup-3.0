@@ -46,19 +46,12 @@ private $objEntrega;
         $datos = json_decode($jsonDatos, true);
         $operacion = $datos['operacion'];
         $datosProcesar = $datos['datos'];
-
-        var_dump($datosProcesar['cedula']);
-        var_dump($datosProcesar['cedula_actual']);
-        if ($datosProcesar['cedula'] !== $datosProcesar['cedula_actual']) {
-            die("ENTRÓ AL IF DE CÉDULA");
-        }
-        die("NO ENTRÓ AL IF DE CÉDULA");
         
         try {
             switch ($operacion) {
                 case 'actualizar':
                     
-                    if ($datosProcesar['cedula'] !== $datosProcesar['cedula_actual']) {
+                    if ((string)$datosProcesar['cedula'] !== (string)$datosProcesar['cedula_actual']) {
                         if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                             return ['respuesta' => 0, 'accion' => 'actualizar', 'text' => 'La cédula ya está registrada'];
                         }
