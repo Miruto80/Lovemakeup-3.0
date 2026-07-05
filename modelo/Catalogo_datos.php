@@ -43,10 +43,16 @@ private $objEntrega;
 /*-----*/
 
     public function procesarCliente($jsonDatos) {
-        die("ESTOY EN PROCESARCLIENTE");
         $datos = json_decode($jsonDatos, true);
         $operacion = $datos['operacion'];
         $datosProcesar = $datos['datos'];
+
+        var_dump($datosProcesar['cedula']);
+        var_dump($datosProcesar['cedula_actual']);
+        if ($datosProcesar['cedula'] !== $datosProcesar['cedula_actual']) {
+            die("ENTRÓ AL IF DE CÉDULA");
+        }
+        die("NO ENTRÓ AL IF DE CÉDULA");
         
         try {
             switch ($operacion) {
