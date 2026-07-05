@@ -172,9 +172,10 @@ $datosCambio = [
 ];
 
 try {
-    error_log('CEDULA FORMULARIO: ' . $dataJson['cedula']);
-    error_log('CEDULA ACTUAL: ' . $current['cedula']);
-    error_log(print_r($datosCambio, true));
+    echo "<pre>";
+    print_r($datosCambio);
+    echo "</pre>";
+    exit;
 
     $resultado = $objDatos->procesarCliente(json_encode($datosCambio));
     if (is_string($resultado)) {
