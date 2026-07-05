@@ -43,16 +43,10 @@ private $objEntrega;
 /*-----*/
 
     public function procesarCliente($jsonDatos) {
+        die("ESTOY EN PROCESARCLIENTE");
         $datos = json_decode($jsonDatos, true);
         $operacion = $datos['operacion'];
         $datosProcesar = $datos['datos'];
-
-        header('Content-Type: application/json');
-        echo json_encode([
-            'cedula' => $datosProcesar['cedula'],
-            'cedula_actual' => $datosProcesar['cedula_actual']
-        ], JSON_PRETTY_PRINT);
-        exit;
         
         try {
             switch ($operacion) {
