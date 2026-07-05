@@ -46,6 +46,10 @@ private $objEntrega;
         $datos = json_decode($jsonDatos, true);
         $operacion = $datos['operacion'];
         $datosProcesar = $datos['datos'];
+
+        var_dump($datosProcesar['cedula']);
+        var_dump($datosProcesar['cedula_actual']);
+        exit;
         
         try {
             switch ($operacion) {
