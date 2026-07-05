@@ -30,16 +30,30 @@ $publicKey = file_get_contents($publicKeyPath);
 function base64url_decode($data) {
     $remainder = strlen($data) % 4;
     if ($remainder) {
-        $padlen = 4 - $remainder;
-        $data .= str_repeat('=', $padlen);
+        $data .= str_repeat('=', 4 - $remainder);
     }
     return base64_decode(strtr($data, '-_', '+/'));
 }
 
 function getAuthorizationHeader() {
-    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+    if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
         return trim($_SERVER['HTTP_AUTHORIZATION']);
     }
+
+    if (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        return trim($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+    }
+
+    if (function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        if (!empty($headers['Authorization'])) {
+            return trim($headers['Authorization']);
+        }
+        if (!empty($headers['authorization'])) {
+            return trim($headers['authorization']);
+        }
+    }
+
     if (function_exists('getallheaders')) {
         $headers = getallheaders();
         if (!empty($headers['Authorization'])) {
@@ -49,6 +63,7 @@ function getAuthorizationHeader() {
             return trim($headers['authorization']);
         }
     }
+
     return null;
 }
 
@@ -89,7 +104,7 @@ if ($verified !== 1) {
 
 $payloadJson = base64url_decode($rawPayload);
 $payload = json_decode($payloadJson, true);
-if (!$payload) {
+if (!$payload || !is_array($payload)) {
     http_response_code(401);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'Payload JWT inválido']);
     exit;
@@ -110,7 +125,6 @@ if (!$userData || empty($userData['id_usuario'])) {
 
 $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
-
 if (!$dataJson) {
     http_response_code(400);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos o JSON inválido']);
@@ -163,7 +177,7 @@ try {
         $resultado = json_decode($resultado, true);
     }
 
-    if (isset($resultado['respuesta']) && $resultado['respuesta'] == 1) {
+    if (isset($resultado['respuesta']) && (int)$resultado['respuesta'] === 1) {
         http_response_code(200);
         echo json_encode([
             'respuesta' => 1,
