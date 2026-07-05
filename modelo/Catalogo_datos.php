@@ -91,8 +91,8 @@ private $objEntrega;
     }
     
   private function ejecutarActualizacion($datos) {
-    $conex = $this->getConex2();
-    $conex2 = $this->getConex1();
+    $conex = $this->getConex2(); // BD principal (persona, usuario)
+    $conex2 = $this->getConex1(); // BD tienda (pedido, direccion)
 
     try {
         $conex->beginTransaction();
@@ -122,7 +122,7 @@ private $objEntrega;
         $stmt->execute($parametros);
 
         // 2. Actualizar pedidos y direcciones si aplica
-        if ($datos['cedula'] !== $datos['cedula_actual']) {
+        if ((string)$datos['cedula'] !== (string)$datos['cedula_actual']) {
 
             // Verificar pedidos
             $sqlCheckPedido = "SELECT COUNT(*) FROM pedido WHERE cedula = :cedula_actual";
@@ -144,7 +144,7 @@ private $objEntrega;
             $sqlUsuario = "UPDATE usuario 
                           SET cedula = :cedula_nueva 
                           WHERE cedula = :cedula_actual";
-            $stmtUsuario = $conex2->prepare($sqlUsuario);
+            $stmtUsuario = $conex->prepare($sqlUsuario);
             $stmtUsuario->execute($paramUsuario);
 
             if ($hayPedidos) {
@@ -163,8 +163,6 @@ private $objEntrega;
                 $stmtDireccion->execute($paramUsuario);
             }
         }
-
-        
 
         // 4. Confirmar transacciones
         $conex->commit();
