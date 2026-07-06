@@ -31,48 +31,53 @@ class FileRateLimiter {
         if (!$ip) {
             $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
         }
-
+    
         // Verificar si la IP está en la blacklist
         if ($this->isBlacklisted($ip)) {
             return $this->getBlacklistTimeRemaining($ip); // Devuelve el tiempo restante
         }
-
+    
         $file = $this->storagePath . hash('sha256', $ip) . '.json';
         $now = microtime(true); // Tiempo en segundos con microsegundos
         $data = ['timestamps' => [], 'last_request' => 0]; // Inicializar siempre como un array vacío
-
+    
         if (file_exists($file)) {
             $content = file_get_contents($file);
             $decoded = json_decode($content, true);
-
-            if ($decoded) {
+    
+            if (is_array($decoded)) {
                 $data = $decoded;
             }
+    
+            // Asegurarse de que 'timestamps' esté inicializado como un array
+            if (!isset($data['timestamps']) || !is_array($data['timestamps'])) {
+                $data['timestamps'] = [];
+            }
         }
-
+    
         // Verificar el cooldown (tiempo mínimo entre solicitudes)
         if (isset($data['last_request']) && ($now - $data['last_request']) < $this->cooldown) {
             return false; // Solicitud demasiado rápida, ignorar
         }
-
+    
         // Filtrar las solicitudes fuera de la ventana de tiempo
         $data['timestamps'] = array_filter($data['timestamps'], function ($timestamp) use ($now) {
             return ($now - $timestamp) <= $this->window;
         });
-
+    
         // Agregar la nueva solicitud
         $data['timestamps'][] = $now;
         $data['last_request'] = $now; // Actualizar el tiempo de la última solicitud
-
+    
         // Guardar los datos actualizados
         file_put_contents($file, json_encode($data));
-
+    
         // Si excede el límite, manejar bloqueos consecutivos
         if (count($data['timestamps']) > $this->limit) {
             $this->handleConsecutiveBlocks($ip);
             return false;
         }
-
+    
         return true;
     }
 
