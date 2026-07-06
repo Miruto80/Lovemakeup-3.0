@@ -7,10 +7,12 @@ class FileRateLimiter {
     private $window;
     private $blacklistFile;
     private $blacklistDuration;
+    private $cooldown; // Tiempo mínimo entre solicitudes consecutivas (en segundos)
 
-    public function __construct($limit = 5, $window = 1) { // 5 solicitudes por segundo
+    public function __construct($limit = 5, $window = 1, $cooldown = 0.2) { // 5 solicitudes por segundo, cooldown de 200ms
         $this->limit = $limit;
         $this->window = $window; // Ventana de tiempo en segundos
+        $this->cooldown = $cooldown; // Cooldown en segundos
         $this->storagePath = __DIR__ . '/data/';
         $this->blacklistFile = $this->storagePath . 'blacklist.json';
         $this->blacklistDuration = 12 * 60 * 60; // 12 horas
@@ -25,46 +27,54 @@ class FileRateLimiter {
         }
     }
 
-
-public function check($ip = null) {
-    if (!$ip) {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    }
-
-    // Verificar si la IP está en la blacklist
-    if ($this->isBlacklisted($ip)) {
-        return $this->getBlacklistTimeRemaining($ip); // Devuelve el tiempo restante
-    }
-
-    $file = $this->storagePath . hash('sha256', $ip) . '.json';
-    $now = time();
-    $data = ['count' => 1, 'start' => $now];
-
-    if (file_exists($file)) {
-        $content = file_get_contents($file);
-        $decoded = json_decode($content, true);
-
-        if ($decoded) {
-            $data = $decoded;
+    public function check($ip = null) {
+        if (!$ip) {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
         }
 
-        if (($now - $data['start']) > $this->window) {
-            $data = ['count' => 1, 'start' => $now];
-        } else {
-            $data['count']++;
+        // Verificar si la IP está en la blacklist
+        if ($this->isBlacklisted($ip)) {
+            return $this->getBlacklistTimeRemaining($ip); // Devuelve el tiempo restante
         }
+
+        $file = $this->storagePath . hash('sha256', $ip) . '.json';
+        $now = microtime(true); // Tiempo en segundos con microsegundos
+        $data = ['timestamps' => [], 'last_request' => 0]; // Inicializar siempre como un array vacío
+
+        if (file_exists($file)) {
+            $content = file_get_contents($file);
+            $decoded = json_decode($content, true);
+
+            if ($decoded) {
+                $data = $decoded;
+            }
+        }
+
+        // Verificar el cooldown (tiempo mínimo entre solicitudes)
+        if (isset($data['last_request']) && ($now - $data['last_request']) < $this->cooldown) {
+            return false; // Solicitud demasiado rápida, ignorar
+        }
+
+        // Filtrar las solicitudes fuera de la ventana de tiempo
+        $data['timestamps'] = array_filter($data['timestamps'], function ($timestamp) use ($now) {
+            return ($now - $timestamp) <= $this->window;
+        });
+
+        // Agregar la nueva solicitud
+        $data['timestamps'][] = $now;
+        $data['last_request'] = $now; // Actualizar el tiempo de la última solicitud
+
+        // Guardar los datos actualizados
+        file_put_contents($file, json_encode($data));
+
+        // Si excede el límite, manejar bloqueos consecutivos
+        if (count($data['timestamps']) > $this->limit) {
+            $this->handleConsecutiveBlocks($ip);
+            return false;
+        }
+
+        return true;
     }
-
-    file_put_contents($file, json_encode($data));
-
-    // Si la IP excede el límite, manejar bloqueos consecutivos
-    if ($data['count'] > $this->limit) {
-        $this->handleConsecutiveBlocks($ip);
-        return false;
-    }
-
-    return true;
-}
 
     private function isBlacklisted($ip) {
         $blacklist = json_decode(file_get_contents($this->blacklistFile), true);
