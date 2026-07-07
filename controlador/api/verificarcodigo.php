@@ -9,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Cargar llaves públicas para verificar el token
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem'; 
 $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
 
@@ -19,7 +18,6 @@ if (!file_exists($publicKeyPath) || !file_exists($privateKeyPath)) {
     exit;
 }
 
-// Capturar el Token de los Headers
 $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
 $token = null;
 
@@ -33,7 +31,6 @@ if (!$token) {
     exit;
 }
 
-// Desarmar el JWT de forma manual y segura (RS256)
 $partes = explode('.', $token);
 if (count($partes) !== 3) {
     http_response_code(401);
@@ -42,8 +39,6 @@ if (count($partes) !== 3) {
 }
 
 list($rawHeader, $rawPayload, $rawSignature) = $partes;
-
-// Decodificar payload para leer datos internos
 $payload = json_decode(base64_decode(strtr($rawPayload, '-_', '+/')), true);
 
 if (!$payload || time() > $payload['exp']) {
@@ -57,11 +52,12 @@ $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
 $codigoIngresado = trim($dataJson['codigo'] ?? '');
 
-$codigoCorrecto = $payload['data']['codigo'];
-$cedula = $payload['data']['cedula'];
-$cedula = $payload['data']['correo'];
+// Mapeo exacto basado en la estructura del Paso 1
+$codigoCorrecto = $payload['data']['codigo'] ?? '';
+$cedula         = $payload['data']['cedula'] ?? '';
+$correo         = $payload['data']['correo'] ?? '';
 
-// Controlar los 3 intentos usando el estado del payload (o inicializarlo si no viene)
+// Extraemos los intentos usando la misma clave 'intentos' del Paso 1
 $intentosFallidos = $payload['data']['intentos'] ?? 0;
 
 function base64url_encode($data) {
@@ -70,15 +66,19 @@ function base64url_encode($data) {
 
 // --- VALIDACIÓN DEL CÓDIGO ---
 if ($codigoIngresado == $codigoCorrecto) {
-    // CÓDIGO CORRECTO: Generamos un token limpio y final autorizado para cambiar la clave
+    // PASO 3: Generamos un token nuevo de 5 minutos autorizado para el cambio final de clave
     $privKeyId = openssl_get_privatekey(file_get_contents($privateKeyPath));
     
     $newHeader = ['alg' => 'RS256', 'typ' => 'JWT'];
     $newPayload = [
-        'sub'  => $cedula,
+        'sub'  => $correo,
         'iat'  => time(),
-        'exp'  => time() + 300, // 5 minutos de validez para cambiar la contraseña
-        'data' => ['cedula' => $cedula, 'autorizado' => true]
+        'exp'  => time() + 300, 
+        'data' => [
+            'cedula' => $cedula, 
+            'correo' => $correo, 
+            'autorizado' => true
+        ]
     ];
 
     $signingInput = base64url_encode(json_encode($newHeader)) . '.' . base64url_encode(json_encode($newPayload));
@@ -92,34 +92,36 @@ if ($codigoIngresado == $codigoCorrecto) {
     ]);
     exit;
 } else {
-    // CÓDIGO INCORRECTO: Sumamos un intento
+    // CÓDIGO INCORRECTO: Incrementamos el contador
     $intentosFallidos++;
     $restantes = 3 - $intentosFallidos;
 
     if ($intentosFallidos >= 3) {
-        // Excedió el límite: Solicitamos destruir el token y forzar salida
         http_response_code(403);
         echo json_encode([
-            'respuesta' => -2, // Código especial para decirle a la app que regrese al Home
+            'respuesta' => -2, 
             'mensaje'   => 'Por seguridad tu solicitud fue cancelada.'
         ]);
         exit;
     }
 
-    // Si le quedan intentos, re-firmamos un token modificado con el nuevo contador de fallos
-    $privKeyId = openssl_get_privatekey(file_get_contents($privateKeyPath));
-    $payload['data']['intentos_fallidos'] = $intentosFallidos;
+    // Actualizamos el contador dentro de la estructura original recibida
+    $payload['data']['intentos'] = $intentosFallidos;
     
+    $privKeyId = openssl_get_privatekey(file_get_contents($privateKeyPath));
+    
+    // Volvemos a armar el JWT con el Header original de la app y el payload modificado
     $signingInput = $partes[0] . '.' . base64url_encode(json_encode($payload));
     openssl_sign($signingInput, $signature, $privKeyId, OPENSSL_ALGO_SHA256);
     openssl_free_key($privKeyId);
+    
     $nuevoTokenActualizado = $signingInput . '.' . base64url_encode($signature);
 
     http_response_code(400);
     echo json_encode([
         'respuesta' => 0,
         'mensaje'   => "Código de verificación incorrecto. Te quedan $restantes intentos.",
-        'token'     => $nuevoTokenActualizado, // Le devolvemos el token modificado para actualizar AsyncStorage
+        'token'     => $nuevoTokenActualizado, 
         'intentos_restantes' => $restantes
     ]);
     exit;
