@@ -44,7 +44,7 @@ $datosRegistro = [
         'cedula'         => $dataJson['cedula'],
         'telefono'       => $dataJson['telefono'],
         'correo'         => $dataJson['correo'],
-        'tipo_documento' => $dataJson['tipo_documento'] ?? 'V',
+        'tipo_documento' => $dataJson['tipo_documento'],
         'clave'          => $dataJson['clave']
     ]
 ];
@@ -68,10 +68,8 @@ try {
         ]);
         exit;
     } else {
-        // Si entra aquí es porque respuesta fue 0 o hubo un error
         $msj = 'Error: Los datos ya existen o son inválidos.';
         
-        // Si el catch del privado mandó el texto del error de PDO
         if (isset($resultado['text'])) {
             if (strpos($resultado['text'], 'Duplicate entry') !== false) {
                 $msj = 'Esta cédula o correo ya está en uso.';

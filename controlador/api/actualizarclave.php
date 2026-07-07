@@ -18,7 +18,7 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\Olvidoclave;
 
-// 1. Buscamos el token de todas las formas posibles en el servidor
+// Buscamos el token de todas las formas posibles en el servidor
 $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
 
 if (empty($authHeader) && function_exists('apache_request_headers')) {
@@ -28,7 +28,7 @@ if (empty($authHeader) && function_exists('apache_request_headers')) {
 
 $token = null;
 
-// 2. Extraemos el JWT puro limpiando la palabra "Bearer" si existe
+// Extraemos el JWT puro limpiando la palabra "Bearer" si existe
 if (!empty($authHeader)) {
     if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
         $token = $matches[1];
@@ -37,17 +37,17 @@ if (!empty($authHeader)) {
     }
 }
 
-// 3. Si no hay nada, detenemos con un mensaje claro
+// Si no hay nada, detenemos con un mensaje claro
 if (!$token || trim($token) === '') {
     http_response_code(401);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'No se recibió ningún token en el servidor.']);
     exit;
 }
 
-// 4. Limpiamos comillas o espacios raros invisibles
+// Limpiamos comillas o espacios raros invisibles
 $token = trim($token, '"\' ');
 
-// 5. Ahora sí, picamos el token en 3 partes de forma segura
+// Ahora sí, picamos el token en 3 partes de forma segura
 $partes = explode('.', $token);
 if (count($partes) !== 3) {
     http_response_code(401);
@@ -89,7 +89,6 @@ if (!isset($payload['data']['autorizado']) || $payload['data']['autorizado'] !==
     exit;
 }
 
-// Si llegó aquí, todo está verificado y seguro
 $cedula = $payload['data']['cedula'];
 
 // Leer contraseña enviada por el formulario
@@ -105,9 +104,9 @@ if (empty($ClaveNueva)) {
 
 $objolvido = new Olvidoclave();
 
-// Estructuramos el array tal como lo manejan tus modelos internos
+
 $datosRegistro = [
-    'operacion' => 'actualizar', // Ajusta este string al nombre exacto de tu operación en el modelo
+    'operacion' => 'actualizar', 
     'datos' => [
         'cedula' => $cedula,
         'clave'  => $ClaveNueva
@@ -122,8 +121,6 @@ try {
         $resultado = json_decode($resultado, true);
     }
 
-    // Evaluamos el éxito con tu misma estructura del Login
-    // Si tu modelo devuelve un formato diferente para actualizar, ajusta este condicional
     http_response_code(200);
     echo json_encode([
         'respuesta' => 1,
@@ -133,6 +130,6 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['respuesta' => 0, 'mensaje' => 'Error de base de datos: ' . $e->getMessage()]);
+    echo json_encode(['respuesta' => 0, 'mensaje' => 'Error: ' . $e->getMessage()]);
     exit;
 }

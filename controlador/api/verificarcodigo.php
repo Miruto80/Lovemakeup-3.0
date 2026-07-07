@@ -52,12 +52,12 @@ $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
 $codigoIngresado = trim($dataJson['codigo'] ?? '');
 
-// Mapeo exacto basado en la estructura del Paso 1
+
 $codigoCorrecto = $payload['data']['codigo'] ?? '';
 $cedula         = $payload['data']['cedula'] ?? '';
 $correo         = $payload['data']['correo'] ?? '';
 
-// Extraemos los intentos usando la misma clave 'intentos' del Paso 1
+// Extraemos los intentos 
 $intentosFallidos = $payload['data']['intentos'] ?? 0;
 
 function base64url_encode($data) {
@@ -73,7 +73,7 @@ if ($codigoIngresado == $codigoCorrecto) {
     $newPayload = [
         'sub'  => $correo,
         'iat'  => time(),
-        'exp'  => time() + 300, 
+        'exp'  => time() + 600, 
         'data' => [
             'cedula' => $cedula, 
             'correo' => $correo, 
@@ -92,7 +92,7 @@ if ($codigoIngresado == $codigoCorrecto) {
     ]);
     exit;
 } else {
-    // CÓDIGO INCORRECTO: Incrementamos el contador
+    // CODIGO INCORRECTO Incrementamos el contador
     $intentosFallidos++;
     $restantes = 3 - $intentosFallidos;
 
