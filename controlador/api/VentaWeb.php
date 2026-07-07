@@ -140,6 +140,23 @@ $objVentaWeb = new VentaWeb();
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $jsonDatos = file_get_contents('php://input');
+        
+        // Verificar si el JSON se decodifica correctamente
+        $decodedData = json_decode($jsonDatos, true);
+        if (!$decodedData) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Error al decodificar JSON: ' . json_last_error_msg()]);
+            exit;
+        }
+
+        // Verificar si la clave 'datos' existe en el JSON
+        if (!isset($decodedData['datos'])) {
+            http_response_code(400);
+            echo json_encode(['error' => "La clave 'datos' es requerida en la solicitud."]);
+            exit;
+        }
+
+        // Procesar el pedido
         $resultado = $objVentaWeb->procesarPedido($jsonDatos);
         echo json_encode($resultado);
     } else {
