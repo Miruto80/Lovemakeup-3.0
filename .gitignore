@@ -1,5 +1,7 @@
 # Configuración y Secretos
 passconfig.env
+AGENTS.md
+TODO.md
 
 # Dependencias de Composer
 /vendor/

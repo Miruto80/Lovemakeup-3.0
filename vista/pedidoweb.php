@@ -191,7 +191,7 @@
     <td class="texto-secundario"><?= $pedido['id_pedido']?></td>
     <td class="texto-secundario"><?= $pedido['fecha'] ?></td>
     <td class=" m-3 text-white badge <?php echo $badgeClass; ?>"><?php echo $estatus_texto[$pedido['estatus']] ?></td>
-    <td class="texto-secundario"><?= $pedido['precio_total_bs'] ?>$</td>
+    <td class="texto-secundario"><?= $pedido['precio_total_bs'] ?>Bs</td>
     <td class="texto-secundario"><?= $pedido['referencia_bancaria'] ?></td>
     <td class="texto-secundario"><?= $pedido['nombre_cliente'] ?></td>
 
