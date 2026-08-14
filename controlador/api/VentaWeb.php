@@ -156,6 +156,44 @@ try {
             exit;
         }
 
+        // Si imagen viene como base64 (data URI), guardarla como archivo
+        $tieneImagen = !empty($decodedData['datos']['imagen']);
+        $tipoImagen = $tieneImagen ? gettype($decodedData['datos']['imagen']) : 'none';
+        $lenImagen = $tieneImagen ? strlen($decodedData['datos']['imagen']) : 0;
+        $prefijoImagen = $tieneImagen ? substr($decodedData['datos']['imagen'], 0, 80) : '';
+
+        $logLine = date('Y-m-d H:i:s') . " | imagen_recibida=" . ($tieneImagen ? 'SI' : 'NO') . " | tipo=$tipoImagen | len=$lenImagen | prefijo=" . $prefijoImagen . "\n";
+        @file_put_contents(__DIR__ . '/debug_comprobante.log', $logLine, FILE_APPEND);
+
+        if ($tieneImagen && preg_match('/^data:image\/(\w+);base64,/', $decodedData['datos']['imagen'], $m)) {
+            $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+            $extsPermitidas = ['jpg', 'jpeg', 'png', 'webp'];
+            $ext = in_array($ext, $extsPermitidas) ? $ext : 'jpg';
+
+            $base64Data = substr($decodedData['datos']['imagen'], strpos($decodedData['datos']['imagen'], ',') + 1);
+            $binario = base64_decode($base64Data);
+            if ($binario !== false) {
+                $dirCaptures = __DIR__ . '/../../assets/img/captures';
+                if (!is_dir($dirCaptures)) {
+                    mkdir($dirCaptures, 0777, true);
+                }
+                $nombreArchivo = 'img_' . uniqid() . '.' . $ext;
+                $rutaAbsoluta = $dirCaptures . '/' . $nombreArchivo;
+                $guardado = file_put_contents($rutaAbsoluta, $binario);
+                if ($guardado !== false) {
+                    $decodedData['datos']['imagen'] = 'assets/img/captures/' . $nombreArchivo;
+                    $jsonDatos = json_encode($decodedData);
+                    @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | archivo_guardado=$nombreArchivo | bytes=$guardado | ruta=assets/img/captures/$nombreArchivo\n", FILE_APPEND);
+                } else {
+                    @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_guardando_archivo\n", FILE_APPEND);
+                }
+            } else {
+                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_base64_decode_fallo\n", FILE_APPEND);
+            }
+        } else {
+            @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | imagen_no_es_data_uri_o_vacia\n", FILE_APPEND);
+        }
+
         // Procesar el pedido
         $resultado = $objVentaWeb->procesarPedido($jsonDatos);
         echo json_encode($resultado);
