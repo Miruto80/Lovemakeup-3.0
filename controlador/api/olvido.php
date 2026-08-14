@@ -80,9 +80,8 @@ try {
             exit;
         }
         
-        // Saltamos directo a la generación omitiendo la verificación de base de datos
     } else {
-        // --- MÓDULO NORMAL (SOLICITUD INICIAL): SÍ VERIFICA BASE DE DATOS ---
+        // --- MÓDULO  SÍ VERIFICA BASE DE DATOS ---
         if (!$dataJson || !isset($dataJson['correo'])) {
             http_response_code(400);
             echo json_encode(['respuesta' => 0, 'mensaje' => 'Correo es obligatorio']);
@@ -114,7 +113,7 @@ try {
         }
     }
 
-    // --- PROCESO COMÚN: GENERACIÓN DE CÓDIGO Y NUEVO JWT ---
+    // ---  GENERACIÓN DE CÓDIGO Y NUEVO JWT ---
     $privKeyId = openssl_get_privatekey($privateKey);
     if ($privKeyId === false) {
         http_response_code(500);
@@ -134,7 +133,7 @@ try {
     }
 
     $header = ['alg' => 'RS256', 'typ' => 'JWT'];
-    $duration = 600; 
+    $duration = 300; 
     
     $payload = [
         'sub'  => $correo,

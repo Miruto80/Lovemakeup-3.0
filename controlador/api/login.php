@@ -100,6 +100,7 @@ try {
                     'correo'     => $resultado->correo,
                     'telefono'   => $resultado->telefono,
                     'id_rol'     => $resultado->id_rol,
+                    'tipo_documento'     => $resultado->tipo_documento,
                     'nivel_rol'  => $resultado->nivel
                 ]
             ];
