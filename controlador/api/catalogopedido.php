@@ -97,16 +97,28 @@ try {
     $obj = new Catalogopedido();
     $pedidos = $obj->consultarPedidosCompletosCatalogo();
 
-    // Determinar cédula del usuario desde el token (varias posibilidades) o desde query param para depuración
+    // Determinar cédula del usuario desde las claims del token (producción)
     $requestCedula = null;
-    if (isset($_GET['cedula']) && !empty($_GET['cedula'])) {
-        $requestCedula = preg_replace('/\D/', '', $_GET['cedula']);
-    } else {
-        if (is_array($claims)) {
-            if (isset($claims['data']['cedula'])) $requestCedula = preg_replace('/\D/', '', $claims['data']['cedula']);
-            elseif (isset($claims['cedula'])) $requestCedula = preg_replace('/\D/', '', $claims['cedula']);
-            elseif (isset($claims['data']['usuario'])) $requestCedula = preg_replace('/\D/', '', $claims['data']['usuario']);
+    if (is_array($claims)) {
+        if (!empty($claims['data']['cedula'])) {
+            $requestCedula = preg_replace('/\D/', '', $claims['data']['cedula']);
+        } elseif (!empty($claims['cedula'])) {
+            $requestCedula = preg_replace('/\D/', '', $claims['cedula']);
+        } elseif (!empty($claims['data']['usuario'])) {
+            $requestCedula = preg_replace('/\D/', '', $claims['data']['usuario']);
         }
+    }
+
+    // Para depuración local solo: permitir override con ?debug=1&cedula=...
+    if (isset($_GET['debug']) && $_GET['debug'] === '1' && isset($_GET['cedula']) && !empty($_GET['cedula'])) {
+        $requestCedula = preg_replace('/\D/', '', $_GET['cedula']);
+    }
+
+    // En producción exigir la cédula en el token
+    if (!$requestCedula) {
+        http_response_code(403);
+        echo json_encode(['respuesta' => 0, 'mensaje' => 'Cédula no encontrada en token.']);
+        exit;
     }
 
     // Adjuntar detalles de cada pedido
@@ -132,16 +144,14 @@ try {
     }
     unset($p);
 
-    // Si se tiene cédula, filtrar solo los pedidos del cliente
-    if ($requestCedula) {
-        $filtered = array_filter($pedidos, function ($item) use ($requestCedula) {
-            $itemCed = isset($item['cedula']) ? preg_replace('/\D/', '', $item['cedula']) : '';
-            return $itemCed !== '' && $itemCed === $requestCedula;
-        });
-        $pedidos = array_values($filtered);
-    }
+    // Filtrar solo los pedidos asociados a la cédula del token
+    $filtered = array_filter($pedidos, function ($item) use ($requestCedula) {
+        $itemCed = isset($item['cedula']) ? preg_replace('/\D/', '', $item['cedula']) : '';
+        return $itemCed !== '' && $itemCed === $requestCedula;
+    });
+    $pedidos = array_values($filtered);
 
-    echo json_encode(['respuesta' => 1, 'pedidos' => $pedidos, 'requested_cedula' => $requestCedula]);
+    echo json_encode(['respuesta' => 1, 'pedidos' => $pedidos]);
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
