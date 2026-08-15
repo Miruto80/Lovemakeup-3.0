@@ -9,7 +9,7 @@ class VentaWeb extends Conexion
         parent::__construct();
     }
 
-    public function procesarPedido($jsonDatos)
+    public function procesarPedido(string $jsonDatos): array
     {
         $d = json_decode($jsonDatos, true)['datos'];
         $conex = $this->getConex1();   
@@ -88,7 +88,7 @@ class VentaWeb extends Conexion
     }
 
 
-    private function registrarDireccion($d)
+    private function registrarDireccion(array $d): string
     {
         $conex = $this->getConex1();
         $sql = "INSERT INTO direccion(id_metodoentrega, cedula, direccion_envio, sucursal_envio,id_delivery)
@@ -98,7 +98,7 @@ class VentaWeb extends Conexion
         return $conex->lastInsertId();
     }
 
-    private function registrarPedido($d)
+    private function registrarPedido(array $d): string
     {
         $conex = $this->getConex1();
         $sql = "INSERT INTO pedido(tipo, fecha, estatus, precio_total_usd, precio_total_bs, 
@@ -110,7 +110,7 @@ class VentaWeb extends Conexion
         return $conex->lastInsertId();
     }
 
-    private function registrarPago($d)
+    private function registrarPago(array $d): string
     {
         $conex = $this->getConex1();
 
@@ -154,7 +154,7 @@ class VentaWeb extends Conexion
         return $idPago;
     }
 
-    private function asignarPagoAPedido($idPedido, $idPago)
+    private function asignarPagoAPedido(string $idPedido, string $idPago): void
     {
         $conex = $this->getConex1();
         $stmt = $conex->prepare(
@@ -163,7 +163,7 @@ class VentaWeb extends Conexion
         $stmt->execute(['id_pago' => $idPago, 'id_pedido' => $idPedido]);
     }
 
-    private function registrarDetalle($d)
+    private function registrarDetalle(array $d): void
     {
         $conex = $this->getConex1();
         $stmt = $conex->prepare(
@@ -173,7 +173,7 @@ class VentaWeb extends Conexion
         $stmt->execute($d);
     }
 
-    private function actualizarStock($id, $cant)
+    private function actualizarStock(string $id, int $cant): void
     {
         $conex = $this->getConex1();
         $stmt = $conex->prepare(
@@ -183,7 +183,7 @@ class VentaWeb extends Conexion
         $stmt->execute(['cant' => $cant, 'id' => $id]);
     }
 
-    private function validarStockCarrito($carrito) {
+    private function validarStockCarrito(array $carrito): void {
    
         $conex = $this->getConex1();
         foreach ($carrito as $item) {
@@ -197,7 +197,7 @@ class VentaWeb extends Conexion
         }
     }
 
-    public function obtenerMetodosPago() {
+    public function obtenerMetodosPago(): array {
         $conex = $this->getConex1(); 
         try {
             $sql = "SELECT id_metodopago, nombre, estatus 
@@ -212,7 +212,7 @@ class VentaWeb extends Conexion
         }
     }
 
-    public function obtenerMetodosEntrega() {
+    public function obtenerMetodosEntrega(): array {
         $conex = $this->getConex1(); 
         try {
             $sql = "SELECT id_entrega, nombre, estatus 
@@ -230,7 +230,7 @@ class VentaWeb extends Conexion
 
   
 
- public function detectarInyeccionSQL($valor) {
+ public function detectarInyeccionSQL(string $valor): bool {
     if (empty($valor)) {
         return false;
     }
@@ -254,7 +254,7 @@ class VentaWeb extends Conexion
     return false;
 }
 
-public function sanitizarString($valor, $max = 100){
+public function sanitizarString(string $valor, int $max = 100): string {
 
     if($this->detectarInyeccionSQL($valor)){
         return '';
@@ -267,7 +267,7 @@ public function sanitizarString($valor, $max = 100){
     return substr($valor,0,$max);
 }
 
-public function sanitizarEntero($valor, $min = null, $max = null) {
+public function sanitizarEntero(mixed $valor, ?int $min = null, ?int $max = null): ?int {
     if (!is_numeric($valor)) {
         return null;
     }
@@ -281,7 +281,7 @@ public function sanitizarEntero($valor, $min = null, $max = null) {
     return $valor;
 }
 
-public function sanitizarDecimal($valor, $min = null, $max = null) {
+public function sanitizarDecimal(mixed $valor, ?float $min = null, ?float $max = null): ?float {
     if (!is_numeric($valor)) {
         return null;
     }
@@ -295,7 +295,7 @@ public function sanitizarDecimal($valor, $min = null, $max = null) {
     return $valor;
 }
 
-public function validarReferenciaBancaria($referencia) {
+public function validarReferenciaBancaria(string $referencia): bool {
     if (empty($referencia)) {
         return false;
     }
@@ -308,7 +308,7 @@ public function validarReferenciaBancaria($referencia) {
     return true;
 }
 
-public function validarTelefono($telefono) {
+public function validarTelefono(string $telefono): bool {
     if (empty($telefono)) {
         return false;
     }
@@ -323,7 +323,7 @@ public function validarTelefono($telefono) {
 }
 
 
-public function sanitizarDireccion($direccion) {
+public function sanitizarDireccion(string $direccion): string {
 
     if (empty($direccion)) {
         return '';
@@ -346,7 +346,7 @@ public function sanitizarDireccion($direccion) {
 /**
  * Valida y sanitiza sucursal (solo alfanuméricos y guiones)
  */
-public function sanitizarSucursal($sucursal) {
+public function sanitizarSucursal(string $sucursal): string {
     if (empty($sucursal)) {
         return '';
     }
@@ -371,7 +371,7 @@ public function sanitizarSucursal($sucursal) {
 /**
  * Valida la estructura del carrito para prevenir inyecciones
  */
-public function validarCarrito($carrito) {
+public function validarCarrito(array $carrito): array {
     if (!is_array($carrito)) {
         return [];
     }
@@ -409,7 +409,7 @@ public function validarCarrito($carrito) {
     return $carrito_validado;
 }
 
-public function validarIdMetodoPago($id_metodopago, $metodos_pago) {
+public function validarIdMetodoPago(mixed $id_metodopago, array $metodos_pago): bool {
     if (empty($id_metodopago) || !is_numeric($id_metodopago)) {
         return false;
     }
@@ -425,7 +425,7 @@ public function validarIdMetodoPago($id_metodopago, $metodos_pago) {
 /**
  * Valida que el id_metodoentrega sea válido y exista en la base de datos
  */
-public function validarIdMetodoEntrega($id_metodoentrega, $metodos_entrega) {
+public function validarIdMetodoEntrega(mixed $id_metodoentrega, array $metodos_entrega): bool {
     if (empty($id_metodoentrega) || !is_numeric($id_metodoentrega)) {
         return false;
     }
@@ -441,7 +441,7 @@ public function validarIdMetodoEntrega($id_metodoentrega, $metodos_entrega) {
 /**
  * Valida que el banco sea válido (lista de bancos permitidos)
  */
-public function validarBanco($banco) {
+public function validarBanco(string $banco): bool {
     if (empty($banco)) {
         return false;
     }
@@ -480,7 +480,7 @@ public function validarBanco($banco) {
 
 /* Valida que un producto exista y esté activo
 */
-public function validarProductoActivo($id_producto) {
+public function validarProductoActivo(int $id_producto): bool {
     $conex = $this->getConex1();
     $stmt = $conex->prepare("SELECT id_producto FROM producto WHERE id_producto = :id AND estatus = 1");
     $stmt->execute(['id' => $id_producto]);
@@ -490,7 +490,7 @@ public function validarProductoActivo($id_producto) {
 /**
  * Valida que el banco_destino sea válido (solo 2 opciones permitidas)
  */
-public function validarBancoDestino($banco_destino) {
+public function validarBancoDestino(string $banco_destino): bool {
     if (empty($banco_destino)) {
         return false;
     }
@@ -501,7 +501,7 @@ public function validarBancoDestino($banco_destino) {
     return in_array($banco_destino, $bancos_destino_validos, true);
 }
 
-public function validarMetodoEntrega($metodo_entrega) {
+public function validarMetodoEntrega(mixed $metodo_entrega): bool {
     if (empty($metodo_entrega) || !is_numeric($metodo_entrega)) {
         return false;
     }
@@ -513,7 +513,7 @@ public function validarMetodoEntrega($metodo_entrega) {
 /**
  * Valida que la empresa_envio sea válida (2, 3 para MRW y ZOOM)
  */
-public function validarEmpresaEnvio($empresa_envio) {
+public function validarEmpresaEnvio(mixed $empresa_envio): bool {
     if (empty($empresa_envio) || !is_numeric($empresa_envio)) {
         return false;
     }
@@ -525,7 +525,7 @@ public function validarEmpresaEnvio($empresa_envio) {
 /**
  * Valida que el id_delivery sea válido y exista en la base de datos
  */
-public function validarIdDelivery($id_delivery, $deliveries_activos) {
+public function validarIdDelivery(mixed $id_delivery, array $deliveries_activos): bool {
     if (empty($id_delivery) || !is_numeric($id_delivery)) {
         return false;
     }
@@ -541,7 +541,7 @@ public function validarIdDelivery($id_delivery, $deliveries_activos) {
 /**
  * Valida que la zona sea válida
  */
-public function validarZona($zona) {
+public function validarZona(string $zona): bool {
     if (empty($zona)) {
         return false;
     }
@@ -552,7 +552,7 @@ public function validarZona($zona) {
 /**
  * Valida que la parroquia sea válida (básica, puede expandirse según necesidades)
  */
-public function validarParroquia($parroquia) {
+public function validarParroquia(string $parroquia): bool {
     if (empty($parroquia)) {
         return false;
     }
@@ -563,7 +563,7 @@ public function validarParroquia($parroquia) {
 /**
  * Valida que el sector sea válido (básica, puede expandirse según necesidades)
  */
-public function validarSector($sector) {
+public function validarSector(string $sector): bool {
     if (empty($sector)) {
         return false;
     }
