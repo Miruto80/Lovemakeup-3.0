@@ -4,7 +4,7 @@ namespace LoveMakeup\Proyecto\Modelo;
 
 class VerCarrito {
 
-    public function procesarCarrito($jsonDatos){
+    public function procesarCarrito(string $jsonDatos): array{
         $datos = json_decode($jsonDatos, true);
         $operacion = $datos ['operacion']?? '';
         $datosProcesar = $datos ['datos']?? [];
@@ -29,15 +29,15 @@ class VerCarrito {
     }
     
 
-    private function obtenerCarrito() {
+    private function obtenerCarrito(): array {
         return $_SESSION['carrito'] ?? [];
     }
 
-    private function guardarCarrito($carrito) {
+    private function guardarCarrito(array $carrito): void {
         $_SESSION['carrito'] = $carrito;
     }
 
-    public function eliminarProducto($id) {
+    public function eliminarProducto(string $id): array {
         $id = (string)$id;
         $carrito = $this->obtenerCarrito();
 
@@ -49,7 +49,7 @@ class VerCarrito {
 
         return ['respuesta' => 0, 'accion' => 'eliminar', 'mensaje' => 'Producto no encontrado'];
     }
-    private function actualizarCantidad($id, $cantidad) {
+    private function actualizarCantidad(string $id, int $cantidad): array {
         $carrito = $this->obtenerCarrito();
         if (isset($carrito[$id])) {
             $stockDisponible = $carrito[$id]['stockDisponible'] ?? 0;
