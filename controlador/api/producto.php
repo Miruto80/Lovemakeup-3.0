@@ -121,11 +121,11 @@ if (isset($_GET['debug']) && $_GET['debug'] === '1') {
     exit;
 }
 
-// if (!$token) {
-//     http_response_code(401);
-//     echo json_encode(['error' => 'Missing Authorization header']);
-//     exit;
-// }
+if (!$token) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Missing Authorization header VERSION_TEST_999']);
+    exit;
+}
 
 // $claims = validate_jwt_rs256($token, $publicKey);
 // if (!$claims) {
