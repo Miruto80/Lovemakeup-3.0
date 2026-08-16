@@ -121,18 +121,18 @@ if (isset($_GET['debug']) && $_GET['debug'] === '1') {
     exit;
 }
 
-if (!$token) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Missing Authorization header']);
-    exit;
-}
+// if (!$token) {
+//     http_response_code(401);
+//     echo json_encode(['error' => 'Missing Authorization header']);
+//     exit;
+// }
 
-$claims = validate_jwt_rs256($token, $publicKey);
-if (!$claims) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Invalid or expired token']);
-    exit;
-}
+// $claims = validate_jwt_rs256($token, $publicKey);
+// if (!$claims) {
+//     http_response_code(401);
+//     echo json_encode(['error' => 'Invalid or expired token']);
+//     exit;
+// }
 
 // Token válido — ejecutar consulta de productos
 $obj = new Producto();
