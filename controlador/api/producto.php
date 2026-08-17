@@ -23,6 +23,7 @@ use LoveMakeup\Proyecto\Modelo\Producto;
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
 
 if (!file_exists($publicKeyPath)) {
+
     http_response_code(500);
 
     echo json_encode([
@@ -34,6 +35,7 @@ if (!file_exists($publicKeyPath)) {
 }
 
 $publicKey = file_get_contents($publicKeyPath);
+
 
 function get_bearer_token()
 {
@@ -68,7 +70,6 @@ function get_bearer_token()
         }
     }
 
-    // Normalizar headers
     $normalized = [];
 
     foreach ($headers as $k => $v) {
@@ -84,7 +85,6 @@ function get_bearer_token()
                 $matches
             )
         ) {
-
             return trim($matches[1]);
         }
     }
@@ -149,7 +149,6 @@ function validate_jwt_rs256($jwt, $publicKey)
         return false;
     }
 
-    // Validar expiración
     if (
         isset($payloadJson['exp']) &&
         time() > (int)$payloadJson['exp']
@@ -160,6 +159,59 @@ function validate_jwt_rs256($jwt, $publicKey)
     return $payloadJson;
 }
 
+
+if (
+    isset($_GET['debug']) &&
+    $_GET['debug'] === '1'
+) {
+
+    $token = get_bearer_token();
+
+    $out = [
+        'debug' => 1,
+        'token_received' => $token ? true : false,
+        'get' => $_GET
+    ];
+
+    if (
+        isset($_GET['validate']) &&
+        $_GET['validate'] === '1'
+    ) {
+
+        if ($token) {
+
+            $valid = validate_jwt_rs256(
+                $token,
+                $publicKey
+            );
+
+            if ($valid) {
+
+                $out['validation'] = [
+                    'valid' => true,
+                    'claims' => $valid
+                ];
+
+            } else {
+
+                $out['validation'] = [
+                    'valid' => false
+                ];
+            }
+
+        } else {
+
+            $out['validation'] = [
+                'valid' => false,
+                'error' => 'no_token'
+            ];
+        }
+    }
+
+    echo json_encode($out);
+
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
@@ -173,9 +225,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
             $productos = $obj->MasVendidos();
 
-        } else {
+        } elseif ($tipo === 'activos') {
 
             $productos = $obj->ProductosActivos();
+
+        } else {
+
+            http_response_code(400);
+
+            echo json_encode([
+                'respuesta' => 0,
+                'mensaje' => 'Tipo de consulta no válido'
+            ]);
+
+            exit;
         }
 
         echo json_encode([
@@ -197,7 +260,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 }
-
 http_response_code(405);
 
 echo json_encode([
