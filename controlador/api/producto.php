@@ -1,7 +1,8 @@
 <?php
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Authorization, Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -9,143 +10,199 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Cargar autoload si existe
 $autoload = __DIR__ . '/../../vendor/autoload.php';
+
 if (file_exists($autoload)) {
     require_once $autoload;
 } else {
-    // intentar cargar modelo manualmente
     require_once __DIR__ . '/../../modelo/Producto.php';
 }
 
 use LoveMakeup\Proyecto\Modelo\Producto;
 
-// Ruta del public key
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
+
 if (!file_exists($publicKeyPath)) {
     http_response_code(500);
-    echo json_encode(['error' => 'Public key not found. Configure jwt_public.pem in config/']);
+
+    echo json_encode([
+        'respuesta' => 0,
+        'mensaje' => 'Public key not found'
+    ]);
+
     exit;
 }
 
 $publicKey = file_get_contents($publicKeyPath);
 
-// Obtiene token Bearer
-function get_bearer_token() {
+function get_bearer_token()
+{
     $headers = [];
+
     if (function_exists('getallheaders')) {
+
         $headers = getallheaders();
+
     } else {
+
         foreach ($_SERVER as $name => $value) {
+
             if (substr($name, 0, 5) == 'HTTP_') {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+
+                $headers[
+                    str_replace(
+                        ' ',
+                        '-',
+                        ucwords(
+                            strtolower(
+                                str_replace(
+                                    '_',
+                                    ' ',
+                                    substr($name, 5)
+                                )
+                            )
+                        )
+                    )
+                ] = $value;
             }
         }
     }
-    // Normalize header names to lowercase to handle clients/servers that lowercase headers
+
+    // Normalizar headers
     $normalized = [];
+
     foreach ($headers as $k => $v) {
         $normalized[strtolower($k)] = $v;
     }
+
     if (isset($normalized['authorization'])) {
-        if (preg_match('/Bearer\s+(.*)$/i', $normalized['authorization'], $matches)) {
+
+        if (
+            preg_match(
+                '/Bearer\s+(.*)$/i',
+                $normalized['authorization'],
+                $matches
+            )
+        ) {
+
             return trim($matches[1]);
         }
     }
+
     return null;
 }
 
-function base64url_decode($data) {
+
+function base64url_decode($data)
+{
     $remainder = strlen($data) % 4;
-    if ($remainder) $data .= str_repeat('=', 4 - $remainder);
-    return base64_decode(strtr($data, '-_', '+/'));
+
+    if ($remainder) {
+        $data .= str_repeat('=', 4 - $remainder);
+    }
+
+    return base64_decode(
+        strtr($data, '-_', '+/')
+    );
 }
 
-function validate_jwt_rs256($jwt, $publicKey) {
+
+function validate_jwt_rs256($jwt, $publicKey)
+{
     $parts = explode('.', $jwt);
-    if (count($parts) != 3) return false;
-    list($hdr, $payload, $sig) = $parts;
+
+    if (count($parts) !== 3) {
+        return false;
+    }
+
+    [$hdr, $payload, $sig] = $parts;
+
     $signed = $hdr . '.' . $payload;
+
     $signature = base64url_decode($sig);
+
     $pubKeyId = openssl_get_publickey($publicKey);
-    if ($pubKeyId === false) return false;
-    $ok = openssl_verify($signed, $signature, $pubKeyId, OPENSSL_ALGO_SHA256) === 1;
+
+    if ($pubKeyId === false) {
+        return false;
+    }
+
+    $ok = openssl_verify(
+        $signed,
+        $signature,
+        $pubKeyId,
+        OPENSSL_ALGO_SHA256
+    ) === 1;
+
     openssl_free_key($pubKeyId);
-    if (!$ok) return false;
-    $payloadJson = json_decode(base64url_decode($payload), true);
-    if (!is_array($payloadJson)) return false;
-    if (isset($payloadJson['exp']) && time() > (int)$payloadJson['exp']) return false;
+
+    if (!$ok) {
+        return false;
+    }
+
+    $payloadJson = json_decode(
+        base64url_decode($payload),
+        true
+    );
+
+    if (!is_array($payloadJson)) {
+        return false;
+    }
+
+    // Validar expiración
+    if (
+        isset($payloadJson['exp']) &&
+        time() > (int)$payloadJson['exp']
+    ) {
+        return false;
+    }
+
     return $payloadJson;
 }
 
-$token = get_bearer_token();
-// Fallback: aceptar token también por query param (útil para depuración en emuladores)
-if (empty($token) && isset($_GET['access_token'])) {
-    $token = $_GET['access_token'];
-}
 
-// Modo depuración: mostrar cabeceras y parámetros recibidos
-if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-    $hdrs = [];
-    if (function_exists('getallheaders')) {
-        $hdrs = getallheaders();
-    } else {
-        foreach ($_SERVER as $name => $value) {
-            if (substr($name, 0, 5) == 'HTTP_') {
-                $hdrs[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
-            }
-        }
-    }
-    $out = [
-        'debug' => 1,
-        'headers' => $hdrs,
-        'get' => $_GET,
-        'token_extracted' => $token
-    ];
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-    // Si se pide validación, intentar validar el JWT y devolver el resultado
-    if (isset($_GET['validate']) && $_GET['validate'] === '1') {
-        if ($token) {
-            $valid = validate_jwt_rs256($token, $publicKey);
-            if ($valid) {
-                $out['validation'] = ['valid' => true, 'claims' => $valid];
-            } else {
-                $out['validation'] = ['valid' => false];
-            }
+    try {
+
+        $obj = new Producto();
+
+        $tipo = $_GET['tipo'] ?? 'activos';
+
+        if ($tipo === 'mas_vendidos') {
+
+            $productos = $obj->MasVendidos();
+
         } else {
-            $out['validation'] = ['valid' => false, 'error' => 'no_token'];
+
+            $productos = $obj->ProductosActivos();
         }
+
+        echo json_encode([
+            'respuesta' => 1,
+            'productos' => $productos
+        ]);
+
+        exit;
+
+    } catch (Exception $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'respuesta' => 0,
+            'mensaje' => $e->getMessage()
+        ]);
+
+        exit;
     }
-
-    echo json_encode($out);
-    exit;
 }
 
-if (!$token) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Missing Authorization header']);
-    exit;
-}
+http_response_code(405);
 
-$claims = validate_jwt_rs256($token, $publicKey);
-if (!$claims) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Invalid or expired token']);
-    exit;
-}
+echo json_encode([
+    'respuesta' => 0,
+    'mensaje' => 'Método no permitido'
+]);
 
-// Token válido — ejecutar consulta de productos
-$obj = new Producto();
-try {
-    $tipo = $_GET['tipo'] ?? 'activos';
-    if ($tipo === 'mas_vendidos') {
-        $productos = $obj->MasVendidos();
-    } else {
-        $productos = $obj->ProductosActivos();
-    }
-    echo json_encode(['respuesta' => 1, 'productos' => $productos]);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
-}
 ?>
