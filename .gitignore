@@ -3,6 +3,8 @@ passconfig.env
 
 # Dependencias de Composer
 /vendor/
+AGENTS.md
+TODO.md
 
 # Imagenes de archivos
 /assets/img/captures/
