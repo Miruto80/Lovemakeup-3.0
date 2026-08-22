@@ -121,6 +121,7 @@
     <div class="product-grid row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 g-4">
         <?php if (!empty($registro)): ?>
             <?php foreach ($registro as $producto): ?>
+            <?php $imagenes = is_array($producto['imagenes'] ?? null) ? $producto['imagenes'] : []; ?>
                 <div class="col">
                    <div class="product-item" data-categoria="<?php echo $producto['id_categoria']; ?>" 
                      data-id="<?php echo $producto['id_producto']; ?>"
@@ -131,11 +132,11 @@
                      data-cantidad-mayor="<?php echo $producto['cantidad_mayor']; ?>"
                      data-precio-mayor="<?php echo $producto['precio_mayor']; ?>"
                      data-stock-disponible="<?php echo $producto['stock_disponible']; ?>"
-                     data-imagenes="<?php echo htmlspecialchars(json_encode($producto['imagenes'])); ?>">
+                     data-imagenes="<?php echo htmlspecialchars(json_encode($imagenes)); ?>">
                   <figure class="position-relative">
                     <p title="<?php echo htmlspecialchars($producto['nombre']); ?>">
                       <img
-                       src="<?php echo $producto['imagenes'][0]['url_imagen']; ?>"
+                       src="<?php echo htmlspecialchars($imagenes[0]['url_imagen'] ?? ''); ?>"
                        alt="<?php echo htmlspecialchars($producto['nombre']); ?>"
                        class="tab-image img-fluid rounded-3"
                        data-bs-toggle="modal"
@@ -195,7 +196,7 @@
                     <input type="hidden" name="precio_detal" value="<?php echo $producto['precio_detal']; ?>">
                     <input type="hidden" name="precio_mayor" value="<?php echo $producto['precio_mayor']; ?>">
                     <input type="hidden" name="cantidad_mayor" value="<?php echo $producto['cantidad_mayor']; ?>">
-                    <input type="hidden" name="imagen" value="<?php echo $producto['imagenes'][0]['url_imagen']; ?>">
+                    <input type="hidden" name="imagen" value="<?php echo htmlspecialchars($imagenes[0]['url_imagen'] ?? ''); ?>">
                     <input type="hidden" name="stockDisponible" value="<?php echo $producto['stock_disponible']; ?>">
 
 
