@@ -60,14 +60,7 @@ class Catalogo extends Conexion {
         $sql = "
             SELECT p.*,
                    c.nombre AS nombre_categoria,
-                   m.nombre AS nombre_marca,
-                   (
-                     SELECT pi.url_imagen
-                     FROM producto_imagen pi
-                     WHERE pi.id_producto = p.id_producto
-                     ORDER BY pi.id_imagen ASC
-                     LIMIT 1
-                   ) AS imagen
+                                     m.nombre AS nombre_marca
             FROM producto p
             INNER JOIN categoria c ON p.id_categoria = c.id_categoria
             INNER JOIN marca m ON p.id_marca = m.id_marca
@@ -79,6 +72,12 @@ class Catalogo extends Conexion {
         $stmt->bindParam(':busqueda', $busqueda, \PDO::PARAM_STR);
         $stmt->execute();
         $resultado = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($resultado as &$producto) {
+            $producto['imagenes'] = $this->objproducto->obtenerImagenes($producto['id_producto']);
+        }
+        unset($producto);
+
         $conex = null;
         return $resultado;
     } catch (\PDOException $e) {

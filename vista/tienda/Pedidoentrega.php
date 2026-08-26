@@ -1,497 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
-<!-- php CSS, Meta y titulo--> 
-<?php include 'vista/complementos/head_catalogo.php' ?>
-
+    <?php include 'vista/complementos/head_catalogo.php' ?>
+    <title>Entrega - Pedido | LoveMakeup C.A </title> 
 </head>
-<style>
-  .text-color1{
-    color: #ff009a;
-  }
+<body class="min-h-screen flex flex-col pb-20 lg:pb-0">
 
-    .pasos-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 600px;
-      margin: 50px auto;
-    }
-
-    .paso {
-      text-align: center;
-      position: relative;
-      flex: 1;
-    }
-
-    .paso:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      top: 15px;
-      right: -50%;
-      width: 100%;
-      height: 2px;
-      background-color: #ccc;
-      z-index: 0;
-    }
-
-    .circulo {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      margin: 0 auto 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: white;
-      position: relative;
-      z-index: 1;
-    }
-
-    .completado .circulo {
-      background-color: #f679d4; /* amarillo */
-    }
-
-    .actual .circulo {
-      background-color: #4fa7fa; /* naranja */
-    }
-
-    .pendiente .circulo {
-      background-color: #adb5bd; /* gris */
-    }
-
-    .paso span {
-      font-size: 14px;
-    }
-
-    .sombra-suave {
-box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3); 
-}
-
-.opcion-custom {
-  display: block;
-  padding: 15px;
-  border: 2px solid #dee2e6;
-  border-radius: 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: #fff;
-  color: #f679d4;
-  font-weight: 500;
-}
-
-.opcion-custom i {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
-
-
-input[type="radio"]:checked + .opcion-custom {
-  border-color: #f679d4;
-  background-color: #ffe9f9;
-  color: black;
-}
-
-/* ===== INDICADOR DE PASOS ===== */
-
-.progress-steps {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  position: relative;
-  padding: 0 20px;
-}
-
-/* Línea base */
-.progress-steps::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 40px;
-  right: 40px;
-  height: 6px;
-  background: linear-gradient(90deg, #f3f4f6, #e5e7eb);
-  z-index: 1;
-  transform: translateY(-50%);
-  border-radius: 10px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-}
-
-/* Contenedor de barra rosada */
-.progress-bar-container {
-  position: absolute;
-  top: 50%;
-  left: 40px;
-  height: 6px;
-  z-index: 2;
-  transform: translateY(-50%);
-  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow: hidden;
-  border-radius: 10px;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    #f472b6 0%,
-    #ec4899 25%,
-    #f472b6 50%,
-    #ec4899 75%,
-    #f472b6 100%
-  );
-  background-size: 200% 100%;
-  animation: progress-animation 2.5s ease-in-out infinite;
-  border-radius: 10px;
-  box-shadow:
-    0 0 20px rgba(236,72,153,0.4),
-    0 0 10px rgba(244,114,182,0.3),
-    0 2px 6px rgba(236,72,153,0.2),
-    inset 0 1px 0 rgba(255,255,255,0.4);
-  position: relative;
-}
-
-.progress-bar-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,0.4),
-    transparent
-  );
-  animation: shine 2s ease-in-out infinite;
-}
-
-@keyframes progress-animation {
-  0%, 100% { background-position: 0% 0; }
-  50% { background-position: 100% 0; }
-}
-
-@keyframes shine {
-  0% { left: -100%; }
-  50%, 100% { left: 100%; }
-}
-
-/* ===== STEP ===== */
-
-.step {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: white;
-  padding: 0.5rem;
-}
-
-.step-number {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: #e9ecef;
-  color: #6c757d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-  transition: all 0.4s;
-  border: 3px solid transparent;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.step-label {
-  font-size: 0.875rem;
-  color: #6c757d;
-  text-align: center;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-/* Activo */
-.step.active .step-number {
-  background: linear-gradient(135deg, #ec4899, #f472b6);
-  color: white;
-  border-color: #ec4899;
-  box-shadow:
-    0 0 20px rgba(236,72,153,0.4),
-    0 4px 12px rgba(236,72,153,0.3),
-    inset 0 1px 0 rgba(255,255,255,0.3);
-  transform: scale(1.1);
-}
-
-.step.active .step-label {
-  color: #ec4899;
-  font-weight: 600;
-  transform: scale(1.05);
-}
-
-/* Completado */
-.step.completed .step-number {
-  background: linear-gradient(135deg, #10b981, #34d399);
-  color: white;
-  border-color: #10b981;
-  box-shadow:
-    0 0 15px rgba(16,185,129,0.3),
-    0 3px 10px rgba(16,185,129,0.2);
-}
-
-.step.completed .step-label {
-  color: #10b981;
-  font-weight: 600;
-}
-
-/* Estilos para las secciones del formulario */
-.seccion-formulario {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #f578d4;
-  transition: all 0.3s ease;
-}
-
-.seccion-formulario {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #f786de;
-  transition: all 0.3s ease;
-}
-
-.seccion-formulario:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.seccion-formulario h6 {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.seccion-formulario h6 i {
-  color: #f6c5b4;
-  font-size: 1.2rem;
-}
-
-
-  </style>
-<!-- |||||||||||||||| LOADER ||||||||||||||||||||-->
-  <div class="preloader-wrapper">
-    <div class="preloader">
-    </div>
-  </div>
-<!-- |||||||||||||||| LOADER ||||||||||||||||||||-->
-
-<!-- php CARRITO--> 
+    <!-- php CARRITO--> 
 <?php include 'vista/complementos/carrito.php' ?>
 
-<!-- php ENCABEZADO LOGO, ICONO CARRITO Y LOGIN--> 
-<?php include 'vista/complementos/nav_catalogo.php' ?>
+  <?php include 'vista/complementos/nav_catalogo.php' ?>
 
-<section id="latest-blog" class="section-padding pt-0">
-    <div class="container-lg">
-        <div class="pasos-container">
-    <div class="paso completado">
-      <div class="circulo">1</div>
-      <span>Producto</span>
-    </div>
-    <div class="paso actual">
-      <div class="circulo">2</div>
-      <span>Entrega</span>
-    </div>
-    <div class="paso completado">
-      <div class="circulo">3</div>
-      <span>Pago</span>
-    </div>
-    <div class="paso completado">
-      <div class="circulo">4</div>
-      <span>Confirmación</span>
-    </div>
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- sección de entrega -->
+<section id="entrega" class="tab-content">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Método de Entrega</h2>
+    <p class="text-s text-gray-600 mt-0.5">Selecciona cómo deseas recibir tu pedido o visítanos en nuestra tienda física</p>
   </div>
 
-  
-  <div class="container py-2"> 
-    <!-- FORMULARIO ENTREGA -->
-<form id="formEntrega" class="row g-4">
-  <div class="row text-center justify-content-center mb-4">
-    <p>Seleccione el metodo de entrega</p>
-
-
-    <div class="col-md-3">
-      <input type="radio" id="op1" name="metodo_entrega" value="4" class="d-none">
-      <label for="op1" class="opcion-custom">
-        <i class="fa-solid fa-shop"></i><br>
-        Tienda física
-      </label>
-    </div>
-
-
-    <div class="col-md-3">
-      <input type="radio" id="op2" name="metodo_entrega" value="2" class="d-none">
-      <label for="op2" class="opcion-custom">
-        <i class="fa-solid fa-truck"></i><br>
-        Envíos nacionales
-      </label>
-    </div>
-
-
-    <div class="col-md-3">
-      <input type="radio" id="op3" name="metodo_entrega" value="1" class="d-none">
-      <label for="op3" class="opcion-custom">
-      <i class="fa-solid fa-motorcycle fa-2x"></i><br>
-        Delivery
-      </label>
-    </div>
-  </div>
-
-  <input type="hidden" name="continuar_entrega" value="1">
- 
-    <div id="formulario-opciones">
-      <!-- Aquí se cargará el contenido según la opción seleccionada -->
-      </div>
-    </div>
-
+      <!-- 2. STEPPER DE PASOS -->
+    <div class="mb-8 border-b border-gray-200 pb-4">
     
-      <br>
-    <div class="d-flex justify-content-between">
-    <a href="?pagina=vercarrito" id="btn-atras" class="btn btn-secondary"><i class="fa-solid fa-arrow-left me-2"></i> Atrás</a>
-      <button type="button" id="btn-continuar-entrega" class="btn btn-primary me-2"> <i class="fa-solid fa-arrow-right"> </i> Continuar</button>
-      </div>
-
-  
-</form>
+        <div class="flex items-center justify-center space-x-4 sm:space-x-8 max-w-2xl mx-auto">
+            <!-- Paso 1 -->
+            <div class="flex items-center space-x-2 text-emerald-400">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">1</span>
+                <span class="text-xs sm:text-sm">Carrito</span>
+            </div>
+            <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Paso 2 -->
+            <div class="flex items-center space-x-2 text-pink-600 font-semibold">
+                <span class="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs">2</span>
+                <span class="text-xs sm:text-sm">Entrega</span>
+            </div>
+               <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Paso 2 -->
+            <div class="flex items-center space-x-2 text-gray-400">
+                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs">3</span>
+                <span class="text-xs sm:text-sm">Pago</span>
+            </div>
+            <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Paso 3 -->
+            <div class="flex items-center space-x-2 text-gray-400">
+                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs">4</span>
+                <span class="text-xs sm:text-sm">Confirmación</span>
+            </div>
+        </div>
     </div>
 
-  </section>
+  <form id="formEntrega" class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:p-8 space-y-8">
+    
+    <!-- SELECCIÓN DE MÉTODO DE ENTREGA -->
+    <div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Opción 1: Tienda física -->
+        <label for="op1" class="relative flex flex-col items-center justify-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 border-slate-200 bg-white hover:border-pink-300 hover:bg-pink-50/40 has-[:checked]:border-pink-500 has-[:checked]:bg-pink-50/50 has-[:checked]:text-pink-600 has-[:checked]:shadow-sm group">
+          <input type="radio" id="op1" name="metodo_entrega" value="4" class="sr-only">
+          <div class="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-pink-100 group-has-[:checked]:bg-pink-500 group-has-[:checked]:text-white flex items-center justify-center text-slate-600 mb-3 transition-colors">
+            <i class="fa-solid fa-shop text-lg"></i>
+          </div>
+          <span class="font-semibold text-sm text-slate-700 group-has-[:checked]:text-pink-600">Tienda física</span>
+          <span class="text-xs text-slate-400 mt-0.5">Retiro presencial</span>
+        </label>
+
+        <!-- Opción 2: Envíos nacionales -->
+        <label for="op2" class="relative flex flex-col items-center justify-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 border-slate-200 bg-white hover:border-pink-300 hover:bg-pink-50/40 has-[:checked]:border-pink-500 has-[:checked]:bg-pink-50/50 has-[:checked]:text-pink-600 has-[:checked]:shadow-sm group">
+          <input type="radio" id="op2" name="metodo_entrega" value="2" class="sr-only">
+          <div class="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-pink-100 group-has-[:checked]:bg-pink-500 group-has-[:checked]:text-white flex items-center justify-center text-slate-600 mb-3 transition-colors">
+            <i class="fa-solid fa-truck text-lg"></i>
+          </div>
+          <span class="font-semibold text-sm text-slate-700 group-has-[:checked]:text-pink-600">Envíos nacionales</span>
+          <span class="text-xs text-slate-400 mt-0.5">Agencias de envío</span>
+        </label>
+
+        <!-- Opción 3: Delivery -->
+        <label for="op3" class="relative flex flex-col items-center justify-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 border-slate-200 bg-white hover:border-pink-300 hover:bg-pink-50/40 has-[:checked]:border-pink-500 has-[:checked]:bg-pink-50/50 has-[:checked]:text-pink-600 has-[:checked]:shadow-sm group">
+          <input type="radio" id="op3" name="metodo_entrega" value="1" class="sr-only">
+          <div class="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-pink-100 group-has-[:checked]:bg-pink-500 group-has-[:checked]:text-white flex items-center justify-center text-slate-600 mb-3 transition-colors">
+            <i class="fa-solid fa-motorcycle text-lg"></i>
+          </div>
+          <span class="font-semibold text-sm text-slate-700 group-has-[:checked]:text-pink-600">Delivery</span>
+          <span class="text-xs text-slate-400 mt-0.5">Envío local express</span>
+        </label>
+      </div>
+    </div>
+
+    <input type="hidden" name="continuar_entrega" value="1">
+
+    <!-- CONTENEDOR DE FORMULARIO DINÁMICO -->
+    <div id="formulario-opciones" class="transition-all duration-300"></div>
+
+    <!-- BOTONES DE NAVEGACIÓN -->
+    <div class="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-between items-center gap-3">
+      <a href="?pagina=vercarrito" id="btn-atras" class="w-full sm:w-auto px-6 py-3 bg-gray-900 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors duration-150 inline-flex items-center justify-center text-sm">
+        <i class="fa-solid fa-arrow-left me-2"></i> Regresar al carrito
+      </a>
+      <button type="button" id="btn-continuar-entrega" class="w-full sm:w-auto px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-md shadow-pink-200 transition-all duration-150 inline-flex items-center justify-center text-sm">
+        Continuar al Pago <i class="fa-solid fa-arrow-right ms-2"></i>
+      </button>
+    </div>
+  </form>
+</section>
 
 
-
+<!-- Tienda física -->
 <template id="form-op1">
-  <div class="card p-3 sombra-rosada seccion-formulario">
-     <div class="mb-3">
-      <p class="text-center text-color1">Retiro en Tienda fisica</p>
-    <label for="retira" class="form-label text-dark">Tienda física ubicada en la av 20 con calles 29 y 30 CC Barquisimeto plaza, Estado Lara, Venezuela </label>
-    <input type="text" class="form-control text-dark" name="direccion_envio" id="retira" value="Retiro en Tienda Fisica" readonly>
-  </div>
+  <div class="bg-slate-50/80 p-5 rounded-2xl border border-pink-100 space-y-3">
+    <div class="flex items-center space-x-3 text-slate-800 font-semibold text-base border-b border-slate-200 pb-2">
+      <i class="fa-solid fa-store text-pink-500"></i>
+      <span>Retiro en Tienda Física</span>
+    </div>
+    <div>
+      <label for="retira" class="block text-xs font-medium text-slate-600 mb-1.5">
+        Ubicación principal: Av. 20 entre calles 29 y 30, C.C. Barquisimeto Plaza, Estado Lara.
+      </label>
+      <input type="text" class="w-full px-4 py-2.5 bg-white border border-pink-200 rounded-xl text-slate-700 text-sm focus:outline-none cursor-not-allowed font-medium" name="direccion_envio" id="retira" value="Retiro en Tienda Física (Barquisimeto)" readonly>
+    </div>
   </div>
 </template>
 
+<!-- Envíos Nacionales -->
 <template id="form-op2">
-  <div class="card p-3 sombra-rosada seccion-formulario">
-     <div class="row g-3 mb-3">
-      <p class="text-center text-color1">Envios Nacionales</p>
-      <div class="col-md-6">
-      <label class="form-label">Empresa</label>
-      <select name="empresa_envio" class="form-select">
-        <option value="">Selecciona</option>
-        <?php foreach($metodos_entrega as $me): ?>
-          <?php if (in_array($me['id_entrega'], [2,3])): ?>
-            <option  value="<?= $me['id_entrega'] ?>"><?= $me['nombre'] ?></option>
-          <?php endif; ?>
-        <?php endforeach; ?>
-      </select>
+  <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 space-y-4">
+    <div class="flex items-center space-x-3 text-slate-800 font-semibold text-base border-b border-slate-200 pb-2">
+      <i class="fa-solid fa-boxes-packing text-pink-500"></i>
+        <span>Datos para Envío Nacional</span>
     </div>
-    <div class="col-md-6">
-      <label for="codigoSucursal" class="form-label text-dark">Código de la sucursal</label>
-      <input type="text" name="sucursal_envio" class="form-control text-dark" id="codigoSucursal" placeholder="Ej. 2140">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Empresa de Envío</label>
+        <select name="empresa_envio" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none">
+          <option value="">Selecciona agencia</option>
+          <?php foreach($metodos_entrega as $me): ?>
+            <?php if (in_array($me['id_entrega'], [2,3])): ?>
+              <option value="<?= $me['id_entrega'] ?>"><?= $me['nombre'] ?></option>
+            <?php endif; ?>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div>
+        <label for="codigoSucursal" class="block text-xs font-semibold text-slate-700 mb-1">Código de Sucursal</label>
+        <input type="text" name="sucursal_envio" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none" id="codigoSucursal" placeholder="Ej. 2140">
+      </div>
     </div>
-  </div>
-  <div class="mb-3">
-    <label for="nombreSucursal" class="form-label text-dark">Nombre de la sucursal</label>
-    <input type="text"   name="direccion_envio" class="form-control text-dark" id="nombreSucursal" placeholder="Ej. Sucursal Barquisimeto Oeste">
-  </div>
+    <div>
+      <label for="nombreSucursal" class="block text-xs font-semibold text-slate-700 mb-1">Nombre / Dirección de la Sucursal</label>
+      <input type="text" name="direccion_envio" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none" id="nombreSucursal" placeholder="Ej. MRW Sucursal Barquisimeto Centro">
+    </div>
   </div>
 </template>
 
-<!-- delivery -->
+<!--Delivery -->
 <template id="form-op3">
-  <div class="card p-3 sombra-rosada seccion-formulario">
-   <div class="row g-3 mb-3">
-    <p class="text-center text-color1">Delivery</p> 
-    
-    
-    
-                             <div class="col-md-3">
-                             <label for="delivery" class="labeldel">Delivery:</label>
-                             <select id="delivery" name="id_delivery" class="form-select">
-    <option value="">Seleccione un Delivery</option>
-    <?php foreach ($delivery_activos as $d): ?>
-        <option value="<?= $d['id_delivery'] ?>"
-            data-nombre="<?= $d['nombre'] ?>"
-            data-tipo="<?= $d['tipo'] ?>"
-            data-contacto="<?= $d['contacto'] ?>"
-        >
-            <?= $d['tipo'] ?> --- <?= $d['nombre'] ?>
-        </option>
-    <?php endforeach; ?>
-</select>
+  <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 space-y-4">
+    <div class="flex items-center space-x-3 text-slate-800 font-semibold text-base border-b border-slate-200 pb-2">
+      <i class="fa-solid fa-motorcycle text-pink-500"></i>
+      <span>Detalles de Entrega Express (Delivery)</span>
+    </div>
 
-<input type="hidden" id="id_delivery">
-<input type="hidden" name="delivery_nombre" id="delivery_nombre">
-<input type="hidden" name="delivery_tipo" id="delivery_tipo">
-<input type="hidden" name="delivery_contacto" id="delivery_contacto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="delivery" class="block text-xs font-semibold text-slate-700 mb-1">Servicio de Delivery</label>
+        <select id="delivery" name="id_delivery" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none">
+          <option value="">Seleccione repartidor o empresa</option>
+          <?php foreach ($delivery_activos as $d): ?>
+            <option value="<?= $d['id_delivery'] ?>"
+                data-nombre="<?= $d['nombre'] ?>"
+                data-tipo="<?= $d['tipo'] ?>"
+                data-contacto="<?= $d['contacto'] ?>"
+            >
+              <?= $d['tipo'] ?> --- <?= $d['nombre'] ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
 
-                              </div>
-     
-  
-                            <div class="col-md-3"> 
-                              <label for="zona" class="labeldel">Zona:</label>
-                              <select id="zona" name="zona" class="form-select text-gray-900" id="zona">
-                                <option value="">-- Selecciona una zona --</option>
-                                <option value="norte">Norte</option>
-                                <option value="sur">Sur</option>
-                                <option value="este">Este</option>
-                                <option value="oeste">Oeste</option>
-                                <option value="centro">Centro</option>
-                              </select>
-                              </div>
+        <input type="hidden" id="id_delivery">
+        <input type="hidden" name="delivery_nombre" id="delivery_nombre">
+        <input type="hidden" name="delivery_tipo" id="delivery_tipo">
+        <input type="hidden" name="delivery_contacto" id="delivery_contacto">
+      </div>
 
-                              <div class="col-md-3">
-                              <label for="parroquia" class="labeldel">Parroquia:</label>
-                              <select id="parroquia" name="parroquia" class="form-select text-gray-900" id="parroquia">
-                                <option value="">-- Selecciona una parroquia --</option>
-                              </select>
-                              </div>
-                              <div class="col-md-3">
-                              <label for="sector" class="labeldel">Sector:</label>
-                              <select id="sector" name="sector" class="form-select text-gray-900" id="sector">
-                                <option value="">-- Selecciona un sector --</option>
-                              </select>
-                            </div>
-  </div>
-  <div class="mb-3">
-    <label for="direccion" class="form-label text-dark">Dirección exacta</label>
-    <input type="text" name="direccion_envio" class="form-control text-dark" id="direccion" placeholder="Ej. Calle 5, casa 12, frente a panadería...">
-  </div>
+      <div>
+        <label for="zona" class="block text-xs font-semibold text-slate-700 mb-1">Zona</label>
+        <select id="zona" name="zona" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none">
+          <option value="">-- Selecciona una zona --</option>
+          <option value="norte">Norte</option>
+          <option value="sur">Sur</option>
+          <option value="este">Este</option>
+          <option value="oeste">Oeste</option>
+          <option value="centro">Centro</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="parroquia" class="block text-xs font-semibold text-slate-700 mb-1">Parroquia</label>
+        <select id="parroquia" name="parroquia" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none">
+          <option value="">-- Selecciona parroquia --</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="sector" class="block text-xs font-semibold text-slate-700 mb-1">Sector / Urbanización</label>
+        <select id="sector" name="sector" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none">
+          <option value="">-- Selecciona sector --</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label for="direccion" class="block text-xs font-semibold text-slate-700 mb-1">Punto de referencia y dirección exacta</label>
+      <input type="text" name="direccion_envio" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 focus:outline-none" id="direccion" placeholder="Ej. Av. Lara con Av. Los Leones, edif. X, piso 2, apto 2B">
+    </div>
   </div>
 </template>
+     
 
+    </main>
+   <?php include 'vista/complementos/footer_catalogo.php' ?>
 
-
-<!-- php Publicidad Insta, Publicidad calidad, footer y JS--> 
-<?php include 'vista/complementos/footer_catalogo.php' ?>
 <script src="assets/js/Pedidoentrega.js"></script>
 
-</script>
-</body>
-
+  </body>
 </html>

@@ -20,6 +20,8 @@ document.querySelectorAll('.btn-eliminar-deseo').forEach(button => {
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3c8b21', 
+      cancelButtonColor: '#b92c2c',  
       reverseButtons: true
     }).then((result) => {
       if (result.isConfirmed) {

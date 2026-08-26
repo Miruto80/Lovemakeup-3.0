@@ -1,0 +1,148 @@
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #fcf8fa;
+    color: #1f2937;
+}
+ /* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+       
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+        ::-webkit-scrollbar-thumb {
+            background: #f472b6;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #db2777;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .product-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -10px rgba(216, 27, 96, 0.12);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            background-color: #d81b60;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        .nav-link.active::after, .nav-link:hover::after {
+            width: 80%;
+        }
+
+        .tab-content {
+            animation: fadeIn 0.35s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Slider Carousel Transitions */
+        .carousel-slide {
+            transition: opacity 0.7s ease-in-out;
+        }
+
+/* Estilos compatibles con tus validaciones de JS */
+.is-invalid {
+        border-color: #ef4444 !important; /* text-red-500 */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23ef4444'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23ef4444' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.is-valid {
+    border-color: #22c55e !important; /* text-green-500 */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2322c55e' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+.is-valid:focus {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2) !important;
+}
+    
+/* Ajuste para inputs con ícono a la izquierda en Tailwind */
+.input-con-icono {
+    padding-left: 2.75rem !important;
+}
+
+
+/*LOADER*/
+ @keyframes spin-slow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+        animation: spin-slow 1.2s linear infinite;
+    }
+
+     /* Estilo general del popover */
+.driverjs-theme .driver-popover {
+  background-color: #f8f9fa;
+  border: 2px solid #d63384 !important;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  max-width: 320px;
+}
+
+/* Título del popover */
+.driverjs-theme .driver-popover-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #0d6efd;
+  margin-bottom: 10px;
+}
+
+/* Descripción del popover */
+.driverjs-theme .driver-popover-description {
+  font-size: 16px;
+  color: #333;
+}
+
+/* Botones de navegación */
+.driverjs-theme .driver-popover-footer button {
+  font-size: 16px !important;
+  padding: 10px 18px !important;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
