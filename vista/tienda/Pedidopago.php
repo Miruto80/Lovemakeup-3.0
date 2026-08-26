@@ -61,32 +61,35 @@ document.addEventListener("DOMContentLoaded", obtenerTasaDolarApi);
         <h2 class="text-2xl font-bold text-gray-900">Completar Pago</h2>
         <p class="text-s text-gray-700 mt-0.5">Selecciona el destino de tu Pago Móvil y adjunta el comprobante.</p>
     </div>
-    <!-- 2. STEPPER DE PASOS -->
-    <div class="mb-8 border-b border-gray-200 pb-4">
-    
-        <div class="flex items-center justify-center space-x-4 sm:space-x-8 max-w-2xl mx-auto">
+
+    <!-- PASOS -->
+    <div class="mb-8 border-b border-gray-200 pb-4 px-2">
+        <div class="flex items-center justify-between sm:justify-center sm:space-x-8 max-w-2xl mx-auto">
             <!-- Paso 1 -->
-            <div class="flex items-center space-x-2 text-emerald-400">
-                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">1</span>
-                <span class="text-xs sm:text-sm">Carrito</span>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-emerald-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">1</span>
+                <span class="text-[11px] sm:text-sm">Carrito</span>
             </div>
-            <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Divisor 1 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
             <!-- Paso 2 -->
-            <div class="flex items-center space-x-2 text-emerald-400">
-                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">2</span>
-                <span class="text-xs sm:text-sm">Entrega</span>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-emerald-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">2</span>
+                <span class="text-[11px] sm:text-sm">Entrega</span>
             </div>
-               <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
-            <!-- Paso 2 -->
-             <div class="flex items-center space-x-2 text-pink-600 font-semibold">
-                <span class="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs">3</span>
-                <span class="text-xs sm:text-sm">Pago</span>
-            </div>
-            <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Divisor 2 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
             <!-- Paso 3 -->
-            <div class="flex items-center space-x-2 text-gray-400">
-                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs">4</span>
-                <span class="text-xs sm:text-sm">Confirmación</span>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-pink-400 font-semibold shrink-0">
+                <span class="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs shrink-0">3</span>
+                <span class="text-[11px] sm:text-sm">Pago</span>
+            </div>
+            <!-- Divisor 3 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
+            <!-- Paso 4 -->
+            <div class="flex items-center space-x-1 sm:space-x-2 text-gray-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs shrink-0">4</span>
+                <span class="text-[11px] sm:text-sm">Confirmación</span>
             </div>
         </div>
     </div>

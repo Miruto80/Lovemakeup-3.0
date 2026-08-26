@@ -84,7 +84,7 @@
 
     <!-- CATEGORÍAS EN DESKTOP (Sticky optimizado con overflow interno si hay muchas categorías) -->
     <div class="hidden md:block md:col-span-3 sticky top-36 max-h-[calc(100vh-8rem)]">
-        <div class="p-6 bg-white border border-pink-100 rounded-3xl shadow-sm flex flex-col max-h-full">
+        <div class="categorias p-6 bg-white border border-pink-100 rounded-3xl shadow-sm flex flex-col max-h-full">
             
             <!-- Título fijo visible -->
             <h5 class="font-bold text-gray-900 text-sm border-b border-pink-100 pb-3 mb-3 flex items-center gap-2 shrink-0">
@@ -287,11 +287,11 @@
                         <div class="flex items-baseline gap-2 flex-wrap">
                             <span id="modal-precio" class="text-2xl font-black text-accent-fuchsia"></span>
                         </div>
-                        <div class="mt-1 text-xs font-semibold text-gray-600">
+                        <div class="mt-1 text-xs font-semibold text-black">
                             Precio al Mayor: <span id="modal-precio-mayor" class="text-pink-600 font-bold"></span> 
                             (a partir de <span id="modal-cantidad-mayor" class="font-bold"></span> unids)
                         </div>
-                        <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
+                        <span class="text-[13px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
                             <i class="fa-solid fa-circle-check"></i> Stock Disponible: <span id="modal-stock-disponible">0</span>
                         </span>
                     </div>
@@ -299,7 +299,7 @@
                     <!-- Descripción -->
                     <div class="space-y-2 mb-4">
                         <h4 class="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Descripción del Producto</h4>
-                        <p id="modal-descripcion" class="text-xs text-gray-600 leading-relaxed"></p>
+                        <p id="modal-descripcion" class="text-s text-gray-600 leading-relaxed"></p>
                     </div>
                 </div>
 

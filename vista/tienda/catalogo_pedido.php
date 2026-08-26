@@ -15,16 +15,19 @@
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!--  contactos -->
-        <section id="pedidos" class="tab-content">
-            <div class="mb-6 flex items-center justify-between">
+    <section id="pedidos" class="tab-content">
+
+     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-pink-100">
         <div>
             <h2 class="text-2xl font-bold text-gray-900">Mis Pedidos</h2>
-            <p class="text-s text-gray-700 mt-1">Historial de tus compras y pedidos con su estado de entrega</p>
+            <p class="text-s text-gray-500 mt-0.5">Historial de tus compras y pedidos con su estado de entrega</p>
         </div>
-        <span class="text-xs font-semibold px-6 py-3 bg-black text-white rounded-full">
-            <?= count($pedidos)  ?>  <?= count($pedidos) === 1 ? 'Pedido' : ' Pedidos' ?>
-        </span>
-    </div>
+        <div class="flex items-center gap-2">
+            <span id="productCountBadge" class="bg-black text-white text-xs font-bold px-3 py-2 rounded-full">
+               <?= count($pedidos)  ?>  <?= count($pedidos) === 1 ? 'Pedido' : ' Pedidos' ?>
+            </span>
+        </div>
+    </div> 
 
             <!-- REJILLA DE TARJETAS DE PEDIDOS -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -38,13 +41,13 @@
 
             // Badges con colores pastel en Tailwind
             $badgeStyle = match ((string)$pedido['estatus']) {
-                '0' => 'bg-red-50 text-red-700 border-red-200',
-                '1' => 'bg-amber-50 text-amber-700 border-amber-200',
+                '0' => 'bg-red-600 text-white border-red-700',
+                '1' => 'bg-amber-400 text-black border-amber-500',
                 '2' => 'bg-blue-50 text-blue-700 border-blue-200',
-                '3' => 'bg-purple-50 text-purple-700 border-purple-200',
-                '4' => 'bg-sky-50 text-sky-700 border-sky-200',
-                '5' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                default => 'bg-gray-50 text-gray-700 border-gray-200'
+                '3' => 'bg-purple-700 text-white border-purple-600',
+                '4' => 'bg-sky-500 text-white border-sky-600',
+                '5' => 'bg-emerald-500 text-white border-emerald-600',
+                default => 'bg-gray-500 text-white border-gray-600'
             };
         ?>
             <div class="bg-white border border-pink-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
@@ -52,7 +55,7 @@
                     <!-- Cabecera de la Card -->
                     <div class="flex items-center justify-between pb-3 border-b border-pink-50 mb-4">
                         <div class="flex items-center gap-2">
-                            <span class="w-16 h-8 rounded-3xl bg-pink-50 text-accent-fuchsia flex items-center justify-center text-xs font-bold">
+                            <span class="w-20 h-8 rounded-3xl bg-pink-50 text-accent-fuchsia flex items-center justify-center text-xs font-bold">
                                 N° <?= $pedido['id_pedido'] ?>
                             </span>
                             <span class="text-xs font-semibold text-black">
@@ -67,20 +70,20 @@
                     <!-- Datos Principales -->
                     <div class="space-y-2 text-xs text-gray-600 mb-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Fecha:</span>
+                            <span class="text-gray-600">Fecha:</span>
                             <span class="font-medium text-gray-800"><?= date('d/m/Y h:i A', strtotime($pedido['fecha'])) ?></span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Método de Pago:</span>
+                            <span class="text-gray-600">Método de Pago:</span>
                             <span class="font-medium text-gray-800"><?= htmlspecialchars($pedido['metodo_pago'] ?? 'N/A') ?></span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Entrega:</span>
+                            <span class="text-gray-600">Entrega:</span>
                             <span class="font-medium text-gray-800"><?= htmlspecialchars($pedido['metodo_entrega'] ?? 'N/A') ?></span>
                         </div>
                         <?php if(!empty($pedido['precio_total_bs'])): ?>
                             <div class="flex justify-between items-center pt-2 border-t border-pink-50">
-                                <span class="font-bold text-gray-700">Total Bs:</span>
+                                <span class="font-bold text-black">Total Bs:</span>
                                 <span class="font-extrabold text-accent-fuchsia text-sm">Bs. <?= number_format($pedido['precio_total_bs'], 2,',', '.') ?></span>
                             </div>
                         <?php endif; ?>
@@ -130,7 +133,7 @@
                 <div class="p-5 bg-pink-500 from-pink-500 to-accent-fuchsia text-white flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-base">Detalles del Pedido #<?= $pedido['id_pedido'] ?></h3>
-                        <p class="text-[11px] opacity-90"><?= date('d/m/Y - h:i A', strtotime($pedido['fecha'])) ?></p>
+                        <p class="text-[13px] opacity-90"><?= date('d/m/Y - h:i A', strtotime($pedido['fecha'])) ?></p>
                     </div>
                     <button type="button" 
                             onclick="closeModal('modalPedido<?= $pedido['id_pedido'] ?>')"
@@ -144,35 +147,35 @@
                     
                     <!-- Información de Cliente y Pago -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-4 bg-pink-50/40 border border-pink-100 rounded-2xl space-y-1.5">
+                        <div class="p-4 bg-pink-50/40 border border-pink-100 rounded-2xl space-y-1.5 text-[14px]">
                             <h4 class="font-bold text-gray-900 border-b border-pink-100 pb-1 mb-2 flex items-center gap-1.5">
                                 <i class="fa-solid fa-user text-accent-fuchsia"></i> Cliente
                             </h4>
-                            <p><strong class="text-gray-700">Nombre:</strong> <?= htmlspecialchars($pedido['nombre_cliente'] ?? '') ?> <?= htmlspecialchars($pedido['apellido_cliente'] ?? '') ?></p>
-                            <p><strong class="text-gray-700">Teléfono:</strong> <?= htmlspecialchars($pedido['telefono_emisor'] ?? 'N/A') ?></p>
-                            <p><strong class="text-gray-700">Estatus:</strong> <?= htmlspecialchars($estatus_texto[$pedido['estatus']] ?? '') ?></p>
+                            <p><strong class="text-black">Nombre:</strong> <?= htmlspecialchars($pedido['nombre_cliente'] ?? '') ?> <?= htmlspecialchars($pedido['apellido_cliente'] ?? '') ?></p>
+                            <p><strong class="text-black">Teléfono:</strong> <?= htmlspecialchars($pedido['telefono_emisor'] ?? 'N/A') ?></p>
+                            <p><strong class="text-black">Estatus:</strong> <?= htmlspecialchars($estatus_texto[$pedido['estatus']] ?? '') ?></p>
                         </div>
 
-                        <div class="p-4 bg-pink-50/40 border border-pink-100 rounded-2xl space-y-1.5">
+                        <div class="p-4 bg-pink-50/40 border border-pink-100 rounded-2xl space-y-1.5 text-[14px]">
                             <h4 class="font-bold text-gray-900 border-b border-pink-100 pb-1 mb-2 flex items-center gap-1.5">
-                                <i class="fa-solid fa-credit-card text-accent-fuchsia"></i> Pago & Entrega
+                                <i class="fa-solid fa-credit-card text-accent-fuchsia"></i> Pago Y Entrega
                             </h4>
-                            <p><strong class="text-gray-700">Método Pago:</strong> <?= htmlspecialchars($pedido['metodo_pago'] ?? 'N/A') ?></p>
+                            <p><strong class="text-black">Método Pago:</strong> <?= htmlspecialchars($pedido['metodo_pago'] ?? 'N/A') ?></p>
                             <?php if (!empty($pedido['banco'])): ?>
-                                <p><strong class="text-gray-700">Banco:</strong> <?= htmlspecialchars($pedido['banco']) ?> &rarr; <?= htmlspecialchars($pedido['banco_destino'] ?? '') ?></p>
+                                <p><strong class="text-black">Banco:</strong> <?= htmlspecialchars($pedido['banco']) ?> &rarr; <?= htmlspecialchars($pedido['banco_destino'] ?? '') ?></p>
                             <?php endif; ?>
                             <?php if (!empty($pedido['referencia_bancaria'])): ?>
-                                <p><strong class="text-gray-700">Ref:</strong> <?= htmlspecialchars($pedido['referencia_bancaria']) ?></p>
+                                <p><strong class="text-black">Ref:</strong> <?= htmlspecialchars($pedido['referencia_bancaria']) ?></p>
                             <?php endif; ?>
-                            <p><strong class="text-gray-700">Entrega:</strong> <?= htmlspecialchars($pedido['metodo_entrega'] ?? 'N/A') ?></p>
+                            <p><strong class="text-black">Entrega:</strong> <?= htmlspecialchars($pedido['metodo_entrega'] ?? 'N/A') ?></p>
                         </div>
                     </div>
 
                     <!-- Comprobante / Dirección si aplican -->
                     <?php if (!empty($pedido['direccion']) || !empty($pedido['imagen'])): ?>
-                        <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                        <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2 text-[14px]">
                             <?php if (!empty($pedido['direccion'])): ?>
-                                <p><strong class="text-gray-700">Dirección de Envío:</strong><br><?= nl2br(htmlspecialchars($pedido['direccion'])) ?></p>
+                                <p><strong class="text-black">Dirección de Envío:</strong><br><?= nl2br(htmlspecialchars($pedido['direccion'])) ?></p>
                             <?php endif; ?>
                             <?php if (!empty($pedido['imagen'])): ?>
                                 <div>

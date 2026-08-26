@@ -625,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (result.isConfirmed) {
                     window.location.href = "?pagina=login"; 
                 }
-            });
+            }); 
         });
     }
 )});
@@ -636,12 +636,11 @@ $('#btnAyuda').on("click", function () {
 
     let steps = [
         { element: '#search-form', popover: { title: 'Buscador', description: 'Aquí puedes buscar cualquier producto de nuestro catálogo', side: "left" }},
-        { element: '[aria-controls="offcanvasCart"]', popover: { title: 'Carrito de compras', description: 'Haz clic aquí para ver los productos que has agregado al carrito.', side: "left", align: 'start' }},
-        { element: '[data-bs-target="#cerrar"]', popover: { title: 'Cerrar sesión', description: 'Este botón te permite cerrar sesión en tu cuenta.', side: "left", align: 'start' }},
-        { element: '.section-title', popover: { title:'Productos más vendidos', description: 'Un listado de nuestros 10 productos más vendidos.', side: "top", align: 'start' }},
+        { element: '.help-carrito', popover: { title: 'Carrito de compras', description: 'Haz clic aquí para ver los productos que has agregado al carrito.', side: "left", align: 'start' }},
+        { element: '.help-login', popover: { title: 'Cerrar sesión', description: 'Este botón te permite cerrar sesión en tu cuenta.', side: "left", align: 'start' }},
+        { element: '.heplp-productotop', popover: { title:'Productos más vendidos', description: 'Un listado de nuestros 10 productos más vendidos.', side: "top", align: 'start' }},
         { element: '.product-item', popover: { title: 'Productos', description: 'Estas son las cartas de nuestros productos. Puedes dar clic en la imagen para ver más detalles del producto.', side: "left", align: 'start' }},
         { element: '.categorias', popover: { title: 'Filtrado por categoría', description: 'Aquí podrás seleccionar las categorías y te saldrán los productos asociados', side: "left", align: 'start' }},
-        { element: '#Botonlado', popover: { title: 'Ver todos los productos', description: 'Aquí puedes ver el listado de todos los productos', side: "left", align: 'start' }},
         { popover: { title: 'Eso es todo', description: 'Este es el fin de la guía, espero que hayas entendido' }}
     ];
 
@@ -666,8 +665,8 @@ $('#btnAyuda').on("click", function () {
     // Si la URL contiene "ver_carrito", mostrar solo los primeros 3 pasos y agregar uno con ".table-light"
     if (currentURL.includes("vercarrito")) {
         steps = [
-            { element: '.table-light', popover: { title: 'Lista del carrito', description: 'Aquí puedes ver los productos que has añadido al carrito.', side: "left", align: 'start' }},
-            { element: '.Enlacecompra', popover: { title: 'Datos del pago', description: 'Aquí colocaras los datos del pago movil realizado y despues esperaras a la confirmacion', side: "left", align: 'start' }},
+            { element: '.orden', popover: { title: 'Lista del carrito', description: 'Aquí puedes ver los productos que has añadido al carrito.', side: "left", align: 'start' }},
+            
         ];
     }
     if (currentURL.includes("verpedidoweb")) {

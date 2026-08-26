@@ -196,11 +196,11 @@
                                 <div class="flex items-baseline gap-2 flex-wrap">
                                     <span id="modal-precio" class="text-2xl font-black text-accent-fuchsia"></span>
                                 </div>
-                                <div class="mt-1 text-xs font-semibold text-gray-600">
+                                <div class="mt-1 text-xs font-semibold text-black">
                                     Precio al Mayor: <span id="modal-precio-mayor" class="text-pink-600 font-bold"></span> 
                                     (a partir de <span id="modal-cantidad-mayor" class="font-bold"></span> unids)
                                 </div>
-                                <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
+                                <span class="text-[13px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
                                     <i class="fa-solid fa-circle-check"></i> Stock Disponible: <span id="modal-stock-disponible">0</span>
                                 </span>
                             </div>
@@ -208,7 +208,7 @@
                             <!-- Descripción -->
                             <div class="space-y-2 mb-4">
                                 <h4 class="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Descripción del Producto</h4>
-                                <p id="modal-descripcion" class="text-xs text-gray-600 leading-relaxed"></p>
+                                <p id="modal-descripcion" class="text-s text-gray-600 leading-relaxed"></p>
                             </div>
                         </div>
 

@@ -23,32 +23,34 @@
         <p class="text-s text-gray-500 mt-0.5">Revisa tus productos antes de procesar el pedido</p>
     </div>
 
-    <!-- 2. STEPPER DE PASOS -->
-    <div class="mb-8 border-b border-gray-200 pb-4">
-    
-        <div class="flex items-center justify-center space-x-4 sm:space-x-8 max-w-2xl mx-auto">
+   <!-- PASOS -->
+    <div class="mb-8 border-b border-gray-200 pb-4 px-2">
+        <div class="flex items-center justify-between sm:justify-center sm:space-x-8 max-w-2xl mx-auto">
             <!-- Paso 1 -->
-            <div class="flex items-center space-x-2 text-pink-600 font-semibold">
-                <span class="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs">1</span>
-                <span class="text-xs sm:text-sm">Carrito</span>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-pink-600 font-semibold shrink-0">
+                <span class="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs shrink-0">1</span>
+                <span class="text-[11px] sm:text-sm">Carrito</span>
             </div>
-            <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Divisor 1 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
             <!-- Paso 2 -->
-            <div class="flex items-center space-x-2 text-gray-400">
-                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs">2</span>
-                <span class="text-xs sm:text-sm">Entrega</span>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-gray-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs shrink-0">2</span>
+                <span class="text-[11px] sm:text-sm">Entrega</span>
             </div>
-               <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
-            <!-- Paso 2 -->
-            <div class="flex items-center space-x-2 text-gray-400">
-                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs">3</span>
-                <span class="text-xs sm:text-sm">Pago</span>
-            </div>
-            <div class="w-8 sm:w-16 h-0.5 bg-gray-200"></div>
+            <!-- Divisor 2 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
             <!-- Paso 3 -->
-            <div class="flex items-center space-x-2 text-gray-400">
-                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs">4</span>
-                <span class="text-xs sm:text-sm">Confirmación</span>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-gray-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs shrink-0">3</span>
+                <span class="text-[11px] sm:text-sm">Pago</span>
+            </div>
+            <!-- Divisor 3 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
+            <!-- Paso 4 -->
+            <div class="flex items-center space-x-1 sm:space-x-2 text-gray-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-xs shrink-0">4</span>
+                <span class="text-[11px] sm:text-sm">Confirmación</span>
             </div>
         </div>
     </div>
@@ -74,7 +76,7 @@
             <!-- TABLA DE PRODUCTOS (Lado Izquierdo - 8 Col) -->
             <div class="lg:col-span-8 bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse orden">
                         <thead>
                             <tr class="bg-gray-50/50 text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-200">
                                 <th class="py-3 px-4">Acción</th>
@@ -135,7 +137,7 @@
                 <!-- Botón Volver -->
                 <div class="p-4 bg-gray-50/50 border-t border-gray-100">
                     <a href="?pagina=catalogo_producto" class="w-full flex items-center justify-center bg-gray-900 hover:bg-grey-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-xs">
-                        <i class="fa-solid fa-arrow-left me-1.5"></i> Seguir Comprando
+                        <i class="fa-solid fa-arrow-left me-1.5"></i> Seguir Buscando
                     </a>
                 </div>
             </div>
@@ -161,11 +163,11 @@
 
                 <!-- ACCIONES Y BOTONES -->
                 <div class="space-y-2">
-                    <a href="?pagina=Pedidoentrega" id="btn-siguiente" class="w-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-xs">
+                    <a href="?pagina=Pedidoentrega" id="btn-siguiente" class="w-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-4 rounded-xl text-xs transition-colors shadow-xs">
                         <i class="fa-solid fa-cart-shopping me-2"></i> Continuar con la Compra
                     </a>
                     
-                    <a href="?pagina=reserva_cliente" class="w-full flex items-center justify-center text-white bg-sky-600 hover:bg-sky-900 font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors border border-sky-200">
+                    <a href="?pagina=reserva_cliente" class="w-full flex items-center justify-center text-white bg-sky-600 hover:bg-sky-900 font-semibold py-4 px-4 rounded-xl text-xs transition-colors border border-sky-200">
                         <i class="fa-solid fa-bookmark me-2"></i> Reservar Productos
                     </a>
                 </div>

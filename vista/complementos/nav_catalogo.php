@@ -105,13 +105,13 @@ if ($json) {
                   
                     <?php if ($sesion_activa): ?>
                         <!-- Si hay sesión activa, muestra el botón de cerrar sesión con otro ícono -->
-                            <button onclick="openLogoutModal()" class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-accent-fuchsia bg-pink-50 hover:bg-pink-100/80 px-2.5 sm:px-3.5 py-2 rounded-full border border-pink-100 transition-all">
+                            <button onclick="openLogoutModal()" class="help-login flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-accent-fuchsia bg-pink-50 hover:bg-pink-100/80 px-2.5 sm:px-3.5 py-2 rounded-full border border-pink-100 transition-all">
                                 <i class="fa-solid fa-right-from-bracket text-base text-accent-fuchsia"></i>
                                 <span class="truncate max-w-[90px] sm:max-w-[140px]">Cerrar</span>
                             </button>
                     <?php else: ?>
                         <!-- Si no hay sesion activa, muestra el icono de usuario para iniciar sesion -->
-                        <a href="?pagina=login" class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-accent-fuchsia bg-pink-50 hover:bg-pink-100/80 px-2.5 sm:px-3.5 py-2 rounded-full border border-pink-100 transition-all">
+                        <a href="?pagina=login" class="help-login flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-accent-fuchsia bg-pink-50 hover:bg-pink-100/80 px-2.5 sm:px-3.5 py-2 rounded-full border border-pink-100 transition-all">
                             <i class="fa-regular fa-circle-user text-base text-accent-fuchsia"></i>
                             <span  class="truncate max-w-[90px] sm:max-w-[140px]">Iniciar Sesion</span>
                         </a>
@@ -135,7 +135,7 @@ if ($json) {
 
                         <!-- CARRITO -->
                         <?php if (!in_array($pagina, $paginasOcultas)): ?>
-                            <button onclick="toggleCartDrawer(true)" class="relative flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-accent-fuchsia to-pink-600 hover:from-pink-700 hover:to-accent-fuchsia text-white px-3 sm:px-4 py-2.5 rounded-full shadow-lg shadow-pink-500/20 text-xs font-bold transition-all transform active:scale-95">
+                            <button onclick="toggleCartDrawer(true)" class="help-carrito relative flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-accent-fuchsia to-pink-600 hover:from-pink-700 hover:to-accent-fuchsia text-white px-3 sm:px-4 py-2.5 rounded-full shadow-lg shadow-pink-500/20 text-xs font-bold transition-all transform active:scale-95">
                                 <i class="fa-solid fa-cart-shopping  text-sm"></i>
                                 <span class="hidden sm:inline">Carrito</span>
                                 <span id="cartCountBadge" class="bg-white text-accent-fuchsia rounded-full text-[11px] font-extrabold px-1.5 py-0.2 min-w-[20px] text-center"> <?php echo count($carrito); ?>   </span>
@@ -229,11 +229,18 @@ if ($json) {
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-gray-900 text-sm">LoveMakeup C.A</h3>
-                                <?php if ($sesion_activa): ?>
-                                    <p class="text-[10px] text-pink-600 font-semibold" id="drawerUserStatus"> Cliente: <?php echo $nombreCompleto?></p>
-                                <?php else: ?>
-                                    <p class="text-[10px] text-pink-600 font-semibold" id="drawerUserStatus">Sesion no iniciada</p>
-                                <?php endif; ?>
+                        
+                                    <?php if ($sesion_activa): ?>
+                                        <?php if (isset($_GET['pagina']) && $_GET['pagina'] === 'listadeseo'): ?>
+                                            <p class="text-[10px] text-pink-600 font-semibold drawerUserStatus">Cliente</p>
+                                        <?php else: ?>
+                                            <p class="text-[10px] text-pink-600 font-semibold drawerUserStatus">
+                                                Cliente: <?php echo htmlspecialchars($nombreCompleto ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                            </p>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <p class="text-[10px] text-pink-600 font-semibold drawerUserStatus">Sesión no iniciada</p>
+                                    <?php endif; ?>
                                
                             </div>
                         </div>
