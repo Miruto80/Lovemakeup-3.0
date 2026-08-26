@@ -116,8 +116,8 @@ error_reporting(E_ALL);
         }
 
     // Validar que el archivo del controlador exista
-    if (!is_file("controlador/".$pagina.".php")){
-        require_once("controlador/error.php");
+        if (!is_file(__DIR__ . "/controlador/" . $pagina . ".php")){
+        require_once __DIR__ . "/controlador/error.php";
         exit;
     }
     
