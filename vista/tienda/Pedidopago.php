@@ -39,6 +39,7 @@ async function obtenerTasaDolarApi() {
 
         document.getElementById("bs").textContent = "Bs " + resultadoForBs;  
         document.getElementById("precio_total_bs").value = resultadoBs ;  
+        document.getElementById("inputMonto").value = resultadoForBs ;  
     } catch (error) {
         document.getElementById("bs").textContent = "Error al cargar el total";
         console.error("Error al obtener la tasa:", error);
@@ -127,6 +128,16 @@ document.addEventListener("DOMContentLoaded", obtenerTasaDolarApi);
 
             <!-- Formulario de Registro de Pago -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6">
+                <!-- Input MONTON A PAGAR (Solo Móvil) -->
+                <div class="block sm:hidden my-4 px-2">
+                <label for="inputEstado" class="block text-xs font-medium text-black mb-1">
+                    Monto a pagar de tu pedido
+                </label>
+                <div class="relative">
+                    <input type="text" id="inputMonto" readonly class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-xs font-semibold rounded-xl py-2.5 px-3.5 focus:outline-none cursor-not-allowed select-none">
+                </div>
+                </div>
+
                 <form id="formPago" class="grid grid-cols-1 sm:grid-cols-2 gap-4" enctype="multipart/form-data">
                     
                     <!-- Flag AJAX -->

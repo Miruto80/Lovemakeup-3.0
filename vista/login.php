@@ -75,7 +75,7 @@ if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'sesion_expirada') {
 <!-- |||||||||||||||| LOADER ||||||||||||||||||||-->
 
   <div class="d-md-flex half">
-    <div class="bg" style="background-image: url('assets/img/g03.jpg');"></div>
+    <div class="bg" style="background-image: url('assets/img/login.webp');"></div>
     <div class="contents">
 
       <div class="container">
@@ -221,7 +221,7 @@ if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'sesion_expirada') {
     <div class="row g-0">
 
     <div class="col-md-4 image-side d-none d-md-block">
-         <img src="assets/img/e4.jpg"  style="width: 100%; height: 100%;">
+         <img src="assets/img/login_res.jpg"  style="width: 100%; height: 100%;">
     </div>
 
     <!-- Formulario a la derecha -->

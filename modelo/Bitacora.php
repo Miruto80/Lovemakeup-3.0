@@ -30,10 +30,8 @@ class Bitacora extends Conexion {
 
     function __construct(){ 
         parent::__construct(); // Llama al constructor de la clase padre
-
-        // Obtener las conexiones de la clase padre
-        $this->conex1 = $this->getConex1();
-        $this->conex2 = $this->getConex2();
+        $this->conex1 = null;
+        $this->conex2 = null;
         
         // Configurar zona horaria una sola vez (optimización)
         if (!self::$timezoneConfigurado) {
@@ -67,6 +65,14 @@ class Bitacora extends Conexion {
         
         // Log en formato JSON para mejor parseo
         error_log('[BITACORA] ' . json_encode($logData, JSON_UNESCAPED_UNICODE));
+    }
+
+    private function getConexionBitacora() {
+        if ($this->conex2 === null) {
+            $this->conex2 = $this->getConex2();
+        }
+
+        return $this->conex2;
     }
 
     /* Registra una operación en la bitácora */
@@ -148,7 +154,7 @@ class Bitacora extends Conexion {
             $registro = "INSERT INTO bitacora (accion, fecha_hora, descripcion, cedula) 
                         VALUES (:accion, :fecha_hora, :descripcion, :cedula)";
             
-            $stmt = $this->conex2->prepare($registro);
+            $stmt = $this->getConexionBitacora()->prepare($registro);
             $stmt->bindParam(':accion', $accion, \PDO::PARAM_STR);
             $stmt->bindParam(':fecha_hora', $fecha, \PDO::PARAM_STR);
             $stmt->bindParam(':descripcion', $detalle, \PDO::PARAM_STR);
@@ -203,7 +209,7 @@ class Bitacora extends Conexion {
                          INNER JOIN rol ru ON u.id_rol = ru.id_rol
                          ORDER BY b.fecha_hora DESC LIMIT :limite
                         ";
-            $consulta = $this->conex2->prepare($registro);
+            $consulta = $this->getConexionBitacora()->prepare($registro);
             $consulta->bindParam(':limite', $limite, \PDO::PARAM_INT);
             $consulta->execute();
 
@@ -231,7 +237,7 @@ class Bitacora extends Conexion {
 
     public function contarTotal(){
         $sql = "SELECT COUNT(*) AS total FROM bitacora";
-        $consulta = $this->conex2->prepare($sql);
+        $consulta = $this->getConexionBitacora()->prepare($sql);
         $consulta->execute();
         $fila = $consulta->fetch(\PDO::FETCH_ASSOC);
         return $fila['total'];
@@ -253,7 +259,7 @@ class Bitacora extends Conexion {
                      INNER JOIN rol ru ON u.id_rol = ru.id_rol
                      WHERE b.id_bitacora = :id_bitacora";
             
-            $stmt = $this->conex2->prepare($query);
+            $stmt = $this->getConexionBitacora()->prepare($query);
             $stmt->bindParam(':id_bitacora', $id_bitacora, \PDO::PARAM_INT);
             $stmt->execute();
             
@@ -279,7 +285,7 @@ class Bitacora extends Conexion {
             }
 
             $registro = "DELETE FROM bitacora WHERE id_bitacora = :id_bitacora";
-            $strExec = $this->conex2->prepare($registro);
+            $strExec = $this->getConexionBitacora()->prepare($registro);
             $strExec->bindParam(':id_bitacora', $this->id_bitacora, \PDO::PARAM_INT);
             $result = $strExec->execute();
             
@@ -315,14 +321,14 @@ class Bitacora extends Conexion {
         try {
             // Primero contar los registros que se van a eliminar
             $countQuery = "SELECT COUNT(*) as total FROM bitacora";
-            $countStmt = $this->conex2->prepare($countQuery);
+            $countStmt = $this->getConexionBitacora()->prepare($countQuery);
             $countStmt->execute();
             $countResult = $countStmt->fetch(\PDO::FETCH_ASSOC);
             $totalRegistros = $countResult['total'] ?? 0;
 
             // Proceder con la eliminación
             $registro = "DELETE FROM bitacora";
-            $strExec = $this->conex2->prepare($registro);
+            $strExec = $this->getConexionBitacora()->prepare($registro);
             $result = $strExec->execute();
             
             if ($result) {
