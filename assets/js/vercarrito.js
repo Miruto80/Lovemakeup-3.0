@@ -64,7 +64,8 @@ $(document).ready(function () {
               setTimeout(() => location.reload(), 100);
             }
           } else {
-            muestraMensaje('error', 2000, 'Error', res.mensaje || 'No se pudo eliminar el producto.');
+           muestraMensaje('error', 2000, 'Error', res.mensaje || 'No se pudo eliminar el producto.');
+            setTimeout(() => location.reload(), 2000);
           }
         },
         error: function (xhr, status, error) {
@@ -73,6 +74,8 @@ $(document).ready(function () {
         }
       });
     });
+
+    
   
     function actualizarCantidad(id, cantidad, fila) {
       $.ajax({

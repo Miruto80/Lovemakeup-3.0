@@ -12,9 +12,9 @@ class Catalogopedido extends Conexion{
 
    
     }
+
     
-    
-    public function consultarPedidosCompletosCatalogo() {
+    public function consultarPedidosCompletosCatalogo($id_persona) {
 
         $conex1 = $this->getConex1();
     
@@ -45,7 +45,7 @@ class Catalogopedido extends Conexion{
                         del.tipo AS delivery_tipo,
                         del.contacto AS delivery_contacto,
     
-                        -- MÉTODO ENTREGA
+                        -- MÉTODO ENTREGA 
                         me.id_entrega AS id_metodoentrega,
                         me.nombre AS metodo_entrega,
                         me.descripcion AS descripcion_entrega,
@@ -58,7 +58,7 @@ class Catalogopedido extends Conexion{
     
                         -- REFERENCIA
                         rp.referencia AS referencia_bancaria,
-                        rp.banco_emisor,
+                        rp.banco_emisor, 
                         rp.banco_receptor,
                         rp.telefono_emisor,
     
@@ -83,11 +83,13 @@ class Catalogopedido extends Conexion{
     
                     LEFT JOIN metodo_pago mp ON dp.id_metodopago = mp.id_metodopago
     
-                    WHERE p.tipo = 2
+                    WHERE p.tipo = 2 AND p.cedula =:cedula
                     ORDER BY p.fecha DESC";
     
             $stmt = $conex1->prepare($sql);
-            $stmt->execute();
+            $stmt->execute([
+                'cedula' => $id_persona
+            ]);
             $pedidos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     
             if (empty($pedidos)) {

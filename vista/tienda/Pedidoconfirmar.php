@@ -1,173 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
-<!-- php CSS, Meta y titulo--> 
-<?php include 'vista/complementos/head_catalogo.php' ?>
-
+    <?php include 'vista/complementos/head_catalogo.php' ?>
+    <title>Compra Exitosa  | LoveMakeup C.A </title> 
 </head>
-<style>
-  .text-color1{
-    color: #ff009a;
-  }
+<body class="min-h-screen flex flex-col pb-20 lg:pb-0">
 
-  .oculto {
-  display: none !important;
-}
-
-    .pasos-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 600px;
-      margin: 50px auto;
-    }
-
-    .paso {
-      text-align: center;
-      position: relative;
-      flex: 1;
-    }
-
-    .paso:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      top: 15px;
-      right: -50%;
-      width: 100%;
-      height: 2px;
-      background-color: #ccc;
-      z-index: 0;
-    }
-
-    .circulo {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      margin: 0 auto 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: white;
-      position: relative;
-      z-index: 1;
-    }
-
-    .completado .circulo {
-      background-color: #f679d4; /* amarillo */
-    }
-
-    .actual .circulo {
-      background-color: #4fa7fa; /* naranja */
-    }
-
-    .pendiente .circulo {
-      background-color: #adb5bd; /* gris */
-    }
-
-    .paso span {
-      font-size: 14px;
-    }
-
-    .sombra-suave {
-      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3); 
-      }
-
-
-    .confirmacion-box {
-      max-width: 700px;
-      margin: 10px auto;
-      padding: 40px;
-      border-radius: 20px;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(255, 105, 180, 0.3);
-      background-color: #e4ffeb;
-    }
-
-    .confirmacion-box i {
-      font-size: 64px;
-      color: #10fe4d; 
-      margin-bottom: 20px;
-    }
-
-    .confirmacion-box h2 {
-      font-weight: 600;
-      color: #212529;
-    }
-
-    .confirmacion-box p {
-      font-size: 16px;
-      color: #6c757d;
-    }
-
-    .footer-text {
-      font-size: 13px;
-      margin-top: 20px;
-      color: #adb5bd;
-    }
-
-
-  </style>
-<!-- |||||||||||||||| LOADER ||||||||||||||||||||-->
-  <div class="preloader-wrapper">
-    <div class="preloader">
-    </div>
-  </div>
-<!-- |||||||||||||||| LOADER ||||||||||||||||||||-->
-
-<!-- php CARRITO--> 
+    <!-- php CARRITO--> 
 <?php include 'vista/complementos/carrito.php' ?>
 
-<!-- php ENCABEZADO LOGO, ICONO CARRITO Y LOGIN--> 
-<?php include 'vista/complementos/nav_catalogo.php' ?>
+  <?php include 'vista/complementos/nav_catalogo.php' ?>
 
-<section id="latest-blog" class="section-padding pt-0">
-    <div class="container-lg">
-        <div class="pasos-container">
-    <div class="paso completado">
-      <div class="circulo">1</div>
-      <span>Producto</span>
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      <!--  pedidoextiso -->
+      <section id="pedidoextiso" class="tab-content">
+
+    <!-- PASOS -->
+    <div class="mb-8 border-b border-gray-200 pb-4 px-2">
+        <div class="flex items-center justify-between sm:justify-center sm:space-x-8 max-w-2xl mx-auto">
+            <!-- Paso 1 -->
+            <div class="flex items-center space-x-1 sm:space-x-2 text-emerald-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">1</span>
+                <span class="text-[11px] sm:text-sm">Carrito</span>
+            </div>
+            <!-- Divisor 1 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
+            <!-- Paso 2 -->
+            <div class="flex items-center space-x-1 sm:space-x-2 text-emerald-400  shrink-0">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">2</span>
+                <span class="text-[11px] sm:text-sm">Entrega</span>
+            </div>
+            <!-- Divisor 2 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
+            <!-- Paso 3 -->
+            <div class="flex items-center space-x-1 sm:space-x-2 text-emerald-400 shrink-0">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">3</span>
+                <span class="text-[11px] sm:text-sm">Pago</span>
+            </div>
+            <!-- Divisor 3 -->
+            <div class="h-0.5 bg-gray-200 flex-1 mx-1.5 sm:flex-none sm:w-16"></div>
+            <!-- Paso 4 -->
+            <div class="flex items-center space-x-1 sm:space-x-2 text-pink-400 font-semibold shrink-0">
+                <span class="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs shrink-0">4</span>
+                <span class="text-[11px] sm:text-sm">Confirmación</span>
+            </div>
+        </div>
     </div>
-    <div class="paso completado">
-      <div class="circulo">2</div>
-      <span>Entrega</span>
-    </div>
-    <div class="paso completado">
-      <div class="circulo">3</div>
-      <span>Pago</span>
-    </div>
-    <div class="paso actual">
-      <div class="circulo">4</div>
-      <span>Confirmación</span>
-    </div>
-  </div>
 
+            <div class="max-w-xl mx-auto my-8 bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center space-y-6">
+      
+              <!-- Ícono Ilustrativo -->
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full shadow-inner">
+                  <i class="fa-solid fa-circle-check text-3xl"></i>
+              </div>
 
+              <!-- Título y Descripción -->
+              <div class="space-y-2">
+                  <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">¡Tu pedido se ha registrado con éxito!</h2>
+                  <p class="text-s text-gray-600 leading-relaxed max-w-md mx-auto">
+                      ¡Muchas gracias por tu compra! <strong>Tu pago se encuentra actualmente en proceso de verificación</strong>  por nuestro equipo. Una vez validado, prepararemos tu pedido para el despacho o retiro.
+                  </p>
+              </div>
 
-<div class="confirmacion-box">
-    <i class="fas fa-check-circle"></i>
-    <h2>Tu pedido se a registrar con exito</h2>
-    <p>¡Gracias por tu compra!. Tu pedido está en proceso de verificación de pago por parte de nuestro equipo. Una vez confirmado, se procederá al retiro o envío según lo que seleccionaste.</p>
+              <!-- Bloque Informativo de Soporte -->
+              <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 text-s text-gray-600 space-y-2">
+                  <p class="font-medium text-gray-800 flex items-center justify-center gap-1.5">
+                      <i class="fa-solid fa-headset text-pink-500"></i> ¿Tienes alguna duda o inconveniente?
+                  </p>
+                  <p>
+                      Si necesitas ayuda o realizar un ajuste en tu orden, comunícate con nuestro equipo de atención a través de  
+                      <a href="https://wa.me/584245115414" target="_blank" class="text-pink-600 font-semibold hover:underline inline-flex items-center gap-1">
+                          <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                      </a>
+                  </p>
+              </div>
 
-    <p class="footer-text">¡Agradecemos tu confianza y preferencia!</p>
-    <a href="?pagina=catalogo" class="btn btn-primary">Continuar</a>
-  </div>
+              <!-- Cierre y Botón de Acción -->
+              <div class="pt-2 space-y-4">
+                  <p class="text-xs font-semibold text-gray-800 uppercase tracking-wider">¡Agradecemos tu confianza y preferencia!</p>
+                  
+                  <div>
+                      <a href="?pagina=catalogo_pedido" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 bg-gray-900 hover:bg-gray-600 text-white font-semibold text-sm rounded-xl shadow-xs transition-all duration-200">
+                          <i class="fa-solid fa-bag-shopping"></i> Continuar comprando
+                      </a>
+                  </div>
+              </div>
 
+          </div>
 
+<div class="mb-8 border-b border-gray-200 pb-4"></div>
+            
+      </section>
 
-
-
-    </div>
-
-  </section>
-
-
-
-
-<!-- php Publicidad Insta, Publicidad calidad, footer y JS--> 
-<?php include 'vista/complementos/footer_catalogo.php' ?>
-  
+  </main>
+  <?php include 'vista/complementos/footer_catalogo.php' ?>
 </body>
-
 </html>

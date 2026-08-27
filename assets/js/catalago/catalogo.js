@@ -1,3 +1,201 @@
+/* -------------------------------- TIENDA ----------------------------------------*/
+/// LOADER
+window.addEventListener('load', function() {
+    const loader = document.getElementById('app-loader');
+        if (loader) {
+            loader.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                loader.remove(); // Elimina el elemento del DOM tras el desvanecimiento
+            }, 500);
+        }
+});
+
+/// MODAL CONFIRAMCION
+ function openLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+/// Cierra el modal de confirmación
+function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+
+        let exchangeRate = 775.34;
+        let cart = [];
+        let favorites = [1, 3];
+        let activeSlide = 0;
+        let slideTimer = null;
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startHeroCarousel();
+        });
+
+      
+
+        // 4-Second Auto Banner Slider Carousel Logic
+        function startHeroCarousel() {
+            if (slideTimer) clearInterval(slideTimer);
+            slideTimer = setInterval(() => {
+                nextSlide();
+            }, 4000);
+        }
+
+        function goToSlide(index) {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('#carouselIndicators button');
+
+            slides.forEach((slide, idx) => {
+                if (idx === index) {
+                    slide.classList.remove('opacity-0', 'pointer-events-none');
+                    slide.classList.add('opacity-100');
+                } else {
+                    slide.classList.remove('opacity-100');
+                    slide.classList.add('opacity-0', 'pointer-events-none');
+                }
+            });
+
+            dots.forEach((dot, idx) => {
+                if (idx === index) {
+                    dot.classList.remove('bg-white/40');
+                    dot.classList.add('bg-white', 'w-6');
+                } else {
+                    dot.classList.remove('bg-white', 'w-6');
+                    dot.classList.add('bg-white/40', 'w-3');
+                }
+            });
+
+            activeSlide = index;
+        }
+
+        function nextSlide() {
+            let next = (activeSlide + 1) % 4;
+            goToSlide(next);
+        }
+
+        function prevSlide() {
+            let prev = (activeSlide - 1 + 4) % 4;
+            goToSlide(prev);
+        }
+
+        // Navigation Tabs Handling
+        function switchTab(tabName) {
+            const tabs = ['inicio', 'productos', 'favoritos', 'pedidos', 'datos', 'ubicacion', 'contacto'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`view-${t}`);
+                if (el) el.classList.add('hidden');
+
+                const deskNav = document.getElementById(`desk-nav-${t}`);
+                if (deskNav) deskNav.classList.remove('active', 'text-accent-fuchsia');
+
+                const botNav = document.getElementById(`bot-nav-${t}`);
+                if (botNav) botNav.classList.remove('text-accent-fuchsia');
+            });
+
+            const activeEl = document.getElementById(`view-${tabName}`);
+            if (activeEl) activeEl.classList.remove('hidden');
+
+            const activeDeskNav = document.getElementById(`desk-nav-${tabName}`);
+            if (activeDeskNav) activeDeskNav.classList.add('active', 'text-accent-fuchsia');
+
+            const activeBotNav = document.getElementById(`bot-nav-${tabName}`);
+            if (activeBotNav) activeBotNav.classList.add('text-accent-fuchsia');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (tabName === 'favoritos') renderFavorites();
+        }
+
+        function switchTabMobile(tabName) {
+            toggleMobileDrawer(false);
+            switchTab(tabName);
+        }
+
+        function toggleMobileDrawer(open) {
+            const drawer = document.getElementById('mobileDrawer');
+            const panel = document.getElementById('mobileDrawerPanel');
+            if (open) {
+                drawer.classList.remove('pointer-events-none', 'opacity-0');
+                drawer.classList.add('opacity-100');
+                panel.classList.remove('-translate-x-full');
+            } else {
+                panel.classList.add('-translate-x-full');
+                drawer.classList.remove('opacity-100');
+                drawer.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function syncMobileSearch() {
+            const q = document.getElementById('searchInputMobile').value;
+            document.getElementById('searchInput').value = q;
+            filterProducts();
+        }
+
+        function toggleCartDrawer(open) {
+            const drawer = document.getElementById('cartDrawer');
+            const panel = document.getElementById('cartDrawerPanel');
+            if (open) {
+                drawer.classList.remove('pointer-events-none', 'opacity-0');
+                drawer.classList.add('opacity-100');
+                panel.classList.remove('translate-x-full');
+            } else {
+                panel.classList.add('translate-x-full');
+                drawer.classList.remove('opacity-100');
+                drawer.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+$(document).ready(function () {
+    $(document).on("click", ".btn-login", function (e) {
+        e.preventDefault();
+        Swal.fire({
+            title: '¡Inicia sesión!',
+            text: 'Debes iniciar sesión para realizar esta acción.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#3c8b21', 
+            cancelButtonColor: '#6b7280',  
+            confirmButtonText: '<i class="fa-solid fa-right-to-bracket mr-1"></i> Iniciar sesión',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                popup: 'rounded-2xl',       
+                confirmButton: 'rounded-xl text-sm font-semibold px-4 py-4',
+                cancelButton: 'rounded-xl text-sm font-semibold px-4 py-4'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'Pagina=login'; 
+            }
+        });
+    });
+    const $btnVolverArriba = $("#btnVolverArriba");
+
+    // Mostrar u ocultar el boton según la posición del scroll
+    $(window).scroll(function () {
+        if ($(this).scrollTop() > 300) {
+            $btnVolverArriba.removeClass("hidden").fadeIn(200);
+        } else {
+            $btnVolverArriba.fadeOut(200, function() {
+                $(this).addClass("hidden");
+            });
+        }
+    });
+
+    // Evento click para subir suavemente al inicio
+    $btnVolverArriba.on("click", function (e) {
+        e.preventDefault();
+        $("html, body").animate({ scrollTop: 0 }, 500); 
+    });
+});
+/* -------------------------------- FIN TIENDA ----------------------------------------*/
+
+
 window.onload = function() {
     if (window.location.search.includes("busqueda=")) {
         window.history.replaceState({}, document.title, "index.php?pagina=catalogo_producto");
@@ -7,84 +205,135 @@ window.onload = function() {
 document.addEventListener("DOMContentLoaded", () => {
     const checkboxes = document.querySelectorAll('.filtro-checkbox');
     const productos = document.querySelectorAll('.product-item[data-categoria]');
-  
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', () => {
-        const categoriasSeleccionadas = Array.from(checkboxes)
-          .filter(c => c.checked)
-          .map(c => c.value);
-  
-        productos.forEach(prod => {
-          // Buscar el contenedor padre que es la columna de la grilla
-          const container = prod.closest('.col');
-          const categoria = prod.getAttribute('data-categoria');
-          if (categoriasSeleccionadas.length === 0 || categoriasSeleccionadas.includes(categoria)) {
-            container.style.display = ''; // Se muestra la columna
-          } else {
-            container.style.display = 'none'; // Se oculta y no ocupa espacio
-          }
-        });
-      });
-    });
-  });
-  
-  const checkboxes = document.querySelectorAll('.filtro-checkbox');
 
-checkboxes.forEach(checkbox => {
-  checkbox.addEventListener('change', () => {
-    const label = checkbox.closest('label');
-    if (checkbox.checked) {
-      label.style.backgroundColor = 'pink';
-    } else {
-      label.style.backgroundColor = '';
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const isChecked = e.target.checked;
+
+            // 1. Sincronizar el checkbox equivalente (móvil <-> desktop)
+            checkboxes.forEach(otherCb => {
+                if (otherCb.value === val) {
+                    otherCb.checked = isChecked;
+                    actualizarEstiloLabel(otherCb);
+                }
+            });
+
+            // 2. Obtener categorías activas
+            const categoriasSeleccionadas = Array.from(checkboxes)
+                .filter(c => c.checked)
+                .map(c => c.value);
+
+            // 3. Filtrar los elementos dentro de la rejilla
+            productos.forEach(prod => {
+                // Si el mismo producto tiene la clase del grid o está envuelto por ella
+                const target = prod.classList.contains('product-item') ? prod : prod.closest('.product-item');
+                const categoria = prod.getAttribute('data-categoria');
+
+                if (categoriasSeleccionadas.length === 0 || categoriasSeleccionadas.includes(categoria)) {
+                    target.style.display = ''; // Muestra el producto
+                } else {
+                    target.style.display = 'none'; // Oculta y libera el espacio en el grid
+                }
+            });
+        });
+    });
+
+    // Función auxiliar para manejar clases activas en Tailwind en lugar de style inline
+    function actualizarEstiloLabel(checkbox) {
+        const label = checkbox.closest('label');
+        if (!label) return;
+
+        if (checkbox.checked) {
+            label.classList.add('bg-pink-100', 'border-accent-fuchsia', 'text-accent-fuchsia');
+            label.classList.remove('bg-pink-50/30');
+        } else {
+            label.classList.remove('bg-pink-100', 'border-accent-fuchsia', 'text-accent-fuchsia');
+            label.classList.add('bg-pink-50/30');
+        }
     }
-  });
 });
 
 
+let currentModalQty = 1;
 
 function openModal(element) {
+    // CAPTURAR Y VERIFICAR EL EVENTO
+    const e = window.event;
+    if (e && e.target) {
+        if (e.target.closest('.btn-favorito') || e.target.closest('a[href*="pagina=login"]') || e.target.closest('.btn-login')) {
+            return; 
+        }
+    }
+
     const id = element.dataset.id;
     const nombre = element.dataset.nombre;
     const precio = element.dataset.precio;
-    const marca = element.dataset.marca || 'N/A';
-    const descripcion = element.dataset.descripcion || 'N/A';
-    const cantidadMayor = element.dataset.cantidadMayor || 'N/A';
-    const precioMayor = element.dataset.precioMayor || 'N/A';
-    const stockDisponible = element.dataset.stockDisponible || 'N/A';
+    const marca = element.dataset.marca || 'LoveMakeup';
+    const descripcion = element.dataset.descripcion || 'Sin descripción disponible.';
+    const cantidadMayor = element.dataset.cantidadMayor || '0';
+    const precioMayor = element.dataset.precioMayor || '0.00';
+    const stockDisponible = element.dataset.stockDisponible || '0';
     
     // Convertir el JSON de imágenes
-    const imagenes = JSON.parse(element.dataset.imagenes || '[]');
+    let imagenes = [];
+    try {
+        imagenes = JSON.parse(element.dataset.imagenes || '[]');
+    } catch (e) {
+        imagenes = [];
+    }
 
     // Insertar datos en el modal
     document.getElementById('modal-title').textContent = nombre;
-    document.getElementById('modal-precio').textContent = "$" + precio;
+    document.getElementById('modal-precio').textContent = "$" + parseFloat(precio).toFixed(2);
     document.getElementById('modal-marca').textContent = marca;
     document.getElementById('modal-descripcion').textContent = descripcion;
     document.getElementById('modal-cantidad-mayor').textContent = cantidadMayor;
-    document.getElementById('modal-precio-mayor').textContent = "$" + precioMayor;
+    document.getElementById('modal-precio-mayor').textContent = "$" + parseFloat(precioMayor).toFixed(2);
     document.getElementById('modal-stock-disponible').textContent = stockDisponible;
 
-    // Rellenar el slider
+    const marcaBadge = document.getElementById('modal-marca-badge');
+    if (marcaBadge) marcaBadge.textContent = marca;
+
+    // Rellenar el slider/galería de miniaturas
     const sliderInner = document.getElementById('modal-slider-inner');
-    sliderInner.innerHTML = ''; // limpiar antes de agregar
+    const mainImg = document.getElementById('modal-main-image');
+    sliderInner.innerHTML = '';
 
-    imagenes.forEach((img, index) => {
-        const div = document.createElement('div');
-        div.classList.add('carousel-item');
-        if(index === 0) div.classList.add('active');
+    const placeholder = 'https://placehold.co/800x800/fdf2f8/d81b60?text=LoveMakeup';
 
-        const image = document.createElement('img');
-        image.src = img.url_imagen;
-        image.classList.add('d-block','w-100');
-        image.style.maxHeight = '400px';
-        image.style.objectFit = 'contain';
+    if (imagenes.length > 0) {
+        if (mainImg) mainImg.src = imagenes[0].url_imagen || placeholder;
 
-        div.appendChild(image);
-        sliderInner.appendChild(div);
-    });
+        imagenes.forEach((img, index) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `w-14 h-14 rounded-xl border-2 ${index === 0 ? 'border-accent-fuchsia' : 'border-pink-100'} overflow-hidden p-1 bg-pink-50 flex-shrink-0 transition-all`;
+            
+            const image = document.createElement('img');
+            image.src = img.url_imagen;
+            image.className = 'w-full h-full object-contain pointer-events-none';
+            image.onerror = function() { this.src = placeholder; };
 
-    // Rellenar formulario oculto con la primera imagen
+            btn.appendChild(image);
+
+            btn.onclick = function() {
+                if (mainImg) mainImg.src = img.url_imagen;
+                document.querySelectorAll('#modal-slider-inner button').forEach(b => {
+                    b.classList.remove('border-accent-fuchsia');
+                    b.classList.add('border-pink-100');
+                });
+                btn.classList.remove('border-pink-100');
+                btn.classList.add('border-accent-fuchsia');
+            };
+
+            sliderInner.appendChild(btn);
+        });
+    } else {
+        if (mainImg) mainImg.src = placeholder;
+    }
+
+    // Rellenar formulario oculto
     document.getElementById('form-id').value = id;
     document.getElementById('form-nombre').value = nombre;
     document.getElementById('form-precio-detal').value = precio;
@@ -93,9 +342,29 @@ function openModal(element) {
     document.getElementById('form-imagen').value = imagenes.length ? imagenes[0].url_imagen : '';
     document.getElementById('form-stock-disponible').value = stockDisponible;
 
-    // Botón favorito
-    const btnFavorito = document.querySelector('.btn-favorito');
-    if (btnFavorito) btnFavorito.dataset.id = id;
+    // MOSTRAR EL MODAL
+    const modal = document.getElementById('productDetailModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+/* Cierra el modal de detalle */
+function closeProductModal() {
+    const modal = document.getElementById('productDetailModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+/**
+ * Maneja el envío del formulario del modal
+ */
+function handleModalSubmit(event) {
+    event.preventDefault();
+    const productId = document.getElementById('form-id').value;
+    
+    if (typeof agregarAlCarritoDirecto === 'function') {
+        agregarAlCarritoDirecto(productId, 1);
+    }
+
+    closeProductModal();
 }
 
 
@@ -135,13 +404,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
       if(stockDisponible === 0){
-                muestraMensaje('error', 1000, 'Sin stock', 'Este producto no está disponible actualmente.');
+            muestraMensaje('error', 1000, 'Sin stock', 'Este producto no está disponible actualmente.');
         return;
             }
-   if (cantidadActual >= stockDisponible) {
+      if (cantidadActual >= stockDisponible) {
              muestraMensaje('error', 1000, 'Stock limitado', 'Ya has agregado el máximo permitido.');
                   return;
-            } 
+      } 
 
       
 
@@ -356,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (result.isConfirmed) {
                     window.location.href = "?pagina=login"; 
                 }
-            });
+            }); 
         });
     }
 )});
@@ -367,12 +636,11 @@ $('#btnAyuda').on("click", function () {
 
     let steps = [
         { element: '#search-form', popover: { title: 'Buscador', description: 'Aquí puedes buscar cualquier producto de nuestro catálogo', side: "left" }},
-        { element: '[aria-controls="offcanvasCart"]', popover: { title: 'Carrito de compras', description: 'Haz clic aquí para ver los productos que has agregado al carrito.', side: "left", align: 'start' }},
-        { element: '[data-bs-target="#cerrar"]', popover: { title: 'Cerrar sesión', description: 'Este botón te permite cerrar sesión en tu cuenta.', side: "left", align: 'start' }},
-        { element: '.section-title', popover: { title:'Productos más vendidos', description: 'Un listado de nuestros 10 productos más vendidos.', side: "top", align: 'start' }},
+        { element: '.help-carrito', popover: { title: 'Carrito de compras', description: 'Haz clic aquí para ver los productos que has agregado al carrito.', side: "left", align: 'start' }},
+        { element: '.help-login', popover: { title: 'Cerrar sesión', description: 'Este botón te permite cerrar sesión en tu cuenta.', side: "left", align: 'start' }},
+        { element: '.heplp-productotop', popover: { title:'Productos más vendidos', description: 'Un listado de nuestros 10 productos más vendidos.', side: "top", align: 'start' }},
         { element: '.product-item', popover: { title: 'Productos', description: 'Estas son las cartas de nuestros productos. Puedes dar clic en la imagen para ver más detalles del producto.', side: "left", align: 'start' }},
         { element: '.categorias', popover: { title: 'Filtrado por categoría', description: 'Aquí podrás seleccionar las categorías y te saldrán los productos asociados', side: "left", align: 'start' }},
-        { element: '#Botonlado', popover: { title: 'Ver todos los productos', description: 'Aquí puedes ver el listado de todos los productos', side: "left", align: 'start' }},
         { popover: { title: 'Eso es todo', description: 'Este es el fin de la guía, espero que hayas entendido' }}
     ];
 
@@ -397,8 +665,8 @@ $('#btnAyuda').on("click", function () {
     // Si la URL contiene "ver_carrito", mostrar solo los primeros 3 pasos y agregar uno con ".table-light"
     if (currentURL.includes("vercarrito")) {
         steps = [
-            { element: '.table-light', popover: { title: 'Lista del carrito', description: 'Aquí puedes ver los productos que has añadido al carrito.', side: "left", align: 'start' }},
-            { element: '.Enlacecompra', popover: { title: 'Datos del pago', description: 'Aquí colocaras los datos del pago movil realizado y despues esperaras a la confirmacion', side: "left", align: 'start' }},
+            { element: '.orden', popover: { title: 'Lista del carrito', description: 'Aquí puedes ver los productos que has añadido al carrito.', side: "left", align: 'start' }},
+            
         ];
     }
     if (currentURL.includes("verpedidoweb")) {
