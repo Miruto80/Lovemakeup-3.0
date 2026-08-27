@@ -1,10 +1,15 @@
 <?php
-define('DB_NAME_1', 'u417714339_Lovemakeupbd');
-define('DB_NAME_2', 'u417714339_Lovemakeupbds');
-define('DB_HOST', 'localhost');
-define('DB_USER', 'u417714339_Lovemakeup');
-define('DB_USER_2', 'u417714339_Lovemakeups');
-define('DB_PASS', 'Labiosfresa123.'); 
+    use Dotenv\Dotenv;
+    require_once __DIR__ . '/../vendor/autoload.php';
+    $dotenv = Dotenv::createImmutable(dirname(__DIR__), 'passconfig.env');
+    $dotenv->load();
 
-date_default_timezone_set('America/Caracas');
+    define('DB_NAME_1', $_ENV['DB_NAME_1']);
+    define('DB_NAME_2', $_ENV['DB_NAME_2']);
+    define('DB_HOST', $_ENV['DB_HOST']);
+    define('DB_USER', $_ENV['DB_USER']);
+    define('DB_USER_2', $_ENV['DB_USER_2']);
+    define('DB_PASS', $_ENV['DB_PASS']);
+
+    date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'America/Caracas');
 ?>
