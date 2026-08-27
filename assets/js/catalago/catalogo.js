@@ -1,4 +1,4 @@
-/* -------------------------------- TIENDA ----------------------------------------*/
+/* -------------------------- TIENDA ------------------------------------*/
 /// LOADER
 window.addEventListener('load', function() {
     const loader = document.getElementById('app-loader');
