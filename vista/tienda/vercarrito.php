@@ -181,7 +181,7 @@
 
 
     </main>
-     <script src="assets/js/vercarrito.js"></script>
+    <script src="assets/js/vercarrito.js?v=<?= filemtime('assets/js/vercarrito.js') ?>"></script>
    <?php include 'vista/complementos/footer_catalogo.php' ?>
 </body>
 </html>

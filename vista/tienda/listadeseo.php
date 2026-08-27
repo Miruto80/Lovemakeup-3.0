@@ -243,7 +243,7 @@
         </div>
 
     <?php include 'vista/complementos/footer_catalogo.php' ?>
-    <script src="assets/js/lista_deseo.js"></script>
+    <script src="assets/js/lista_deseo.js?v=<?= filemtime('assets/js/lista_deseo.js') ?>"></script>
       
 </body>
 </html>
