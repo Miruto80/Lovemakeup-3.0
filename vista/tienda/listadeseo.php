@@ -116,7 +116,7 @@
                                         <input type="hidden" name="stockDisponible" value="<?php echo $producto['stock_disponible']; ?>">
 
                                         <?php if ($sesion_activa && $_SESSION["nivel_rol"] == 1): ?>
-                                            <button type="button" class="btn-agregar-carrito-exterior w-full bg-pink-50 hover:bg-accent-fuchsia text-accent-fuchsia hover:text-white font-bold py-2 rounded-2xl text-xs flex items-center justify-center gap-1.5 transition-all">
+                                            <button type="button" class="btn-agregar-carrito-exterior w-full bg-accent-fuchsia text-white hover:bg-pink-600 hover:text-white font-bold py-2 rounded-2xl text-xs flex items-center justify-center gap-1.5 transition-all">
                                                 <i class="fa-solid fa-plus text-[10px]"></i> Añadir
                                             </button>
                                             <div class="my-2 pt-2 border-t border-gray-100 flex items-baseline justify-between gap-1">
@@ -155,92 +155,102 @@
     
     </main>
 
-        <!-- MODAL: DETALLE DEL PRODUCTO -->
-        <div id="productDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs hidden p-3 sm:p-4">
-            <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-pink-100 p-6 sm:p-8 relative">
-                
-                <!-- Botón Cerrar (Posicionado arriba a la derecha con margen suficiente) -->
-                <button type="button" onclick="closeProductModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-pink-50 text-gray-500 hover:text-gray-800 flex items-center justify-center text-sm shadow-xs z-20 transition-colors">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+    <!-- MODAL: DETALLE DEL PRODUCTO -->
+<div id="productDetailModal" 
+     onclick="cierremodalfuera(event)"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs hidden p-3 sm:p-4 transition-opacity duration-300 opacity-0">
+    
+    <div id="productModalContent" 
+         class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-pink-100 p-6 sm:p-8 relative transform transition-all duration-300 scale-95 opacity-0">
+        
+        <!-- Botón Cerrar -->
+        <button type="button" onclick="closeProductModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-red-500 text-white hover:text-gray-800 flex items-center justify-center text-sm shadow-xs z-20 transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
 
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start pt-2">
-                    
-                    <!-- Lado de la Galería / Slider -->
-                    <div class="md:col-span-6 space-y-3">
-                        <div class="bg-pink-50/50 rounded-3xl p-4 border border-pink-100 aspect-square flex items-center justify-center relative overflow-hidden group">
-                            <img id="modal-main-image" src="" alt="Producto" class="w-full h-full object-contain transition-all duration-300">
-                            <span id="modal-marca-badge" class="absolute top-3 left-3 bg-accent-fuchsia text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                Original
-                            </span>
-                        </div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start pt-2">
+            
+            <!-- Lado de la Galeria -->
+            <div class="md:col-span-6 space-y-3">
+                <div class="bg-pink-50/50 rounded-3xl p-4 border border-pink-100 aspect-square flex items-center justify-center relative overflow-hidden group">
+                    <img id="modal-main-image" src="" alt="Producto" class="w-full h-full object-contain transition-all duration-300">
+                    <span id="modal-marca-badge" class="absolute top-3 left-3 bg-accent-fuchsia text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        Original
+                    </span>
 
-                        <!-- Contenedor de Miniaturas -->
-                        <div id="modal-slider-inner" class="flex items-center gap-2 overflow-x-auto pb-1">
-                            <!-- Las miniaturas se inyectan dinámicamente -->
-                        </div>
-                    </div>
+                    <!-- Flecha Atras -->
+                    <button type="button" id="modal-prev-btn" onclick="cambiarImagenModal(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-md flex items-center justify-center transition-all z-10 hidden">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
 
-                    <!-- Lado de Información del Producto -->
-                    <div class="md:col-span-6 space-y-4 flex flex-col justify-between h-full">
-                        <div>
-                            <!-- Encabezado con Marca y Favorito (Con pr-8 para no chocar con la X de cerrar) -->
-                            <div class="flex justify-between items-center pr-8 mb-1">
-                                <span id="modal-marca" class="text-xs font-extrabold text-pink-600 uppercase tracking-widest block"></span>
-                            </div>
-                            
-                            <h3 id="modal-title" class="text-xl sm:text-2xl font-black text-gray-900 mb-2 leading-tight"></h3>
-                            
-                            <!-- Precios y Stock -->
-                            <div class="p-3 bg-pink-50/70 rounded-2xl border border-pink-100 mb-4">
-                                <div class="flex items-baseline gap-2 flex-wrap">
-                                    <span id="modal-precio" class="text-2xl font-black text-accent-fuchsia"></span>
-                                </div>
-                                <div class="mt-1 text-xs font-semibold text-black">
-                                    Precio al Mayor: <span id="modal-precio-mayor" class="text-pink-600 font-bold"></span> 
-                                    (a partir de <span id="modal-cantidad-mayor" class="font-bold"></span> unids)
-                                </div>
-                                <span class="text-[13px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
-                                    <i class="fa-solid fa-circle-check"></i> Stock Disponible: <span id="modal-stock-disponible">0</span>
-                                </span>
-                            </div>
+                    <!-- Flecha Siguiente -->
+                    <button type="button" id="modal-next-btn" onclick="cambiarImagenModal(1)" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-gray-800 shadow-md flex items-center justify-center transition-all z-10 hidden">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
 
-                            <!-- Descripción -->
-                            <div class="space-y-2 mb-4">
-                                <h4 class="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Descripción del Producto</h4>
-                                <p id="modal-descripcion" class="text-s text-gray-600 leading-relaxed"></p>
-                            </div>
-                        </div>
-
-                        <!-- Formulario Oculto y Botón de Acción -->
-                        <form id="form-carrito"  class="pt-3 border-t border-pink-100">
-                            <!-- Inputs ocultos para envío de datos al carrito -->
-                            <input type="hidden" name="id" id="form-id">
-                              <input type="hidden" name="nombre" id="form-nombre">
-                              <input type="hidden" name="precio_detal" id="form-precio-detal">
-                              <input type="hidden" name="precio_mayor" id="form-precio-mayor">
-                              <input type="hidden" name="cantidad_mayor" id="form-cantidad-mayor">
-                              <input type="hidden" name="imagen" id="form-imagen">
-                              <input type="hidden" name="stockDisponible" id="form-stock-disponible">
-                            
-                            <?php if ($sesion_activa && $_SESSION["nivel_rol"] == 1): ?>
-                            <button type="submit" id="btn-agregar-carrito"class="w-full bg-accent-fuchsia hover:bg-pink-700 text-white font-bold py-3.5 rounded-2xl text-xs shadow-lg shadow-pink-500/20 transition-all flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-bag-shopping"></i> Agregar al Carrito
-                            </button>
-                            
-                            <?php else: ?>
-                                <button type="button" class="w-full bg-accent-fuchsia hover:bg-pink-700 text-white font-bold py-3.5 rounded-2xl text-xs shadow-lg shadow-pink-500/20 transition-all flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-bag-shopping"></i> Agregar al Carrito
-                                </button>
-
-                            <?php endif; ?>
-                        </form>
-
-                    </div>
-
+                <!-- Contenedor de Miniaturas -->
+                <div id="modal-slider-inner" class="flex items-center gap-2 overflow-x-auto pb-1">
+                    <!-- Las miniaturas dinamicamente -->
                 </div>
             </div>
+
+            <!-- Lado de Información del Producto -->
+            <div class="md:col-span-6 space-y-4 flex flex-col justify-between h-full">
+                <div>
+                    <!-- Encabezado con Marca -->
+                    <div class="flex justify-between items-center pr-8 mb-1">
+                        <span id="modal-marca" class="text-xs font-extrabold text-pink-600 uppercase tracking-widest block"></span>
+                    </div>
+                    
+                    <h3 id="modal-title" class="text-xl sm:text-2xl font-black text-gray-900 mb-2 leading-tight"></h3>
+                    
+                    <!-- Precios y Stock -->
+                    <div class="p-3 bg-pink-50/70 rounded-2xl border border-pink-100 mb-4">
+                        <div class="flex items-baseline gap-2 flex-wrap">
+                            <span id="modal-precio" class="text-2xl font-black text-accent-fuchsia"></span>
+                        </div>
+                        <div class="mt-1 text-xs font-semibold text-black">
+                            Precio al Mayor: <span id="modal-precio-mayor" class="text-pink-600 font-bold"></span> 
+                            (a partir de <span id="modal-cantidad-mayor" class="font-bold"></span> unids)
+                        </div>
+                        <span class="text-[13px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-circle-check"></i> Stock Disponible: <span id="modal-stock-disponible">0</span>
+                        </span>
+                    </div>
+
+                    <!-- Descripcion -->
+                    <div class="space-y-2 mb-4">
+                        <h4 class="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Descripción del Producto</h4>
+                        <p id="modal-descripcion" class="text-s text-gray-600 leading-relaxed"></p>
+                    </div>
+                </div>
+
+                <!-- Formulario Oculto y Botón de Acción -->
+                <form id="form-carrito" class="pt-3 border-t border-pink-100">
+                    <input type="hidden" name="id" id="form-id">
+                    <input type="hidden" name="nombre" id="form-nombre">
+                    <input type="hidden" name="precio_detal" id="form-precio-detal">
+                    <input type="hidden" name="precio_mayor" id="form-precio-mayor">
+                    <input type="hidden" name="cantidad_mayor" id="form-cantidad-mayor">
+                    <input type="hidden" name="imagen" id="form-imagen">
+                    <input type="hidden" name="stockDisponible" id="form-stock-disponible">
+                    
+                    <?php if ($sesion_activa && $_SESSION["nivel_rol"] == 1){ ?>
+                        <button type="submit" id="btn-agregar-carrito" class="w-full bg-accent-fuchsia hover:bg-pink-700 text-white font-bold py-3.5 rounded-2xl text-xs shadow-lg shadow-pink-500/20 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bag-shopping"></i> Agregar al Carrito
+                        </button>
+                    <?php } else { ?>
+                        <button type="button" class="btn-login w-full bg-accent-fuchsia hover:bg-pink-700 text-white font-bold py-3.5 rounded-2xl text-xs shadow-lg shadow-pink-500/20 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bag-shopping"></i> Agregar al Carrito
+                        </button>
+                    <?php } ?>
+                </form>
+            </div>
+
         </div>
+    </div>
+</div>
 
     <?php include 'vista/complementos/footer_catalogo.php' ?>
     <script src="assets/js/lista_deseo.js?v=<?= filemtime('assets/js/lista_deseo.js') ?>"></script>

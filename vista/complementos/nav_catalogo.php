@@ -52,9 +52,7 @@ if ($json) {
                 <span class="bg-white text-black px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase">
                     <i class="fa-solid fa-sparkles text-amber-300 mr-1"></i> Bienvenido/a
                 </span>
-                <span class="opacity-95 font-semibold text-xs sm:text-sm" id="saludo">
-                    
-                </span>
+               <span class="hidden md:inline opacity-95 font-semibold text-xs sm:text-sm" id="saludo"></span>
             </div>
             <div class="flex items-center gap-3 text-[13px] font-medium">
                 <button  class="flex items-center gap-1.5 bg-white text-black px-2.5 py-1 rounded-full transition-all">
@@ -125,11 +123,10 @@ if ($json) {
                         ?>
 
                         <?php if (in_array($pagina,$paginasPermitidas)): ?>
-                            <a class="p-2 mx-1" id="btnAyuda" title="Ayuda">
+                            <a class="hidden md:inline-flex items-center p-2 mx-1 cursor-pointer" id="btnAyuda" title="Ayuda">
                                 <span class="icon text-dark">
-                                <i class="fa-solid fa-circle-question"  style="font-size: 25px; color:#004adf; cursor: pointer;"></i>
-                                </span>
-                                
+                                    <i class="fa-solid fa-circle-question text-[25px] text-[#004adf]"></i>
+                                </span> 
                             </a>
                         <?php endif; ?>
 
@@ -154,16 +151,23 @@ if ($json) {
                 </div>
             </div>
 
-            <!-- barra de busqueda movil -->
-            <div class="md:hidden pb-3">
-                <div class="relative w-full">
-                     <form id="search-form" class="text-center" action="index.php" method="get"> 
+           <!-- Barra de búsqueda móvil y Botón de ayuda alineados -->
+            <div class="md:hidden pb-3 flex items-center gap-2">
+                <div class="relative flex-1">
+                    <form id="search-form-mobile" class="text-center" action="index.php" method="get"> 
                         <input type="hidden" name="pagina" value="catalogo_producto">
                         <input type="text" id="searchInputMobile" name="busqueda" placeholder="Buscar producto, marca o kit..." 
-                        class="w-full bg-pink-50/70 border border-pink-200 text-gray-800 text-xs rounded-full pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-accent-fuchsia/40">
+                            class="w-full bg-pink-50/70 border border-pink-200 text-gray-800 text-xs rounded-full pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-accent-fuchsia/40">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-pink-400 text-xs"></i>
                     </form>
                 </div>
+                <?php if ($sesion_activa && $_SESSION["nivel_rol"] == 1): ?>
+                    <?php if (in_array($pagina, $paginasPermitidas)): ?>
+                        <a id="btnAyuda1" title="Ayuda" class="flex items-center justify-center shrink-0 p-1 cursor-pointer">
+                            <i class="fa-solid fa-circle-question text-xl text-blue-600 hover:text-blue-700 transition-colors"></i>
+                        </a>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
 
             <!-- Barra de navegacion horizontal secundaria para escritorio -->
