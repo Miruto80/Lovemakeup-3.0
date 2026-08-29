@@ -94,10 +94,7 @@ if (!$claims) {
 }
 
 try {
-    $obj = new Catalogopedido();
-    $pedidos = $obj->consultarPedidosCompletosCatalogo();
-
-    // Determinar cédula del usuario desde las claims del token (producción)
+    // 1) Obtener cédula del token PRIMERO
     $requestCedula = null;
     if (is_array($claims)) {
         if (!empty($claims['data']['cedula'])) {
@@ -109,24 +106,25 @@ try {
         }
     }
 
-    // Para depuración local solo: permitir override con ?debug=1&cedula=...
     if (isset($_GET['debug']) && $_GET['debug'] === '1' && isset($_GET['cedula']) && !empty($_GET['cedula'])) {
         $requestCedula = preg_replace('/\D/', '', $_GET['cedula']);
     }
 
-    // En producción exigir la cédula en el token
     if (!$requestCedula) {
         http_response_code(403);
         echo json_encode(['respuesta' => 0, 'mensaje' => 'Cédula no encontrada en token.']);
         exit;
     }
 
-    // Adjuntar detalles de cada pedido
+    // 2) AHORA sí, llamar al modelo pasando la cédula
+    $obj = new Catalogopedido();
+    $pedidos = $obj->consultarPedidosCompletosCatalogo($requestCedula);
+
+    // 3) Adjuntar detalles
     foreach ($pedidos as &$p) {
         $id = $p['id_pedido'] ?? null;
         if ($id) {
             $det = $obj->consultarDetallesPedidoCatalogo($id);
-            // normalizar campos para cliente móvil
             $productos = [];
             if (is_array($det)) {
                 foreach ($det as $d) {
@@ -144,15 +142,9 @@ try {
     }
     unset($p);
 
-    // Filtrar solo los pedidos asociados a la cédula del token
-    $filtered = array_filter($pedidos, function ($item) use ($requestCedula) {
-        $itemCed = isset($item['cedula']) ? preg_replace('/\D/', '', $item['cedula']) : '';
-        return $itemCed !== '' && $itemCed === $requestCedula;
-    });
-    $pedidos = array_values($filtered);
-
     echo json_encode(['respuesta' => 1, 'pedidos' => $pedidos]);
-} catch (Exception $e) {
+
+} catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
 }
