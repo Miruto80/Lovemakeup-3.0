@@ -6,11 +6,13 @@ RewriteEngine On
     Deny from all
 </FilesMatch>
 
-#  LISTADO DE CARPETAS
+# LISTADO DE CARPETAS
 Options -Indexes
 
-# EGLA DE REDIRECCIÓN 
+# EXCLUIR ARCHIVOS ESTÁTICOS DEL ROUTER
+RewriteCond %{REQUEST_URI} !^/assets/
+
+# REGLA DE REDIRECCIÓN
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-
 RewriteRule ^(.*)$ index.php?pagina=$1 [QSA,L]
