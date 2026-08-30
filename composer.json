@@ -6,13 +6,13 @@
         "psr-4": {
             "LoveMakeup\\Proyecto\\Modelo\\": "modelo/",
             "LoveMakeup\\Proyecto\\Controlador\\": "controlador/",
-            "LoveMakeup\\Proyecto\\Config\\": "config/"
+            "LoveMakeup\\Proyecto\\Config\\": "config/",
+            "Seguridad\\": "seguridad/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/",
-            "Seguridad\\": "seguridad/"
+            "Tests\\": "tests/"
         }
     },
     "authors": [
