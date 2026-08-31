@@ -3,36 +3,54 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
     require __DIR__ . '/vendor/autoload.php';
-    
-    // use Seguridad\FileRateLimiter;
-    //
-    // // --- INICIO DE PROTECCIÓN (Rate Limit) - COMENTADO PARA PRUEBA ---
-    //
-    // if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    //     $limiter = new FileRateLimiter(3, 30); 
-    //     
-    //     $checkResult = $limiter->check($_SERVER['REMOTE_ADDR']);
-    //     
-    //     
-    //     if ($checkResult !== true) {
-    //         // Si el resultado no es `true`, es el tiempo restante en la blacklist
-    //         $timeRemaining = is_numeric($checkResult) ? $checkResult : 0;
-    //     
-    //         // 1. Limpiamos cualquier buffer de salida previo
-    //         if (ob_get_level() > 0) {
-    //             ob_end_clean();
-    //         }
-    //         
-    //         // 2. Forzamos el código de estado en la cabecera real
-    //         header('HTTP/1.1 429 Has excedido el limite de solicitudes. Por favor, espera '. gmdate("H:i:s", $timeRemaining) . ' antes de intentarlo de nuevo.', true, 429);
-    //         http_response_code(429);
-    //         
-    //      
-    //         
-    //         exit();
-    //     }
-    // }
-    
+
+    // ============================================
+    // RATE LIMITER — solo rutas sensibles (POST)
+    // Protege login/olvidoclave/registrocliente contra fuerza bruta.
+    // El resto de los POST del sitio no pasa por aquí (evita bloquear carrito/panel admin).
+    // ============================================
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $paginaSolicitada = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['pagina'] ?? '');
+        $paginasSensibles = ['login', 'olvidoclave', 'registrocliente'];
+
+        if (in_array($paginaSolicitada, $paginasSensibles, true)) {
+            $limiter = new \Seguridad\FileRateLimiter(5, 60);
+            $resultadoLimiter = $limiter->check($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+
+            if (!$resultadoLimiter['permitido']) {
+                $reintentarEn = max(1, $resultadoLimiter['reintentar_en']);
+                $mensaje429 = ($resultadoLimiter['motivo'] === 'baneado')
+                    ? 'E429: Demasiados intentos fallidos. Acceso bloqueado temporalmente, intenta de nuevo en ' . gmdate('H:i:s', $reintentarEn) . '.'
+                    : 'E429: Demasiadas solicitudes. Por favor, espera ' . gmdate('H:i:s', $reintentarEn) . ' antes de intentarlo de nuevo.';
+
+                if (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                http_response_code(429);
+                header('Retry-After: ' . $reintentarEn);
+
+                // Las rutas sensibles se usan por AJAX (fetch) → JSON con el formato de MensajeJSON.
+                // Navegación clásica (Accept: text/html) → página HTML mínima.
+                $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
+                $aceptaHTML = stripos($acceptHeader, 'text/html') !== false
+                    && stripos($acceptHeader, 'application/json') === false;
+
+                if ($aceptaHTML) {
+                    header('Content-Type: text/html; charset=utf-8');
+                    echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Límite de solicitudes</title></head>'
+                       . '<body style="font-family:sans-serif;text-align:center;padding-top:80px;">'
+                       . '<h1>429 - Demasiadas solicitudes</h1>'
+                       . '<p>' . htmlspecialchars($mensaje429, ENT_QUOTES, 'UTF-8') . '</p>'
+                       . '</body></html>';
+                } else {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['respuesta' => 0, 'accion' => 'error', 'text' => $mensaje429]);
+                }
+                exit;
+            }
+        }
+    }
+
     // Iniciar sesión para validar acceso (si no está ya iniciada)
     if (session_status() === PHP_SESSION_NONE) {
         session_start();

@@ -114,7 +114,7 @@
                                 </td>
                                 <!-- Precio -->
                                 <td class="py-3 px-4 text-xs font-medium text-gray-600 precio-unitario">
-                                   $ <?= number_format($precioUnitario, 2) ?>
+                                   $ <?= number_format($precioUnitario, 2, '.', '') ?>
                                 </td>
                                 <!-- Control de Cantidad -->
                                 <td class="py-3 px-4">
@@ -126,7 +126,7 @@
                                 </td>
                                 <!-- Subtotal -->
                                 <td class="py-3 px-4 text-right font-bold text-gray-900 text-xs sm:text-sm subtotal">
-                                    $<?= number_format($subtotal, 2) ?>
+                                    $<?= number_format($subtotal, 2, '.', '') ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -157,7 +157,7 @@
                 <div class="border-t border-dashed border-gray-200 pt-3 mb-6">
                     <div class="flex justify-between items-baseline">
                         <span class="text-sm font-bold text-gray-900">Total a Pagar:</span>
-                        <span class="text-xl font-extrabold text-emerald-500 total-general">$<span id="total-carrito"><?= number_format($total, 2) ?></span></span>
+                        <span class="text-xl font-extrabold text-emerald-500 total-general">$<span id="total-carrito"><?= number_format($total, 2, '.', '') ?></span></span>
                     </div>
                 </div>
 

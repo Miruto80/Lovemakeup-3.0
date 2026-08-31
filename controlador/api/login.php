@@ -19,6 +19,25 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\Login;
 
+// Rate limiter: máximo de intentos de login por IP (evita fuerza bruta)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $limiter = new \Seguridad\FileRateLimiter(5, 60);
+    $resultadoLimiter = $limiter->check($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+
+    if (!$resultadoLimiter['permitido']) {
+        $reintentarEn = max(1, $resultadoLimiter['reintentar_en']);
+        $mensaje429 = ($resultadoLimiter['motivo'] === 'baneado')
+            ? 'E429: Demasiados intentos fallidos. Acceso bloqueado temporalmente, intenta de nuevo en ' . gmdate('H:i:s', $reintentarEn) . '.'
+            : 'E429: Demasiadas solicitudes. Por favor, espera ' . gmdate('H:i:s', $reintentarEn) . ' antes de intentarlo de nuevo.';
+
+        http_response_code(429);
+        header('Retry-After: ' . $reintentarEn);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['respuesta' => 0, 'accion' => 'error', 'text' => $mensaje429]);
+        exit;
+    }
+}
+
 // Ruta del private key para FIRMAR el token que va hacia la App
 $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
 if (!file_exists($privateKeyPath)) {
