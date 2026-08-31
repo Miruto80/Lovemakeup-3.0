@@ -19,6 +19,7 @@ if (file_exists($autoload)) {
 }
 
 use LoveMakeup\Proyecto\Modelo\VentaWeb;
+use LoveMakeup\Proyecto\Modelo\Delivery;
 
 // Ruta del public key
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
@@ -193,6 +194,113 @@ try {
         } else {
             @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | imagen_no_es_data_uri_o_vacia\n", FILE_APPEND);
         }
+
+        // ============================================
+        // VALIDACIÓN DE ENTREGA (paridad con el flujo web)
+        // Igual que controlador/Pedidoentrega.php: nunca confiar en lo que
+        // manda el cliente para la dirección/delivery.
+        // ============================================
+        $datos = $decodedData['datos'];
+        $idMetodoentrega = (int)($datos['id_metodoentrega'] ?? 0);
+
+        if (!in_array($idMetodoentrega, [1, 2, 3, 4], true)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'El método de entrega no es válido.']);
+            exit;
+        }
+
+        if ($idMetodoentrega === 1) {
+            // Delivery propio: validar contra el catálogo y reconstruir direccion_envio en el servidor
+            $deliveriesActivos = (new Delivery())->consultarActivos();
+            $idDelivery = $datos['id_delivery'] ?? null;
+
+            if (empty($idDelivery) || !is_numeric($idDelivery)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Debe seleccionar un delivery.']);
+                exit;
+            }
+
+            $idDelivery = (int)$idDelivery;
+            $deliveryValido = false;
+            foreach ($deliveriesActivos as $d) {
+                if ((int)$d['id_delivery'] === $idDelivery) {
+                    $deliveryValido = true;
+                    break;
+                }
+            }
+            if (!$deliveryValido) {
+                http_response_code(400);
+                echo json_encode(['error' => 'El delivery seleccionado no es válido.']);
+                exit;
+            }
+            $datos['id_delivery'] = $idDelivery;
+
+            foreach (['zona', 'parroquia', 'sector', 'direccion'] as $campo) {
+                if (empty($datos[$campo])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => "Falta el campo {$campo}."]);
+                    exit;
+                }
+            }
+
+            $zona = $objVentaWeb->sanitizarString((string)$datos['zona'], 50);
+            $parroquia = $objVentaWeb->sanitizarString((string)$datos['parroquia'], 100);
+            $sector = $objVentaWeb->sanitizarString((string)$datos['sector'], 100);
+            $dirDetall = $objVentaWeb->sanitizarDireccion((string)$datos['direccion']);
+
+            if (!$zona || !$objVentaWeb->validarZona($zona)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'La zona seleccionada no es válida.']);
+                exit;
+            }
+            if (!$parroquia || !$objVentaWeb->validarParroquia($parroquia)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'La parroquia no es válida.']);
+                exit;
+            }
+            if (!$sector || !$objVentaWeb->validarSector($sector)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'El sector no es válido.']);
+                exit;
+            }
+            if (!$dirDetall) {
+                http_response_code(400);
+                echo json_encode(['error' => 'La dirección no es válida.']);
+                exit;
+            }
+
+            $datos['direccion_envio'] = "Zona: {$zona}, Parroquia: {$parroquia}, Sector: {$sector}, Dirección: {$dirDetall}";
+            $datos['sucursal_envio'] = '';
+        } else {
+            // Tienda física / MRW / ZOOM: sanitizar como hace el flujo web
+            $datos['direccion_envio'] = $objVentaWeb->sanitizarDireccion((string)($datos['direccion_envio'] ?? ''));
+            if ($datos['direccion_envio'] === '') {
+                http_response_code(400);
+                echo json_encode(['error' => 'La dirección de envío es obligatoria.']);
+                exit;
+            }
+
+            if ($idMetodoentrega === 2 || $idMetodoentrega === 3) {
+                $empresa = (int)($datos['empresa_envio'] ?? 0);
+                if (!in_array($empresa, [2, 3], true)) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'La empresa de envío no es válida.']);
+                    exit;
+                }
+                $datos['sucursal_envio'] = $objVentaWeb->sanitizarSucursal((string)($datos['sucursal_envio'] ?? ''));
+                if ($datos['sucursal_envio'] === '') {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Complete el código de la sucursal.']);
+                    exit;
+                }
+            } else {
+                $datos['sucursal_envio'] = $objVentaWeb->sanitizarSucursal((string)($datos['sucursal_envio'] ?? ''));
+            }
+            $datos['id_delivery'] = null;
+        }
+
+        $decodedData['datos'] = $datos;
+        $jsonDatos = json_encode($decodedData);
 
         // Procesar el pedido
         $resultado = $objVentaWeb->procesarPedido($jsonDatos);
