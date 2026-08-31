@@ -281,12 +281,7 @@ try {
             }
 
             if ($idMetodoentrega === 2 || $idMetodoentrega === 3) {
-                $empresa = (int)($datos['empresa_envio'] ?? 0);
-                if (!in_array($empresa, [2, 3], true)) {
-                    http_response_code(400);
-                    echo json_encode(['error' => 'La empresa de envío no es válida.']);
-                    exit;
-                }
+                // En la app id_metodoentrega ES la empresa de envío (2=MRW, 3=ZOOM)
                 $datos['sucursal_envio'] = $objVentaWeb->sanitizarSucursal((string)($datos['sucursal_envio'] ?? ''));
                 if ($datos['sucursal_envio'] === '') {
                     http_response_code(400);
@@ -298,6 +293,15 @@ try {
             }
             $datos['id_delivery'] = null;
         }
+
+        // Referencia bancaria: entre 4 y 6 dígitos (pago móvil)
+        $referencia = preg_replace('/[^0-9]/', '', (string)($datos['referencia_bancaria'] ?? ''));
+        if (!preg_match('/^[0-9]{4,6}$/', $referencia)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'El código de referencia debe tener entre 4 y 6 dígitos.']);
+            exit;
+        }
+        $datos['referencia_bancaria'] = $referencia;
 
         $decodedData['datos'] = $datos;
         $jsonDatos = json_encode($decodedData);
