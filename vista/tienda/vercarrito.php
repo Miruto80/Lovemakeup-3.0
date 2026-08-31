@@ -490,7 +490,7 @@ $carritoVacio = empty($_SESSION['carrito']);
       </td>
       <td><img src="<?= htmlspecialchars($item['imagen']) ?>" class="img-thumbnail" width="60"></td>
       <td><strong><?= htmlspecialchars($item['nombre']) ?></strong></td>
-      <td class="precio-unitario">$<?= number_format($precioUnitario, 2) ?></td>
+      <td class="precio-unitario">$<?= number_format($precioUnitario, 2, '.', '') ?></td>
       <td class="quantity-control">
         <div class="d-flex justify-content-center align-items-center">
           <button class="btn btn-outline-secondary btn-sm btn-menos" data-id="<?= $id ?>">−</button>
@@ -498,7 +498,7 @@ $carritoVacio = empty($_SESSION['carrito']);
           <button class="btn btn-outline-secondary btn-sm btn-mas" data-id="<?= $id ?>" data-stock="<?= $item['stockDisponible'] ?>">+</button>
         </div>
       </td>
-      <td class="subtotal">$<?= number_format($subtotal, 2) ?></td>
+      <td class="subtotal">$<?= number_format($subtotal, 2, '.', '') ?></td>
    
     </tr>
     <?php endforeach; ?>
@@ -548,7 +548,7 @@ $carritoVacio = empty($_SESSION['carrito']);
                 <div class="col-md-2">
                   <div class="card-total">
                     <div class=" card-body-total text-center ">
-                      <h4>Total: $<span id="total-carrito" class="total-general text-success"><?= number_format($total, 2) ?></span></h4>
+                      <h4>Total: $<span id="total-carrito" class="total-general text-success"><?= number_format($total, 2, '.', '') ?></span></h4>
                     
                     </div>
                   </div>
