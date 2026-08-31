@@ -242,7 +242,9 @@ class VentaWeb extends Conexion
         '/(\bupdate\b.*\bset\b)/i',
         '/(\bdelete\b.*\bfrom\b)/i',
         '/(\bdrop\b.*\btable\b)/i',
-        '/(--|\#|\/\*|\*\/)/',
+        '/\/\*|\*\//',           // comentarios de bloque /* */
+        '/(^|\s)--(\s|$)/',      // '--' solo como comentario SQL aislado, no 'Av 4--5'
+        '/(^|\s)\#(\s|$)/',      // '#' solo como comentario aislado, no 'Casa #5'
         '/(\bor\b.*\b1\s*=\s*1\b)/i',
         '/(\bdrop\b|\btruncate\b|\balter\b)\s+\btable\b/i'
     ];
@@ -556,8 +558,8 @@ public function validarParroquia(string $parroquia): bool {
     if (empty($parroquia)) {
         return false;
     }
-    // Validación básica: no vacío y alfanumérico
-    return ctype_alnum(str_replace([' ', '-', '_'], '', $parroquia));
+    // Letras (incluye acentos y Ñ), números, espacios y guiones
+    return preg_match('/^[\p{L}\p{N}\s\-_]+$/u', $parroquia) === 1;
 }
 
 /**
@@ -567,8 +569,8 @@ public function validarSector(string $sector): bool {
     if (empty($sector)) {
         return false;
     }
-    // Validación básica: no vacío y alfanumérico
-    return ctype_alnum(str_replace([' ', '-', '_'], '', $sector));
+    // Letras (incluye acentos y Ñ), números, espacios y guiones
+    return preg_match('/^[\p{L}\p{N}\s\-_]+$/u', $sector) === 1;
 }
 
 
