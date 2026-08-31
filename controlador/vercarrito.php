@@ -2,6 +2,9 @@
 
 use LoveMakeup\Proyecto\Modelo\VerCarrito;
 
+// Carga explícita del modelo: no depender del autoload del hosting (case-sensitive en Linux)
+require_once __DIR__ . '/../modelo/VerCarrito.php';
+
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
