@@ -15,7 +15,7 @@ $(document).ready(function () {
     // Limpiar eventos anteriores por seguridad
     $(document).off("click", ".btn-mas");
     $(document).off("click", ".btn-menos");
-    $(document).off("click", ".btn-eliminar");
+    $(document).off("click", ".orden .btn-eliminar");
   
     // Botón "+"
     $(document).on("click", ".btn-mas", function () {
@@ -42,8 +42,8 @@ $(document).ready(function () {
       }
     });
   
-    // Botón eliminar
-    $(document).on("click", ".btn-eliminar", function () {
+    // Botón eliminar (solo los de la tabla del carrito; los del carrito lateral los maneja carrito.js)
+    $(document).on("click", ".orden .btn-eliminar", function () {
       const id = $(this).data("id");
   
       $.ajax({
