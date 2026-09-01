@@ -189,7 +189,7 @@
     </div>
 
     <?php include 'complementos/footer.php'; ?>
-    <!-- para el datatable-->
+    <!-- para el datatable pruebaa--> 
     <script src="assets/js/demo/datatables-demo.js"></script>
     <script src="assets/js/categoria.js"></script>
   </main>
