@@ -15,14 +15,14 @@ class Conexion {
 
     public function getConex1() {
         if ($this->conex1 === null) {
-            $this->conex1 = $this->crearConexion(DB_NAME_1, DB_USER, DB_PASS);
+            $this->conex1 = $this->crearConexion(DB_NAME_1L, DB_USERL, DB_PASSL);
         }
         return $this->conex1;
     }
 
     public function getConex2() {
         if ($this->conex2 === null) {
-            $this->conex2 = $this->crearConexion(DB_NAME_2, DB_USER_2, DB_PASS);
+            $this->conex2 = $this->crearConexion(DB_NAME_2L, DB_USERL, DB_PASSL);
         }
         return $this->conex2;
     }
@@ -30,7 +30,7 @@ class Conexion {
     private function crearConexion($baseDatos, $usuario, $clave) {
         try {
             $conexion = new \PDO(
-                "mysql:host=" . DB_HOST . ";dbname=" . $baseDatos . ";charset=utf8mb4",
+                "mysql:host=" . DB_HOSTL . ";dbname=" . $baseDatos . ";charset=utf8mb4",
                 $usuario,
                 $clave,
                 [
