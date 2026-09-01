@@ -6,6 +6,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 use LoveMakeup\Proyecto\Config\Conexion;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 class Producto extends Conexion {
     private $objcategoria;
@@ -77,13 +78,17 @@ class Producto extends Conexion {
         return $valor;
     }
 
-    private function validarRutaImagen($ruta) {
-        if (empty($ruta)) return false;
-        if (strpos($ruta, '..') !== false) return false; 
-        if (strpos($ruta, 'http') !== false) return false; 
-        return true;
+    private function validarRutaImagen($ruta)
+{
+    if (empty($ruta) || !is_string($ruta)) {
+        return false;
     }
 
+    return (bool) preg_match(
+        '#^https://res\.cloudinary\.com/[A-Za-z0-9_-]+/image/upload/#',
+        $ruta
+    );
+}
     // --- FIN MÉTODOS DE VALIDACIÓN ---
 
     public function procesarProducto($jsonDatos) {
@@ -181,9 +186,11 @@ class Producto extends Conexion {
             // Validar rutas de imágenes
             $imagenes = [];
             if (isset($datos['imagenes']) && is_array($datos['imagenes'])) {
-                foreach ($datos['imagenes'] as $ruta) {
-                    if ($this->validarRutaImagen($ruta)) {
-                        $imagenes[] = $ruta;
+                foreach ($datos['imagenes'] as $imagen) {
+                    if (is_array($imagen)
+                        && $this->validarRutaImagen($imagen['url_imagen'] ?? null)
+                        && !empty($imagen['public_id'])) {
+                        $imagenes[] = $imagen;
                     }
                 }
             }
@@ -209,14 +216,15 @@ class Producto extends Conexion {
 
             // Insertar imágenes
             if (!empty($imagenes)) {
-                $sqlImg = "INSERT INTO producto_imagen(id_producto, url_imagen, tipo) VALUES(:id_producto, :url_imagen, :tipo)";
+                $sqlImg = "INSERT INTO producto_imagen(id_producto, url_imagen, public_id, tipo) VALUES(:id_producto, :url_imagen, :public_id, :tipo)";
                 $stmtImg = $conex->prepare($sqlImg);
 
-                foreach ($imagenes as $indice => $rutaImagen) {
+                foreach ($imagenes as $indice => $imagen) {
                     $tipo = $indice === 0 ? 'principal' : 'secundaria';
                     $stmtImg->execute([
                         'id_producto' => $idProducto,
-                        'url_imagen' => $rutaImagen,
+                        'url_imagen' => $imagen['url_imagen'],
+                        'public_id' => $imagen['public_id'],
                         'tipo' => $tipo
                     ]);
                 }
@@ -266,7 +274,10 @@ class Producto extends Conexion {
             $imagenesReemplazosValidas = [];
             if (is_array($imagenesReemplazos)) {
                 foreach ($imagenesReemplazos as $img) {
-                    if (isset($img['id_imagen']) && isset($img['url_imagen']) && $this->validarRutaImagen($img['url_imagen'])) {
+                    if (isset($img['id_imagen']) && isset($img['url_imagen'])
+                        && isset($img['public_id'])
+                        && $this->validarRutaImagen($img['url_imagen'])
+                        && !empty($img['public_id'])) {
                         $imagenesReemplazosValidas[] = $img;
                     }
                 }
@@ -299,11 +310,20 @@ class Producto extends Conexion {
             ]);
 
             if (!empty($imagenesReemplazosValidas)) {
-                $sqlUpd = "UPDATE producto_imagen SET url_imagen = :url_imagen WHERE id_imagen = :id_imagen";
+                $sqlOld = "SELECT public_id FROM producto_imagen WHERE id_imagen = :id_imagen";
+                $stmtOld = $conex->prepare($sqlOld);
+                $sqlUpd = "UPDATE producto_imagen SET url_imagen = :url_imagen, public_id = :public_id WHERE id_imagen = :id_imagen";
                 $stmtUpd = $conex->prepare($sqlUpd);
                 foreach ($imagenesReemplazosValidas as $img) {
+                    $stmtOld->execute(['id_imagen' => $img['id_imagen']]);
+                    $publicIdAnterior = $stmtOld->fetchColumn();
+                    if (!empty($publicIdAnterior)) {
+                        CloudinaryConfig::getInstance()->uploadApi()->destroy($publicIdAnterior);
+                    }
+
                     $stmtUpd->execute([
                         'url_imagen' => $img['url_imagen'],
+                        'public_id' => $img['public_id'],
                         'id_imagen'  => $img['id_imagen']
                     ]);
                 }
@@ -314,7 +334,7 @@ class Producto extends Conexion {
                 $q->execute(['id' => $id_producto]);
                 $tienePrincipal = $q->fetchColumn() > 0;
 
-                $sqlIns = "INSERT INTO producto_imagen(id_producto, url_imagen, tipo) VALUES(:id_producto, :url_imagen, :tipo)";
+                $sqlIns = "INSERT INTO producto_imagen(id_producto, url_imagen, public_id, tipo) VALUES(:id_producto, :url_imagen, :public_id, :tipo)";
                 $stmtIns = $conex->prepare($sqlIns);
                 foreach ($imagenesNuevasValidas as $idx => $img) {
                     $tipo = (!$tienePrincipal && $idx === 0) ? 'principal' : 'secundaria';
@@ -322,6 +342,7 @@ class Producto extends Conexion {
                     $stmtIns->execute([
                         'id_producto' => $id_producto,
                         'url_imagen'  => $img['url_imagen'],
+                        'public_id'   => $img['public_id'],
                         'tipo'        => $tipo
                     ]);
                 }
@@ -519,7 +540,7 @@ class Producto extends Conexion {
 public function obtenerImagenes($id_producto) {
     $conex = $this->getConex1();
     try {
-        $sql = "SELECT id_imagen, url_imagen, tipo FROM producto_imagen WHERE id_producto = :id_producto";
+        $sql = "SELECT id_imagen, url_imagen, public_id, tipo FROM producto_imagen WHERE id_producto = :id_producto";
         $stmt = $conex->prepare($sql);
         $stmt->execute(['id_producto' => $id_producto]);
         $resultado = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -534,10 +555,17 @@ public function obtenerImagenes($id_producto) {
 public function eliminarImagenes($idsImagenes) {
     $conex = $this->getConex1();
     try {
+        $sqlImagen = "SELECT public_id FROM producto_imagen WHERE id_imagen = :id_imagen";
+        $stmtImagen = $conex->prepare($sqlImagen);
         $sql = "DELETE FROM producto_imagen WHERE id_imagen = :id_imagen";
         $stmt = $conex->prepare($sql);
 
         foreach ($idsImagenes as $idImg) {
+            $stmtImagen->execute(['id_imagen' => $idImg]);
+            $publicId = $stmtImagen->fetchColumn();
+            if (!empty($publicId)) {
+                CloudinaryConfig::getInstance()->uploadApi()->destroy($publicId);
+            }
             $stmt->execute(['id_imagen' => $idImg]);
         }
 
