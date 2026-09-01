@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $rutaTemporal = $_FILES['imagenarchivo']['tmp_name'][$indice];
                         // Generar nombre seguro para el archivo
                         $nuevoNombre = uniqid('img_') . "_" . basename($nombreArchivo);
-                        $rutaDestino = 'assets/img/Imgproductos/' . $nuevoNombre;
+                        $rutaDestino = 'assets/img/ImagenesProductos/' . $nuevoNombre;
                         
                         if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
                             $imagenes[] = $rutaDestino;
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($_FILES['imagenarchivo']['error'][$indice] === 0) {
                     $rutaTemporal = $_FILES['imagenarchivo']['tmp_name'][$indice];
                     $nuevoNombre  = uniqid('img_') . "_" . basename($nombreArchivo);
-                    $rutaDestino  = 'assets/img/Imgproductos/' . $nuevoNombre;
+                    $rutaDestino  = 'assets/img/ImagenesProductos/' . $nuevoNombre;
 
                     if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
                         // Si el nombre original está en reemplazos → UPDATE
