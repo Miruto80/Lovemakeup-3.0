@@ -336,6 +336,7 @@ CREATE TABLE `producto_imagen` (
   `id_imagen` int(11) NOT NULL,
   `id_producto` int(11) DEFAULT NULL,
   `url_imagen` text DEFAULT NULL,
+  `public_id` varchar(255) DEFAULT NULL after `url_imagen`,
   `tipo` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
@@ -343,13 +344,13 @@ CREATE TABLE `producto_imagen` (
 -- Volcado de datos para la tabla `producto_imagen`
 --
 
-INSERT INTO `producto_imagen` (`id_imagen`, `id_producto`, `url_imagen`, `tipo`) VALUES
-(1, 6, 'assets/img/Imgproductos/img_6a22274f7b67a_01.png', 'principal'),
-(2, 6, 'assets/img/Imgproductos/img_6a22274f7c139_0101.png', 'secundaria'),
-(3, 6, 'assets/img/Imgproductos/img_6a22274f7c5c7_010101.png', 'secundaria'),
-(4, 7, 'assets/img/Imgproductos/img_6a2228981100a_020202.png', 'principal'),
-(5, 7, 'assets/img/Imgproductos/img_6a222898116bc_0202.png', 'secundaria'),
-(6, 8, 'assets/img/Imgproductos/img_6a222b084b35f_030303.png', 'principal');
+INSERT INTO `producto_imagen` (`id_imagen`, `id_producto`, `url_imagen`, `public_id`, `tipo`) VALUES
+(1, 6, 'assets/img/Imgproductos/img_6a22274f7b67a_01.png', 'img_6a22274f7b67a_01', 'principal'),
+(2, 6, 'assets/img/Imgproductos/img_6a22274f7c139_0101.png', 'img_6a22274f7c139_0101', 'secundaria'),
+(3, 6, 'assets/img/Imgproductos/img_6a22274f7c5c7_010101.png', 'img_6a22274f7c5c7_010101', 'secundaria'),
+(4, 7, 'assets/img/Imgproductos/img_6a2228981100a_020202.png', 'img_6a2228981100a_020202', 'principal'),
+(5, 7, 'assets/img/Imgproductos/img_6a222898116bc_0202.png', 'img_6a222898116bc_0202', 'secundaria'),
+(6, 8, 'assets/img/Imgproductos/img_6a222b084b35f_030303.png', 'img_6a222b084b35f_030303', 'principal');
 
 -- --------------------------------------------------------
 

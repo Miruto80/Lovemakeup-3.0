@@ -10,6 +10,10 @@
     define('DB_USER', $_ENV['DB_USER']);
     define('DB_USER_2', $_ENV['DB_USER_2']);
     define('DB_PASS', $_ENV['DB_PASS']);
+    
+    define('CLOUDINARY_CLOUD_NAME', $_ENV['CLOUDINARY_CLOUD_NAME']);
+    define('CLOUDINARY_API_KEY', $_ENV['CLOUDINARY_API_KEY']);
+    define('CLOUDINARY_API_SECRET', $_ENV['CLOUDINARY_API_SECRET']);
 
     date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'America/Caracas');
 ?>
