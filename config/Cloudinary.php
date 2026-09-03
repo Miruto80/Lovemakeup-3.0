@@ -63,7 +63,7 @@ class CloudinaryConfig
         ]);
 
         return [
-            'url_imagen' => $response['secure_url'],
+            'url_imagen' => $optimizedUrl,
             'public_id' => $response['public_id']
         ];
     }
