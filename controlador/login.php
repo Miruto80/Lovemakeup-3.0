@@ -32,6 +32,23 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
         $fecha = $_POST['fecha'];  $dolar = $_POST['tasa'];  
         $usuario = $_POST['usuario']; $clave = $_POST['clave'];  $documento = $_POST['tipo_documento'];
 
+        $ipCliente = obtenerIP();
+                                
+        $datosLogin = [
+            'operacion' => 'hastabloqueado',
+            'datos' => [
+                'ip' => $ipCliente
+            ]
+        ];
+        $bloqueado = $objlogin->procesarLogin(json_encode($datosLogin));
+        
+        if (isset($bloqueado['respuesta']) && $bloqueado['respuesta'] == 0) {
+            // La IP está bloqueada o hubo un error previo -> Imprime el JSON y corta la ejecución
+            echo json_encode($bloqueado);
+           
+            exit;
+        }
+
         $campos = [
             'Fecha' => $fecha,
             'Dolar' => $dolar,
@@ -70,6 +87,7 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                         'datos' => [
                             'tipo_documento' => $documento,
                             'cedula' => $usuario,
+                            'ip' => $ipCliente,
                             'clave' => $clave
                         ]
                 ];
@@ -135,10 +153,10 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                     MensajeJSON(0, 'ingresar', 'Cédula y/o Clave inválida.'); 
                 }
         } else{
-             MensajeJSON(0, 'ingresar', 'Datos Vacios - ERROR E300');  
+             MensajeJSON(0, 'ingresar', 'Datos Vacios - E300');  
         }
     } else{ /* V1 */ 
-        MensajeJSON(0, 'ingresar', 'Session Activa - ERROR E150');  
+        MensajeJSON(0, 'ingresar', 'Session Activa - E150');  
     }   
 // ------------------
 } else if (isset($_POST['registrar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| REGISTRO CLIENTE */
