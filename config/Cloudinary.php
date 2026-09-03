@@ -63,8 +63,29 @@ class CloudinaryConfig
         ]);
 
         return [
-            'url_imagen' => $optimizedUrl,
+            'url_imagen' => $response['secure_url'],
             'public_id' => $response['public_id']
+        ];
+    }
+
+    public static function uploadReportImage(string $filePath, ?string $fileName = null): array
+    {
+        $options = [
+            'folder' => 'lovemakeup/reportes/graficos',
+            'resource_type' => 'image',
+        ];
+
+        if (!empty($fileName)) {
+            $options['public_id'] = pathinfo($fileName, PATHINFO_FILENAME);
+            $options['use_filename'] = true;
+            $options['unique_filename'] = false;
+        }
+
+        $response = self::getInstance()->uploadApi()->upload($filePath, $options);
+
+        return [
+            'url_imagen' => $response['secure_url'],
+            'public_id' => $response['public_id'],
         ];
     }
 

@@ -10,6 +10,24 @@ use LoveMakeup\Proyecto\Config\Conexion;
 
 class Reporte {
 
+    private static function subirGraficoCloudinary(string $rutaArchivo, string $nombreArchivo): string
+    {
+        if (!is_file($rutaArchivo)) {
+            return '';
+        }
+
+        try {
+            $resultado = CloudinaryConfig::uploadReportImage($rutaArchivo, $nombreArchivo);
+            if (!empty($resultado['url_imagen'])) {
+                return $resultado['url_imagen'];
+            }
+        } catch (\Throwable $e) {
+            error_log('Reporte::subirGraficoCloudinary error: ' . $e->getMessage());
+        }
+
+        return 'data:image/png;base64,' . base64_encode(file_get_contents($rutaArchivo));
+    }
+
     private static function emitirPdfCloudinary(string $nombreArchivo, Dompdf $pdf): void
     {
         $rutaTemporal = tempnam(sys_get_temp_dir(), 'lovemakeup-reporte-');
@@ -165,9 +183,7 @@ public static function compra(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
         // — Tabla de compras con categoría —
         $whereT = []; $paramsT = [];
@@ -601,9 +617,7 @@ public static function producto(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
         // ——— Tabla de producto ———
         $whereT  = ['1=1'];
@@ -944,9 +958,7 @@ public static function venta(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
         // — Tabla de ventas con categoría —
         $whereT  = ['pe.tipo = 1'];
@@ -1349,9 +1361,7 @@ public static function pedidoWeb(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
                 // Detectar si la tabla `cliente` existe en la BD1; si no, omitimos el JOIN
                 try {
