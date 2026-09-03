@@ -66,6 +66,8 @@ class CloudinaryConfig
             'url_imagen' => $response['secure_url'],
             'public_id' => $response['public_id']
         ];
+    }
+    
     /**
      * Genera una URL optimizada con WebP automático y calidad automática
      * 
