@@ -5,9 +5,40 @@ namespace LoveMakeup\Proyecto\Modelo;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 use LoveMakeup\Proyecto\Config\Conexion;
 
 class Reporte {
+
+    private static function emitirPdfCloudinary(string $nombreArchivo, Dompdf $pdf): void
+    {
+        $rutaTemporal = tempnam(sys_get_temp_dir(), 'lovemakeup-reporte-');
+        if ($rutaTemporal === false) {
+            $pdf->stream($nombreArchivo, ['Attachment' => false]);
+            return;
+        }
+
+        $rutaPdf = $rutaTemporal . '.pdf';
+        rename($rutaTemporal, $rutaPdf);
+
+        try {
+            file_put_contents($rutaPdf, $pdf->output());
+            $resultado = CloudinaryConfig::uploadReportPdf($rutaPdf, $nombreArchivo);
+
+            if (!empty($resultado['url_archivo'])) {
+                header('Location: ' . $resultado['url_archivo']);
+                exit;
+            }
+        } catch (\Throwable $e) {
+            error_log('Reporte::emitirPdfCloudinary error: ' . $e->getMessage());
+        } finally {
+            if (file_exists($rutaPdf)) {
+                @unlink($rutaPdf);
+            }
+        }
+
+        $pdf->stream($nombreArchivo, ['Attachment' => false]);
+    }
 
 public static function compra(
     $start   = null,
@@ -447,7 +478,7 @@ public static function compra(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_Compras.pdf',['Attachment'=>false]);
+        self::emitirPdfCloudinary('Reporte_Compras.pdf', $pdf);
 
         $conex->commit();
     } catch (\Throwable $e) {
@@ -755,7 +786,7 @@ public static function producto(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_Productos.pdf',['Attachment'=>false]);
+        self::emitirPdfCloudinary('Reporte_Productos.pdf', $pdf);
 
         $conex->commit();
     } catch (\Throwable $e) {
@@ -1151,7 +1182,7 @@ public static function venta(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_Ventas.pdf',['Attachment'=>false]);
+        self::emitirPdfCloudinary('Reporte_Ventas.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -1501,7 +1532,7 @@ public static function pedidoWeb(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_PedidosWeb.pdf',['Attachment'=>false]);
+        self::emitirPdfCloudinary('Reporte_PedidosWeb.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -1896,3 +1927,5 @@ public static function countPedidoWeb($start = null, $end = null, $prodId = null
 
 
 }
+
+
