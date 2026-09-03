@@ -407,6 +407,7 @@ private function verificarCredenciales($datos) {
                 'cedula' => $datos['cedula']
             ];
 
+
             $stmt = $conex->prepare($sql);
             $stmt->execute($paramIp);
             $registro = $stmt->fetch(\PDO::FETCH_ASSOC);

@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['respuesta' => 0, 'accion' => 'error', 'text' => $mensaje429]);
         exit;
     }
-}
+} 
 
 // Ruta del private key para FIRMAR el token que va hacia la App
 $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
@@ -69,17 +69,44 @@ if (!$dataJson || !isset($dataJson['usuario']) || !isset($dataJson['clave']) || 
     exit;
 }
 
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
+
 $objlogin = new Login();
 
-// Estructuramos el payload idéntico a como lo espera tu modelo
-$datosLogin = [
-    'operacion' => 'verificar',
-    'datos' => [
-        'tipo_documento' => $dataJson['tipo_documento'],
-        'cedula' => $dataJson['usuario'],
-        'clave' => $dataJson['clave']
-    ]
-];
+        $ipCliente = obtenerIP();
+                                
+        $datosLogin = [
+            'operacion' => 'hastabloqueado',
+            'datos' => [
+                'ip' => $ipCliente,
+                'cedula' => $dataJson['usuario']
+            ]
+        ];
+
+        $bloqueado = $objlogin->procesarLogin(json_encode($datosLogin));
+        
+        if (isset($bloqueado['respuesta']) && $bloqueado['respuesta'] == 0) {
+            // La IP está bloqueada o hubo un error previo -> Imprime el JSON y corta la ejecución
+            http_response_code(403);
+            echo json_encode(['respuesta' => 0, 'mensaje' => 'Lo sentimos, su cuenta está Bloqueada.']);
+            exit;
+            
+        }
+
+
+
+    // Estructuramos el payload idéntico a como lo espera tu modelo
+    $datosLogin = [
+        'operacion' => 'verificar',
+        'datos' => [
+            'tipo_documento' => $dataJson['tipo_documento'],
+            'cedula' => $dataJson['usuario'],
+            'ip' => $ipCliente,
+            'clave' => $dataJson['clave']
+        ]
+    ];
+
 
 try {
     // Enviamos el JSON al modelo
