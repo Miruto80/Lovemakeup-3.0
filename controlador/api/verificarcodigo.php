@@ -70,6 +70,7 @@ if (!$payload || time() > $payload['exp']) {
     echo json_encode(['respuesta' => 0, 'mensaje' => 'El código OTP ha expirado. Solicita uno nuevo.']);
     exit;
 }
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
 
 // Leer datos enviados por la App
 $body = file_get_contents('php://input');
@@ -88,9 +89,13 @@ function base64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
-// --- VALIDACIÓN DEL CÓDIGO ---
+
+    validarExpresionesAPP('codigo_ingresado', $codigoIngresado, "Codigo Ingresado (F) invalido");
+
+
+// --- VALIDACIÓN DEL CODIGO ---
 if ($codigoIngresado == $codigoCorrecto) {
-    // PASO 3: Generamos un token nuevo de 5 minutos autorizado para el cambio final de clave
+    
     $privKeyId = openssl_get_privatekey(file_get_contents($privateKeyPath));
     
     $newHeader = ['alg' => 'RS256', 'typ' => 'JWT'];
@@ -115,6 +120,7 @@ if ($codigoIngresado == $codigoCorrecto) {
         'token'     => $signingInput . '.' . base64url_encode($signature)
     ]);
     exit;
+
 } else {
     // CODIGO INCORRECTO Incrementamos el contador
     $intentosFallidos++;
