@@ -192,11 +192,6 @@ try {
             @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | imagen_no_es_data_uri_o_vacia\n", FILE_APPEND);
         }
 
-        // ============================================
-        // VALIDACIÓN DE ENTREGA (paridad con el flujo web)
-        // Igual que controlador/Pedidoentrega.php: nunca confiar en lo que
-        // manda el cliente para la dirección/delivery.
-        // ============================================
         $datos = $decodedData['datos'];
         $idMetodoentrega = (int)($datos['id_metodoentrega'] ?? 0);
 
