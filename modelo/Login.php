@@ -51,6 +51,15 @@ class Login extends Conexion {
                 case 'verificar': 
                     return $this->verificarCredenciales($datosProcesar);
 
+                case 'hastabloqueado': 
+                    $estadoBloqueo = $this->verificarBloqueoIP($datosProcesar);
+                    if ($estadoBloqueo['bloqueado']) {
+                            return ['respuesta' => 0,'accion'=> 'ingresar','text' => 'Cuenta bloqueada. Intente de nuevo en ' . $estadoBloqueo['minutos'] . ' minuto(s)'
+                        ];
+                    } else {
+                        return ['respuesta' => 1, 'text' => 'La IP no se encuentra bloqueada'];
+                    }
+
                 case 'registrar':
                     if ($this->verificarExistencia(['campo' => 'cedula', 'valor' => $datosProcesar['cedula']])) {
                         return ['respuesta' => 0, 'accion' => 'incluir', 'text' => 'La cédula ya está registrada'];
@@ -59,11 +68,11 @@ class Login extends Conexion {
                         return ['respuesta' => 0, 'accion' => 'incluir', 'text' => 'El correo electrónico ya está registrado'];
                     }
                     return $this->registrarCliente($datosProcesar);
+
                 case 'validar':
                     return $this->obtenerPersonaPorCedula($datosProcesar);
 
                 case 'dolar':
-
                     if ($this->verificarFechaNoExiste($datosProcesar['fecha'])) {
                          return $this->ejecutarRegistro($datosProcesar);
                     }
@@ -92,15 +101,14 @@ class Login extends Conexion {
     }
 
 /*||||||||||||||||||||||||||||||| VERIFICAR CREDENCIALES CEDULA Y CLAVE  |||||||||||||||||||||||||  04  |||||*/            
- private function verificarCredenciales($datos) {
+private function verificarCredenciales($datos) {
     
     if (!isset($datos['cedula']) || !is_numeric($datos['cedula']) || strlen((string)$datos['cedula']) > 8) {
-        $error="10";
+        $error = "10";
         return $error;
     }
-    
-    $conex2 = $this->getConex2();
 
+    $conex2 = $this->getConex2();
     try {
         // Verificar credenciales en usuario, filtrando también por tipo_documento
         $sql = "SELECT 
@@ -129,14 +137,29 @@ class Login extends Conexion {
 
         if ($resultado) {
             $claveDesencriptada = $this->decryptClave(['clave_encriptada' => $resultado->clave]);
+            
+            $claveDesencriptadaLimpia = trim($claveDesencriptada, "\x00..\x1F\x7F");
+                $claveRecibidaLimpia      = trim((string)$datos['clave']);
            
-            if ($claveDesencriptada === $datos['clave']) {
+            // PASO: Verificar clave
+            if ($claveDesencriptadaLimpia === $claveRecibidaLimpia) {
                 $conex2 = null;
+                
+                $this->limpiarIntentos($datos);
                 return $resultado;
+                
+            } else {
+                // La cedula existe pero la clave es incorrecta -> Registrar intento fallido
+                $conex2 = null;
+                $this->registrarIntentoFallido($datos);
+                return null;
+                
             }
         }
 
+        // Si no se encuentra el registro del usuario -> Registrar intento por IP
         $conex2 = null;
+        $this->registrarIntentoFallido($datos);
         return null;
 
     } catch (\PDOException $e) {
@@ -144,6 +167,8 @@ class Login extends Conexion {
         throw $e;
     }
 }
+
+
 
 /*||||||||||||||||||||||||||||||| REGISTRAR CLIENTE NUEVO  |||||||||||||||||||||||||  05  |||||*/            
     private function registrarCliente($datos) {
@@ -364,6 +389,145 @@ class Login extends Conexion {
         }
     }
 
+    // BLOQUEOOOOOOOOOO
+    private function verificarBloqueoIP($datos) {
+        //var_dump($datos);
+        $conex = $this->getConex2();
+        try {
+            $conex->beginTransaction();
 
+            $sql = "SELECT TIMESTAMPDIFF(MINUTE, NOW(), bloqueado_hasta) AS minutos_restantes 
+                    FROM intentos_login 
+                    WHERE ip_address = :ip 
+                    AND bloqueado_hasta > NOW() 
+                    LIMIT 1";
+
+            $paramIp= [
+                'ip' => $datos['ip']
+            ];
+
+            $stmt = $conex->prepare($sql);
+            $stmt->execute($paramIp);
+            $registro = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            $conex->commit();
+            $conex = null;
+
+            if ($registro) {
+                $mins = $registro['minutos_restantes'] > 0 ? $registro['minutos_restantes'] : 1;
+                return [
+                    'bloqueado' => true,
+                    'minutos'   => $mins
+                ];
+            }
+            return ['bloqueado' => false];
+
+        } catch (\PDOException $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            $conex = null;
+            throw $e;
+        }
+    }
+
+    private function registrarIntentoFallido($datos) {
+        $ip = is_array($datos) ? ($datos['ip'] ?? '127.0.0.1') : $datos;
+        $cedula = is_array($datos) ? ($datos['cedula'] ?? null) : null;
+
+        $conex = $this->getConex2();
+        try {
+            $conex->beginTransaction();
+
+            // 1. Verificar si la IP/Usuario ya tiene un registro previo
+            $sqlSelect = "SELECT id, intentos, ultimo_intento 
+                        FROM intentos_login 
+                        WHERE ip_address = :ip 
+                            AND (usuario = :cedula OR usuario IS NULL) 
+                        LIMIT 1";
+            
+            $stmtSelect = $conex->prepare($sqlSelect);
+            $stmtSelect->execute(['ip' => $ip, 'cedula' => $cedula]);
+            $registro = $stmtSelect->fetch(\PDO::FETCH_ASSOC);
+
+            if ($registro) {
+                //  el ultimo intento fue hace más de 10 minutos para reiniciar la cuenta
+                $haceMasDeDiezMins = (strtotime('now') - strtotime($registro['ultimo_intento'])) > 600;
+                
+                $nuevosIntentos = $haceMasDeDiezMins ? 1 : ($registro['intentos'] + 1);
+
+                // Si llega a 5 intentos o más, calculamos el bloqueo a 15 minutos desde el tiempo actual
+                if ($nuevosIntentos >= 5) {
+                    $sqlUpdate = "UPDATE intentos_login 
+                                SET intentos = :intentos, 
+                                    bloqueado_hasta = DATE_ADD(NOW(), INTERVAL 15 MINUTE), 
+                                    ultimo_intento = NOW() 
+                                WHERE id = :id";
+                } else {
+                    $sqlUpdate = "UPDATE intentos_login 
+                                SET intentos = :intentos, 
+                                    bloqueado_hasta = NULL, 
+                                    ultimo_intento = NOW() 
+                                WHERE id = :id";
+                }
+
+                $stmtUpdate = $conex->prepare($sqlUpdate);
+                $stmtUpdate->execute([
+                    'intentos' => $nuevosIntentos,
+                    'id'       => $registro['id']
+                ]);
+
+            } else {
+                // Si no existe registro previo, inserta el PRIMER intento 
+                $sqlInsert = "INSERT INTO intentos_login (ip_address, usuario, intentos, bloqueado_hasta, ultimo_intento) 
+                            VALUES (:ip, :cedula, 1, NULL, NOW())";
+                
+                $stmtInsert = $conex->prepare($sqlInsert);
+                $stmtInsert->execute([
+                    'ip'     => $ip,
+                    'cedula' => $cedula
+                ]);
+            }
+
+            $conex->commit();
+            $conex = null;
+
+        } catch (\PDOException $e) {
+            if ($conex && $conex->inTransaction()) {
+                $conex->rollBack();
+            }
+            $conex = null;
+            throw $e;
+        }
+    }
+
+    private function limpiarIntentos($datos) {
+        $ip     = is_array($datos) ? ($datos['ip'] ?? null) : $datos;
+        $cedula = is_array($datos) ? ($datos['cedula'] ?? null) : null;
+
+        if (empty($ip) && empty($cedula)) {
+            return;
+        }
+
+        $conex = $this->getConex2();
+        try {
+            $conex->beginTransaction();
+
+            $sql = "DELETE FROM intentos_login 
+                    WHERE ip_address = :ip 
+                    AND (usuario = :cedula OR usuario IS NULL)";
+
+            $stmt = $conex->prepare($sql);
+            $stmt->execute([
+                'ip'     => $ip,
+                'cedula' => $cedula
+            ]);
+
+            $conex->commit();
+            $conex = null;
+        } catch (\PDOException $e) {
+            if ($conex) $conex = null;
+        }
+    }
 
 }
