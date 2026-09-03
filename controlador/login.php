@@ -37,15 +37,15 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
         $datosLogin = [
             'operacion' => 'hastabloqueado',
             'datos' => [
-                'ip' => $ipCliente
+                'ip' => $ipCliente,
+                'cedula' => $usuario
             ]
         ];
+
         $bloqueado = $objlogin->procesarLogin(json_encode($datosLogin));
         
         if (isset($bloqueado['respuesta']) && $bloqueado['respuesta'] == 0) {
-            // La IP está bloqueada o hubo un error previo -> Imprime el JSON y corta la ejecución
             echo json_encode($bloqueado);
-           
             exit;
         }
 

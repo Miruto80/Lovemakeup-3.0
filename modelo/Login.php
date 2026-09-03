@@ -398,13 +398,15 @@ private function verificarCredenciales($datos) {
 
             $sql = "SELECT TIMESTAMPDIFF(MINUTE, NOW(), bloqueado_hasta) AS minutos_restantes 
                     FROM intentos_login 
-                    WHERE ip_address = :ip 
+                    WHERE ip_address = :ip AND usuario = :cedula
                     AND bloqueado_hasta > NOW() 
                     LIMIT 1";
 
             $paramIp= [
-                'ip' => $datos['ip']
+                'ip' => $datos['ip'],
+                'cedula' => $datos['cedula']
             ];
+
 
             $stmt = $conex->prepare($sql);
             $stmt->execute($paramIp);

@@ -79,9 +79,11 @@ $objlogin = new Login();
         $datosLogin = [
             'operacion' => 'hastabloqueado',
             'datos' => [
-                'ip' => $ipCliente
+                'ip' => $ipCliente,
+                'cedula' => $dataJson['usuario']
             ]
         ];
+
         $bloqueado = $objlogin->procesarLogin(json_encode($datosLogin));
         
         if (isset($bloqueado['respuesta']) && $bloqueado['respuesta'] == 0) {
