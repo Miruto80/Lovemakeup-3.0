@@ -66,7 +66,6 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                 validarExpresiones('cedula', $usuario, "Cédula (F) inválida","ingresar");
                 validarExpresiones('documento', $documento, "Documento (F) inválido","ingresar");
                 validarExpresiones('clave', $clave, "Clave (F) inválida","ingresar");
-                validarExpresiones('cedula', $usuario, "Cédula (F) inválida","ingresar");
 
                 $hoy = date('Y-m-d');
                 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < $hoy) {
