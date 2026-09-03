@@ -16,16 +16,20 @@ class Reporte {
             return '';
         }
 
+        $contenido = file_get_contents($rutaArchivo);
+        if ($contenido === false) {
+            return '';
+        }
+
         try {
             $resultado = CloudinaryConfig::uploadReportImage($rutaArchivo, $nombreArchivo);
-            if (!empty($resultado['url_imagen'])) {
-                return $resultado['url_imagen'];
-            }
+            error_log('Reporte::subirGraficoCloudinary URL: ' . ($resultado['url_imagen'] ?? ''));
         } catch (\Throwable $e) {
             error_log('Reporte::subirGraficoCloudinary error: ' . $e->getMessage());
         }
 
-        return 'data:image/png;base64,' . base64_encode(file_get_contents($rutaArchivo));
+        // Dompdf debe recibir los bytes locales; no depende de descargar la URL remota.
+        return 'data:image/png;base64,' . base64_encode($contenido);
     }
 
     private static function emitirPdfCloudinary(string $nombreArchivo, Dompdf $pdf): void
