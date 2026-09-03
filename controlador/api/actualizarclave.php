@@ -127,8 +127,8 @@ if (empty($ClaveNueva)) {
 
 $objolvido = new Olvidoclave();
 
-   validarExpresionesAPP('codigo_ingresado', $codigoIngresado, "Codigo Ingresado (F) invalido");
-      validarExpresionesAPP('codigo_ingresado', $codigoIngresado, "Codigo Ingresado (F) invalido");
+   validarExpresionesAPP('clave', $ClaveNueva, "Clave Ingresado (F) invalido");
+
 $datosRegistro = [
     'operacion' => 'actualizar', 
     'datos' => [
