@@ -62,8 +62,10 @@ class CloudinaryConfig
             'resource_type' => 'image'
         ]);
 
+        $optimizedUrl = self::optimizeImageUrl($response['secure_url']);
+
         return [
-            'url_imagen' => $response['secure_url'],
+            'url_imagen' => $optimizedUrl,
             'public_id' => $response['public_id']
         ];
     }
