@@ -115,12 +115,18 @@
             
              <div class="input-group">
                 
-                <select class="form-select" name="tipo_documento" id="rolSelect2"  required >
-                  <option value="<?php echo $_SESSION['documento'] ?>"> <?php echo $_SESSION['documento'] . " (ACTUAL)";?> </option>
-                  <option value="V"> V </option>
-                  <option value="E"> E </option>
-          
-                </select>
+                 <?php 
+                    $tipo_actual = $_SESSION['documento'] ?? 'V';
+                    $opciones = ['V' => 'V', 'E' => 'E', 'J' => 'J'];
+                    ?>
+
+                    <select class="form-select" name="tipo_documento" id="rolSelect2"  required>
+                        <?php foreach ($opciones as $valor => $etiqueta): ?>
+                            <option value="<?php echo $valor; ?>" <?php echo ($tipo_actual === $valor) ? 'selected' : ''; ?>>
+                                 <?php echo $etiqueta; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                     <input type="text" class="form-control" name="cedula" id="cedula" value="<?php echo $_SESSION['id'] ?>">
                     <input type="hidden" class="form-control" name="cedula_actual" value="<?php echo $_SESSION['id'] ?>">
               </div>
