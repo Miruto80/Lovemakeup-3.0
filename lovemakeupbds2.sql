@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-08-2026 a las 21:27:10
+-- Tiempo de generación: 03-09-2026 a las 15:34:07
 -- Versión del servidor: 10.4.32-MariaDB-log
 -- Versión de PHP: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `lovemakeupbds2`
 --
+CREATE DATABASE IF NOT EXISTS `lovemakeupbds2` DEFAULT CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
+USE `lovemakeupbds2`;
 
 -- --------------------------------------------------------
 
@@ -80,7 +82,24 @@ INSERT INTO `bitacora` (`id_bitacora`, `cedula`, `accion`, `descripcion`, `fecha
 (414, 10200300, 'Acceso a Módulo', 'Id_persona: 10200300 | Accion: Acceso a Módulo | Descripcion: módulo de Ventas [Salida]', '2026-08-28 11:16:59'),
 (415, 10200300, 'Acceso a Módulo', 'Id_persona: 10200300 | Accion: Acceso a Módulo | Descripcion: módulo de Producto [Producto]', '2026-08-28 11:17:01'),
 (416, 10200300, 'Registro de producto', 'Id_persona: 10200300 | Accion: Registro de producto | Descripcion: Se registró el producto: gel [Producto]', '2026-08-28 11:17:22'),
-(417, 10200300, 'Acceso a Módulo', 'Id_persona: 10200300 | Accion: Acceso a Módulo | Descripcion: módulo de Producto [Producto]', '2026-08-28 11:17:23');
+(417, 10200300, 'Acceso a Módulo', 'Id_persona: 10200300 | Accion: Acceso a Módulo | Descripcion: módulo de Producto [Producto]', '2026-08-28 11:17:23'),
+(418, 10200300, 'Acceso al sistema', 'Id_persona: 10200300 | Accion: Acceso al sistema | Descripcion: Entro al panel administrativo el usuario: V - 10200300, Jefe Lovemakeup [Login]', '2026-09-03 09:31:18'),
+(419, 10200300, 'Acceso al sistema', 'Id_persona: 10200300 | Accion: Acceso al sistema | Descripcion: Entro al panel administrativo el usuario: V - 10200300, Jefe Lovemakeup [Login]', '2026-09-03 09:31:53');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `intentos_login`
+--
+
+CREATE TABLE `intentos_login` (
+  `id` int(11) NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `usuario` varchar(100) DEFAULT NULL,
+  `intentos` int(11) NOT NULL DEFAULT 1,
+  `bloqueado_hasta` datetime DEFAULT NULL,
+  `ultimo_intento` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -494,6 +513,14 @@ ALTER TABLE `bitacora`
   ADD KEY `cedula` (`cedula`);
 
 --
+-- Indices de la tabla `intentos_login`
+--
+ALTER TABLE `intentos_login`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ip_user` (`ip_address`,`usuario`),
+  ADD KEY `idx_bloqueo` (`bloqueado_hasta`);
+
+--
 -- Indices de la tabla `modulo`
 --
 ALTER TABLE `modulo`
@@ -542,7 +569,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `bitacora`
 --
 ALTER TABLE `bitacora`
-  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=418;
+  MODIFY `id_bitacora` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=420;
+
+--
+-- AUTO_INCREMENT de la tabla `intentos_login`
+--
+ALTER TABLE `intentos_login`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `modulo`

@@ -37,7 +37,8 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
         $datosLogin = [
             'operacion' => 'hastabloqueado',
             'datos' => [
-                'ip' => $ipCliente
+                'ip' => $ipCliente,
+                'cedula' => $usuario
             ]
         ];
         $bloqueado = $objlogin->procesarLogin(json_encode($datosLogin));
