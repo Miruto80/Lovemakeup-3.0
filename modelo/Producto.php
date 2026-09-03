@@ -540,7 +540,7 @@ class Producto extends Conexion {
 public function obtenerImagenes($id_producto) {
     $conex = $this->getConex1();
     try {
-        $sql = "SELECT id_imagen, url_imagen, public_id, tipo FROM producto_imagen WHERE id_producto = :id_producto";
+        $sql = "SELECT id_imagen, url_imagen, tipo FROM producto_imagen WHERE id_producto = :id_producto";
         $stmt = $conex->prepare($sql);
         $stmt->execute(['id_producto' => $id_producto]);
         $resultado = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -548,7 +548,7 @@ public function obtenerImagenes($id_producto) {
         return $resultado;
     } catch (\PDOException $e) {
         if ($conex) $conex = null;
-        throw $e;
+        throw $e; 
     }
 }
 
