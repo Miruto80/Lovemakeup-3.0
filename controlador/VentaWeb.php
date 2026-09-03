@@ -3,6 +3,7 @@
 use LoveMakeup\Proyecto\Modelo\VentaWeb;
 use LoveMakeup\Proyecto\Modelo\MetodoPago;
 use LoveMakeup\Proyecto\Modelo\MetodoEntrega;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -105,15 +106,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $precio_total_bs = !empty($_POST['precio_total_bs']) ? $venta->sanitizarDecimal($_POST['precio_total_bs'], 0) : null;
 
         $rutaImagen = null;
-if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-    $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-    $nuevoNombre = uniqid('img_') . ".$ext";
-    $destino = __DIR__ . '/../assets/img/captures/' . $nuevoNombre;
-    if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $destino)) {
-        die(json_encode(['success'=>false,'message'=>'Error al guardar la imagen.']));
-    }
-    $rutaImagen = 'assets/img/captures/' . $nuevoNombre;
-}
+        if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            // Subir el comprobante a Cloudinary
+            try {
+                $upload = CloudinaryConfig::uploadComprobante($_FILES['imagen']['tmp_name']);
+                $rutaImagen = $upload['url_imagen'];
+            } catch (\Throwable $e) {
+                die(json_encode(['success'=>false,'message'=>'No se pudo guardar el comprobante.']));
+            }
+        }
 
         // Preparar datos del pedido (usando valores sanitizados)
         $datosPedido = [

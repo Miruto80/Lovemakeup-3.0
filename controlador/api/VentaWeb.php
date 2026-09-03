@@ -20,6 +20,7 @@ if (file_exists($autoload)) {
 
 use LoveMakeup\Proyecto\Modelo\VentaWeb;
 use LoveMakeup\Proyecto\Modelo\Delivery;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 // Ruta del public key
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
@@ -157,7 +158,7 @@ try {
             exit;
         }
 
-        // Si imagen viene como base64 (data URI), guardarla como archivo
+        // Si imagen viene como base64 (data URI), subirla a Cloudinary
         $tieneImagen = !empty($decodedData['datos']['imagen']);
         $tipoImagen = $tieneImagen ? gettype($decodedData['datos']['imagen']) : 'none';
         $lenImagen = $tieneImagen ? strlen($decodedData['datos']['imagen']) : 0;
@@ -169,27 +170,23 @@ try {
         if ($tieneImagen && preg_match('/^data:image\/(\w+);base64,/', $decodedData['datos']['imagen'], $m)) {
             $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
             $extsPermitidas = ['jpg', 'jpeg', 'png', 'webp'];
-            $ext = in_array($ext, $extsPermitidas) ? $ext : 'jpg';
+            if (!in_array($ext, $extsPermitidas)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Formato de imagen no permitido.']);
+                exit;
+            }
 
-            $base64Data = substr($decodedData['datos']['imagen'], strpos($decodedData['datos']['imagen'], ',') + 1);
-            $binario = base64_decode($base64Data);
-            if ($binario !== false) {
-                $dirCaptures = __DIR__ . '/../../assets/img/captures';
-                if (!is_dir($dirCaptures)) {
-                    mkdir($dirCaptures, 0777, true);
-                }
-                $nombreArchivo = 'img_' . uniqid() . '.' . $ext;
-                $rutaAbsoluta = $dirCaptures . '/' . $nombreArchivo;
-                $guardado = file_put_contents($rutaAbsoluta, $binario);
-                if ($guardado !== false) {
-                    $decodedData['datos']['imagen'] = 'assets/img/captures/' . $nombreArchivo;
-                    $jsonDatos = json_encode($decodedData);
-                    @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | archivo_guardado=$nombreArchivo | bytes=$guardado | ruta=assets/img/captures/$nombreArchivo\n", FILE_APPEND);
-                } else {
-                    @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_guardando_archivo\n", FILE_APPEND);
-                }
-            } else {
-                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_base64_decode_fallo\n", FILE_APPEND);
+            // Subir el comprobante a Cloudinary (paridad con el flujo de productos)
+            try {
+                $upload = CloudinaryConfig::uploadComprobante($decodedData['datos']['imagen']);
+                $decodedData['datos']['imagen'] = $upload['url_imagen'];
+                $jsonDatos = json_encode($decodedData);
+                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | comprobante_subido_cloudinary | bytes=" . $lenImagen . " | url=" . $upload['url_imagen'] . "\n", FILE_APPEND);
+            } catch (\Throwable $e) {
+                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_subida_cloudinary: " . $e->getMessage() . "\n", FILE_APPEND);
+                http_response_code(500);
+                echo json_encode(['error' => 'No se pudo guardar el comprobante.']);
+                exit;
             }
         } else {
             @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | imagen_no_es_data_uri_o_vacia\n", FILE_APPEND);

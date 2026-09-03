@@ -50,4 +50,18 @@ class CloudinaryConfig
             'public_id' => $response['public_id']
         ];
     }
+
+
+    public static function uploadComprobante(string $origen): array
+    {
+        $response = self::getInstance()->uploadApi()->upload($origen, [
+            'folder' => 'lovemakeup/comprobantes',
+            'resource_type' => 'image'
+        ]);
+
+        return [
+            'url_imagen' => $response['secure_url'],
+            'public_id' => $response['public_id']
+        ];
+    }
 }
