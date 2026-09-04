@@ -1,7 +1,6 @@
 <?php
 
 use LoveMakeup\Proyecto\Modelo\Categoria;
-use LoveMakeup\Proyecto\Modelo\Bitacora;
 
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -22,9 +21,6 @@ if ($_SESSION["nivel_rol"] == 1) {
 
 require_once 'permiso.php';
 $Cat = new Categoria();
-
-// Fijamos el rol en "Administrador"
-$rolText = 'Administrador';
 
 /*||||||||||||||||||||||||||||||| FUNCIONES DE VALIDACIÓN |||||||||||||||||||||||||||||*/
 
@@ -90,17 +86,6 @@ function validarIdCategoria($id_categoria) {
     return $existe > 0;
 }
 
-// 0) GET → acceso + bitácora
-if ($_SERVER['REQUEST_METHOD'] === 'GET'
-    && !isset($_POST['consultar_categoria'])
-) {
-    $Cat->registrarBitacora(json_encode([
-        'id_persona'  => $_SESSION['id'],
-        'accion'      => 'Acceso a Categorías',
-        'descripcion' => "$rolText accedió al módulo Categoría"
-    ]));
-}
-
 // 1) Registrar categoría
 if (isset($_POST['registrar'])) {
     // ========================================
@@ -148,13 +133,6 @@ if (isset($_POST['registrar'])) {
     $res   = $Cat->procesarCategoria(
         json_encode(['operacion'=>'incluir','datos'=>$datos])
     );
-    if ($res['respuesta']==1) {
-        $Cat->registrarBitacora(json_encode([
-            'id_persona'=>$_SESSION['id'],
-            'accion'    =>'Incluir Categoría',
-            'descripcion'=>"Registró categoría \"{$datos['nombre']}\""
-        ]));
-    }
     echo json_encode($res);
     exit;
 }
@@ -220,13 +198,6 @@ if (isset($_POST['modificar'])) {
     $res = $Cat->procesarCategoria(
         json_encode(['operacion'=>'actualizar','datos'=>$datos])
     );
-    if ($res['respuesta']==1) {
-        $Cat->registrarBitacora(json_encode([
-            'id_persona'=>$_SESSION['id'],
-            'accion'    =>'Actualizar Categoría',
-            'descripcion'=>"Actualizó categoría ID {$datos['id_categoria']} → \"{$datos['nombre']}\""
-        ]));
-    }
     echo json_encode($res);
     exit;
 }
@@ -264,41 +235,15 @@ if (isset($_POST['eliminar'])) {
     // CAPA 5: Sanitización (ID ya validado como entero)
     // ========================================
 
-    // obtener nombre antes de eliminar
-    try {
-        $db = $Cat->getConex1();
-        $stmt = $db->prepare("SELECT nombre FROM categoria WHERE id_categoria=:id");
-        $stmt->execute(['id'=>$id]);
-        $nombre = $stmt->fetchColumn() ?: "ID $id";
-        $db = null;
-    } catch (\PDOException $e) {
-        $nombre = "ID $id";
-    }
-
     $res = $Cat->procesarCategoria(
         json_encode(['operacion'=>'eliminar','datos'=>['id_categoria'=>$id]])
     );
-    if ($res['respuesta']==1) {
-        $Cat->registrarBitacora(json_encode([
-            'id_persona'=>$_SESSION['id'],
-            'accion'    =>'Eliminar Categoría',
-            'descripcion'=>"Eliminó categoría \"{$nombre}\""
-        ]));
-    }
     echo json_encode($res);
     exit;
 }
 
 // Consulta para mostrar la vista
 if ($_SESSION["nivel_rol"] == 3 && tieneAcceso(8, 1)) {
-    $bitacora = [
-        'id_persona' => $_SESSION["id"],
-        'accion' => 'Acceso a Módulo',
-        'descripcion' => 'módulo de Categoria'
-    ];
-    $bitacoraObj = new Bitacora();
-    $bitacoraObj->registrarOperacion($bitacora['accion'], 'categoria', $bitacora);
-    
     // Consultar todas las categorías (activas e inactivas para la validación)
     $categorias = $Cat->consultar();
     $pagina_actual = isset($_GET['pagina']) ? $_GET['pagina'] : 'categoria';
