@@ -69,8 +69,8 @@
                   <th class="text-white text-center">Contactar</th>
                   <th class="text-white text-center">Estatus</th>
                  
-                    <?php  if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(10, 3)): ?>
-                  <th class="text-white text-center">Acción</th>
+                    <?php  if (tieneAcceso(10, 3) === true): ?>
+                      <th class="text-white text-center">Acción</th>
                     <?php endif; ?>
                 </tr>
               </thead>
@@ -146,7 +146,7 @@
 
             
                     
-                  <?php  if ($_SESSION["nivel_rol"] == 3 && tieneAcceso(10, 3)): ?>
+                  <?php  if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(10, 3)): ?>
                   <td class="text-center">
                       <form method="POST" action="?pagina=cliente" id="formestatus">
                   
@@ -162,7 +162,7 @@
                       </button>
                     </form>
                  </td>
-                     <?php endif; ?>
+                  <?php endif; ?>
 
                      
                 </tr>
