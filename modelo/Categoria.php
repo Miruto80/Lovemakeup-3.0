@@ -3,6 +3,7 @@
 namespace LoveMakeup\Proyecto\Modelo;
 
 use LoveMakeup\Proyecto\Config\Conexion;
+use LoveMakeup\Proyecto\Modelo\Bitacora;
 
 class Categoria extends Conexion {
     function __construct() {
@@ -88,6 +89,14 @@ class Categoria extends Conexion {
 
             if ($ok) {
                 $conex->commit();
+                // Registrar en bitácora
+                $bitacora = new Bitacora();
+                $bitacora->registrarOperacion(
+                    'CREAR',
+                    'Categoria',
+                    "ID: " . $conex->lastInsertId() . " | Nombre: " . $d['nombre']
+                );
+                $conex = null;
                 $respuesta = ['respuesta'=>1,'accion'=>'incluir','mensaje'=>'Categoría creada'];
             } else {
                 $conex->rollBack();
@@ -148,6 +157,14 @@ class Categoria extends Conexion {
 
             if ($ok) {
                 $conex->commit();
+                // Registrar en bitácora
+                $bitacora = new Bitacora();
+                $bitacora->registrarOperacion(
+                    'MODIFICAR',
+                    'Categoria',
+                    "ID: " . $d['id_categoria'] . " | Nombre: " . $d['nombre']
+                );
+                $conex = null;
                 $respuesta = ['respuesta'=>1,'accion'=>'actualizar','mensaje'=>'Categoría modificada'];
             } else {
                 $conex->rollBack();
@@ -180,6 +197,14 @@ class Categoria extends Conexion {
 
             if ($ok) {
                 $conex->commit();
+                // Registrar en bitácora
+                $bitacora = new Bitacora();
+                $bitacora->registrarOperacion(
+                    'ELIMINAR',
+                    'Categoria',
+                    "ID: " . $d['id_categoria']
+                );
+                $conex = null;
                 $respuesta = ['respuesta'=>1,'accion'=>'eliminar','mensaje'=>'Categoría eliminada'];
             } else {
                 $conex->rollBack();
