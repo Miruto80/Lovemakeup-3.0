@@ -39,11 +39,18 @@
                         <div class="md:col-span-2">
                             <label for="cedula" class="block text-sm font-semibold text-black mb-1">Cédula</label>
                             <div class="flex relative rounded-xl shadow-sm">
-                                <select class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-300 bg-gray-50 text-gray-700 focus:ring-pink-500 focus:border-pink-500 font-medium sm:text-sm" name="tipo_documento" id="rolSelect2" required>
-                                    <option value="<?php echo $_SESSION['documento'] ?>"> <?php echo $_SESSION['documento'] . " (ACTUAL)";?> </option>
-                                    <option value="V"> V </option>
-                                    <option value="E"> E </option>
-                                </select>
+                                <?php 
+                            $tipo_actual = $_SESSION['documento'] ?? 'V';
+                            $opciones = ['V' => 'V', 'E' => 'E', 'J' => 'J'];
+                            ?>
+
+                            <select class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-300 bg-gray-50 text-gray-700 focus:ring-pink-500 focus:border-pink-500 font-medium sm:text-sm" name="tipo_documento" id="rolSelect2" required>
+                                <?php foreach ($opciones as $valor => $etiqueta): ?>
+                                    <option value="<?php echo $valor; ?>" <?php echo ($tipo_actual === $valor) ? 'selected' : ''; ?>>
+                                        <?php echo $etiqueta; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                                 <input type="text" id="cedula" name="cedula" value="<?php echo $_SESSION['id'] ?>" class="flex-1 block w-full min-w-0 rounded-none rounded-r-xl border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-pink-500 focus:border-pink-500 sm:text-sm outline-none transition-colors">
                                 <input type="hidden" name="cedula_actual" value="<?php echo $_SESSION['id'] ?>">
                             </div>

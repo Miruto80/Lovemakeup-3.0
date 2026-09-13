@@ -78,3 +78,22 @@ function validarTipoDocumento($tipo_documento) {
 }
 
  
+function obtenerIP(): string {
+    $ip = '127.0.0.1';
+
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $ip = trim($ips[0]);
+    } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+        $ip = $_SERVER['REMOTE_ADDR'];
+    }
+
+    // Convertir localhost IPv6 a IPv4 para pruebas locales
+    if ($ip === '::1') {
+        $ip = '127.0.0.1';
+    }
+
+    return $ip;
+}

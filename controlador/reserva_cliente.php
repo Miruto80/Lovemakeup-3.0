@@ -1,6 +1,7 @@
 <?php
 
 use LoveMakeup\Proyecto\Modelo\ReservaCliente;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -104,22 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         /* =========================
-           GUARDAR IMAGEN
+           SUBIR IMAGEN A CLOUDINARY
         ========================= */
 
-        $carpeta = __DIR__ . '/../assets/img/captures/';
-
-        if (!is_dir($carpeta)) {
-            mkdir($carpeta, 0775, true);
-        }
-
-        $nombreArchivo = uniqid('img_').'.'.$ext;
-
-        $rutaRelativa = 'assets/img/captures/'.$nombreArchivo;
-
-        $rutaAbsoluta = $carpeta.$nombreArchivo;
-
-        if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaAbsoluta)) {
+        try {
+            $upload = CloudinaryConfig::uploadComprobante($_FILES['imagen']['tmp_name']);
+            $rutaImagen = $upload['url_imagen'];
+        } catch (\Throwable $e) {
+            error_log('[RESERVA_ERROR] Cloudinary: '.$e->getMessage());
             throw new \Exception('No se pudo guardar el comprobante.');
         }
 
@@ -141,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'banco_destino'       => $banco_destino,
                 'monto'               => $precio_bs,
                 'monto_usd'           => $precio_usd,
-                'imagen'              => $rutaRelativa,
+                'imagen'              => $rutaImagen,
                 'carrito'             => $_SESSION['carrito']
             ]
         ];

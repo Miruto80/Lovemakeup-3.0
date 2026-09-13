@@ -7,8 +7,8 @@
        header("location:?pagina=login");
      } /*  Validacion URL  */
      if (!empty($_SESSION['id'])) {
-        require_once 'verificarsession.php';
+      require_once __DIR__ . '/verificarsession.php';
     } 
-    require_once 'vista/error.php';
+    require_once __DIR__ . '/../vista/error.php';
 
 ?>

@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="assets/css/formulario.css">
 </head>
 <body class="g-sidenav-show bg-gray-100">
-
+<!-- Sidebar -->
   <?php include 'complementos/sidebar.php'; ?>
   <main class="main-content position-relative border-radius-lg ">
     <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl"
@@ -189,7 +189,7 @@
     </div>
 
     <?php include 'complementos/footer.php'; ?>
-    <!-- para el datatable-->
+    <!-- para el datatable--> 
     <script src="assets/js/demo/datatables-demo.js"></script>
     <script src="assets/js/categoria.js"></script>
   </main>

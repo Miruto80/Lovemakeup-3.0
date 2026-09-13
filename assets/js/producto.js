@@ -332,7 +332,8 @@ function cambiarEstatusProducto(id_producto, estatus_actual) {
               location = '?pagina=producto';
             }, 1000);
           } else {
-            muestraMensaje("error", 2000, "ERROR", lee.text);
+            const mensajeError = lee.mensaje || lee.text || lee.error || 'No se pudo actualizar el producto.';
+            muestraMensaje("error", 2500, "ERROR", mensajeError);
             $('#btnEnviar').prop("disabled", false).html('<i class="fas fa-save me-2"></i>Guardar Producto');
           }
         }

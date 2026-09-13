@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <?php include 'vista/complementos/head1.php' ?>
+    <?php include 'vista/complementos/head_catalogo.php' ?>
     <title>Aviso Legales | LoveMakeup C.A </title> 
 </head>
 <body class="min-h-screen flex flex-col pb-20 lg:pb-0">
 
     <!-- php CARRITO--> 
-<?php include 'vista/complementos/carrito1.php' ?>
+<?php include 'vista/complementos/carrito.php' ?>
 
-  <?php include 'vista/complementos/nav1.php' ?>
+  <?php include 'vista/complementos/nav_catalogo.php' ?>
 
     <!-- MAIN CONTENT CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -18,7 +18,7 @@
         <section id="vista-aviso" class="tab-content">
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-900">Aviso Legal</h2>
-        <p class="text-xs text-gray-500 mt-0.5">Términos, condiciones y marco regulatorio de LoveMakeup</p>
+        <p class="text-s text-gray-700 mt-0.5">Términos, condiciones y marco regulatorio de LoveMakeup</p>
     </div>
 
     <!-- REJILLA DE CARDS LEGALES -->
@@ -156,6 +156,6 @@
         
 
   </main>
-   <?php include 'vista/complementos/footer1.php' ?>
+   <?php include 'vista/complementos/footer_catalogo.php' ?>
 </body>
 </html>

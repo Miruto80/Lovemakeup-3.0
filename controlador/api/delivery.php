@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Authorization, Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -9,15 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Cargar autoload si existe
-$autoload = __DIR__ . '/../../vendor/autoload.php';
-if (file_exists($autoload)) {
-    require_once $autoload;
-} else {
-    require_once __DIR__ . '/../../modelo/Catalogopedido.php';
-}
+require_once __DIR__ . '/../../vendor/autoload.php';
 
-use LoveMakeup\Proyecto\Modelo\Catalogopedido;
+use LoveMakeup\Proyecto\Modelo\Delivery;
 
 // Ruta del public key
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
@@ -86,67 +80,25 @@ if (!$token) {
     exit;
 }
 
-$claims = validate_jwt_rs256($token, $publicKey);
-if (!$claims) {
+if (!validate_jwt_rs256($token, $publicKey)) {
     http_response_code(401);
     echo json_encode(['error' => 'Invalid or expired token']);
     exit;
 }
 
-try {
-    // 1) Obtener cédula del token PRIMERO
-    $requestCedula = null;
-    if (is_array($claims)) {
-        if (!empty($claims['data']['cedula'])) {
-            $requestCedula = preg_replace('/\D/', '', $claims['data']['cedula']);
-        } elseif (!empty($claims['cedula'])) {
-            $requestCedula = preg_replace('/\D/', '', $claims['cedula']);
-        } elseif (!empty($claims['data']['usuario'])) {
-            $requestCedula = preg_replace('/\D/', '', $claims['data']['usuario']);
-        }
-    }
-
-    if (isset($_GET['debug']) && $_GET['debug'] === '1' && isset($_GET['cedula']) && !empty($_GET['cedula'])) {
-        $requestCedula = preg_replace('/\D/', '', $_GET['cedula']);
-    }
-
-    if (!$requestCedula) {
-        http_response_code(403);
-        echo json_encode(['respuesta' => 0, 'mensaje' => 'Cédula no encontrada en token.']);
-        exit;
-    }
-
-    // 2) AHORA sí, llamar al modelo pasando la cédula
-    $obj = new Catalogopedido();
-    $pedidos = $obj->consultarPedidosCompletosCatalogo($requestCedula);
-
-    // 3) Adjuntar detalles
-    foreach ($pedidos as &$p) {
-        $id = $p['id_pedido'] ?? null;
-        if ($id) {
-            $det = $obj->consultarDetallesPedidoCatalogo($id);
-            $productos = [];
-            if (is_array($det)) {
-                foreach ($det as $d) {
-                    $productos[] = [
-                        'nombre' => $d['nombre'] ?? $d['nombre_producto'] ?? '',
-                        'cantidad' => isset($d['cantidad']) ? (int)$d['cantidad'] : 0,
-                        'precio' => isset($d['precio_unitario']) ? (float)$d['precio_unitario'] : (float)($d['precio'] ?? 0),
-                    ];
-                }
-            }
-            $p['productos'] = $productos;
-        } else {
-            $p['productos'] = [];
-        }
-    }
-    unset($p);
-
-    echo json_encode(['respuesta' => 1, 'pedidos' => $pedidos]);
-
-} catch (\Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed']);
+    exit;
 }
 
-?>
+try {
+    $objDelivery = new Delivery();
+    echo json_encode([
+        'success'    => true,
+        'deliveries' => $objDelivery->consultarActivos()
+    ]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
+}

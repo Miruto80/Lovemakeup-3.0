@@ -2,6 +2,9 @@
 
 use LoveMakeup\Proyecto\Modelo\VerCarrito;
 
+// Carga explícita del modelo: no depender del autoload del hosting (case-sensitive en Linux)
+require_once __DIR__ . '/../modelo/VerCarrito.php';
+
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -21,6 +24,18 @@ $carrito = $_SESSION['carrito'] ?? [];
 $carritoEmpty = empty($carrito);
 $total = 0;
 $accion = $_POST['accion'] ?? '';
+
+// Calcula el total general del carrito respetando el precio por cantidad (mayor/detal)
+function calcularTotalCarrito($carrito) {
+    $total = 0;
+    foreach ($carrito as $p) {
+        $cant = (int)$p['cantidad'];
+        $mayor = (int)$p['cantidad_mayor'];
+        $precio = ($cant >= $mayor) ? floatval($p['precio_mayor']) : floatval($p['precio_detal']);
+        $total += $cant * $precio;
+    }
+    return number_format($total, 2, '.', '');
+}
 
 // Si es una solicitud AJAX (POST con acción), respondemos JSON y salimos
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $accion) {
@@ -42,47 +57,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $accion) {
                 exit;
             }
         
-            $productoEncontrado = false;
-        
-            foreach ($_SESSION['carrito'] as $index => $producto) {
-                if ($producto['id'] == $id) {
-                    unset($_SESSION['carrito'][$index]);
-                    $_SESSION['carrito'] = array_values($_SESSION['carrito']); // Reindexar
-        
-                    // Función para calcular total general
-                    function calcularTotalGeneral() {
-                        $total = 0;
-                        foreach ($_SESSION['carrito'] as $p) {
-                            $cant = $p['cantidad'];
-                            $precio = ($cant >= $p['cantidad_mayor']) ? $p['precio_mayor'] : $p['precio_detal'];
-                            $total += $cant * $precio;
-                        }
-                        return number_format($total, 2);
-                    }
-        
-                    echo json_encode([
-                        'success' => true,
-                        'id' => $id,
-                        'eliminado' => true,
-                        'total' => calcularTotalGeneral()
-                    ]);
-                    exit;
-                }
-            }
-        
-            echo json_encode(['success' => false, 'error' => 'Producto no encontrado en el carrito']);
-            exit;
+            // El carrito se indexa por id de producto; eliminar sin reindexar
+            // para conservar las claves id (las usa actualizar y el alta en carrito.php)
+            $respuesta = $carritoObj->procesarCarrito(json_encode([
+                'operacion' => 'eliminar',
+                'datos' => ['id' => $id]
+            ]));
 
-            $producto = $carrito[$id];
-            $stockDisponible = $producto['stockDisponible'];
+            if ($respuesta['respuesta'] == 1) {
+                $carritoActual = $carritoObj->procesarCarrito(json_encode([
+                    'operacion' => 'obtener'
+                ]))['carrito'] ?? [];
 
-            if ($cantidad < 1 || $cantidad > $stockDisponible) {
                 echo json_encode([
-                    'success' => false,
-                    'error' => 'Cantidad inválida o superior al stock disponible',
-                    'stockDisponible' => $stockDisponible
+                    'success' => true,
+                    'id' => $id,
+                    'eliminado' => true,
+                    'total' => calcularTotalCarrito($carritoActual)
                 ]);
-                exit;}
+            } else {
+                echo json_encode(['success' => false, 'error' => $respuesta['mensaje'] ?? 'No se pudo eliminar el producto']);
+            }
+            exit;
         
                 case 'actualizar':
                     $id = $_POST['id'] ?? '';
@@ -135,21 +131,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $accion) {
                             $subtotal = $precioUnitario * $cantidad;
                 
                             // Calcular total del carrito
-                            $total = 0;
-                            foreach ($carrito as $p) {
-                                $cant = (int)$p['cantidad'];
-                                $mayor = (int)$p['cantidad_mayor'];
-                                $precio = ($cant >= $mayor) ? floatval($p['precio_mayor']) : floatval($p['precio_detal']);
-                                $total += $cant * $precio;
-                            }
+                            $total = calcularTotalCarrito($carrito);
                 
                             echo json_encode([
                                 'success' => true,
                                 'id' => $id,
                                 'cantidad' => $cantidad,
-                                'precio' => number_format($precioUnitario, 2),
-                                'subtotal' => number_format($subtotal, 2),
-                                'total' => number_format($total, 2),
+                                'precio' => number_format($precioUnitario, 2, '.', ''),
+                                'subtotal' => number_format($subtotal, 2, '.', ''),
+                                'total' => $total,
                             ]);
                         } else {
                             echo json_encode(['success' => false, 'error' => $respuesta['mensaje'] ?? 'Error al actualizar']);

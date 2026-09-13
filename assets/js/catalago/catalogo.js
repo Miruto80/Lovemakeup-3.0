@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const val = e.target.value;
             const isChecked = e.target.checked;
 
-            // 1. Sincronizar el checkbox equivalente (móvil <-> desktop)
+            // Sincronizar el checkbox equivalente 
             checkboxes.forEach(otherCb => {
                 if (otherCb.value === val) {
                     otherCb.checked = isChecked;
@@ -219,27 +219,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            // 2. Obtener categorías activas
+            // categorías activas
             const categoriasSeleccionadas = Array.from(checkboxes)
                 .filter(c => c.checked)
                 .map(c => c.value);
 
-            // 3. Filtrar los elementos dentro de la rejilla
+            // Filtrar los elementos dentro de la rejilla
             productos.forEach(prod => {
-                // Si el mismo producto tiene la clase del grid o está envuelto por ella
+                // Si el mismo producto tiene la clase 
                 const target = prod.classList.contains('product-item') ? prod : prod.closest('.product-item');
                 const categoria = prod.getAttribute('data-categoria');
 
                 if (categoriasSeleccionadas.length === 0 || categoriasSeleccionadas.includes(categoria)) {
-                    target.style.display = ''; // Muestra el producto
+                    target.style.display = ''; 
                 } else {
-                    target.style.display = 'none'; // Oculta y libera el espacio en el grid
+                    target.style.display = 'none'; 
                 }
             });
         });
     });
 
-    // Función auxiliar para manejar clases activas en Tailwind en lugar de style inline
+    // Función auxiliar para manejar clases
     function actualizarEstiloLabel(checkbox) {
         const label = checkbox.closest('label');
         if (!label) return;
@@ -254,11 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
-let currentModalQty = 1;
+let modalImagenes = [];
+let modalIndexActual = 0;
 
 function openModal(element) {
-    // CAPTURAR Y VERIFICAR EL EVENTO
     const e = window.event;
     if (e && e.target) {
         if (e.target.closest('.btn-favorito') || e.target.closest('a[href*="pagina=login"]') || e.target.closest('.btn-login')) {
@@ -275,13 +274,13 @@ function openModal(element) {
     const precioMayor = element.dataset.precioMayor || '0.00';
     const stockDisponible = element.dataset.stockDisponible || '0';
     
-    // Convertir el JSON de imágenes
-    let imagenes = [];
     try {
-        imagenes = JSON.parse(element.dataset.imagenes || '[]');
+        modalImagenes = JSON.parse(element.dataset.imagenes || '[]');
     } catch (e) {
-        imagenes = [];
+        modalImagenes = [];
     }
+
+    modalIndexActual = 0;
 
     // Insertar datos en el modal
     document.getElementById('modal-title').textContent = nombre;
@@ -295,20 +294,22 @@ function openModal(element) {
     const marcaBadge = document.getElementById('modal-marca-badge');
     if (marcaBadge) marcaBadge.textContent = marca;
 
-    // Rellenar el slider/galería de miniaturas
+    // Galería
     const sliderInner = document.getElementById('modal-slider-inner');
     const mainImg = document.getElementById('modal-main-image');
-    sliderInner.innerHTML = '';
+    const btnPrev = document.getElementById('modal-prev-btn');
+    const btnNext = document.getElementById('modal-next-btn');
 
+    sliderInner.innerHTML = '';
     const placeholder = 'https://placehold.co/800x800/fdf2f8/d81b60?text=LoveMakeup';
 
-    if (imagenes.length > 0) {
-        if (mainImg) mainImg.src = imagenes[0].url_imagen || placeholder;
+    if (modalImagenes.length > 0) {
+        if (mainImg) mainImg.src = modalImagenes[0].url_imagen || placeholder;
 
-        imagenes.forEach((img, index) => {
+        modalImagenes.forEach((img, index) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = `w-14 h-14 rounded-xl border-2 ${index === 0 ? 'border-accent-fuchsia' : 'border-pink-100'} overflow-hidden p-1 bg-pink-50 flex-shrink-0 transition-all`;
+            btn.className = `w-14 h-14 rounded-xl border-2 ${index === 0 ? 'border-accent-fuchsia' : 'border-pink-100'} overflow-hidden p-1 bg-pink-50 flex-shrink-0 transition-all modal-thumb-btn`;
             
             const image = document.createElement('img');
             image.src = img.url_imagen;
@@ -316,35 +317,103 @@ function openModal(element) {
             image.onerror = function() { this.src = placeholder; };
 
             btn.appendChild(image);
-
-            btn.onclick = function() {
-                if (mainImg) mainImg.src = img.url_imagen;
-                document.querySelectorAll('#modal-slider-inner button').forEach(b => {
-                    b.classList.remove('border-accent-fuchsia');
-                    b.classList.add('border-pink-100');
-                });
-                btn.classList.remove('border-pink-100');
-                btn.classList.add('border-accent-fuchsia');
-            };
-
+            btn.onclick = function() { seleccionarImagenModal(index); };
             sliderInner.appendChild(btn);
         });
+
+        // Mostrar flechas
+        if (modalImagenes.length > 1) {
+            if (btnPrev) btnPrev.classList.remove('hidden');
+            if (btnNext) btnNext.classList.remove('hidden');
+        } else {
+            if (btnPrev) btnPrev.classList.add('hidden');
+            if (btnNext) btnNext.classList.add('hidden');
+        }
     } else {
         if (mainImg) mainImg.src = placeholder;
+        if (btnPrev) btnPrev.classList.add('hidden');
+        if (btnNext) btnNext.classList.add('hidden');
     }
 
-    // Rellenar formulario oculto
+    // Datos del formulario
     document.getElementById('form-id').value = id;
     document.getElementById('form-nombre').value = nombre;
     document.getElementById('form-precio-detal').value = precio;
     document.getElementById('form-precio-mayor').value = precioMayor;
     document.getElementById('form-cantidad-mayor').value = cantidadMayor;
-    document.getElementById('form-imagen').value = imagenes.length ? imagenes[0].url_imagen : '';
+    document.getElementById('form-imagen').value = modalImagenes.length ? modalImagenes[0].url_imagen : '';
     document.getElementById('form-stock-disponible').value = stockDisponible;
 
-    // MOSTRAR EL MODAL
+    // MOSTRAR  MODAL
     const modal = document.getElementById('productDetailModal');
-    if (modal) modal.classList.remove('hidden');
+    const content = document.getElementById('productModalContent');
+    
+    if (modal && content) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('opacity-0', 'scale-95');
+            content.classList.add('opacity-100', 'scale-100');
+        }, 10);
+    }
+}
+
+// Función para cerrar el modal
+function closeProductModal() {
+    const modal = document.getElementById('productDetailModal');
+    const content = document.getElementById('productModalContent');
+
+    if (modal && content) {
+        modal.classList.add('opacity-0');
+        content.classList.remove('opacity-100', 'scale-100');
+        content.classList.add('opacity-0', 'scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300); 
+    }
+}
+
+// Cierre al pulsar fuera del modal
+function cierremodalfuera(e) {
+    if (e.target.id === 'productDetailModal') {
+        closeProductModal();
+    }
+}
+
+function cambiarImagenModal(direccion) {
+    if (modalImagenes.length <= 1) return;
+    modalIndexActual += direccion;
+
+    if (modalIndexActual < 0) {
+        modalIndexActual = modalImagenes.length - 1;
+    } else if (modalIndexActual >= modalImagenes.length) {
+        modalIndexActual = 0;
+    }
+
+    seleccionarImagenModal(modalIndexActual);
+}
+
+
+function seleccionarImagenModal(index) {
+    modalIndexActual = index;
+    const mainImg = document.getElementById('modal-main-image');
+    const placeholder = 'https://placehold.co/800x800/fdf2f8/d81b60?text=LoveMakeup';
+
+    if (mainImg && modalImagenes[index]) {
+        mainImg.src = modalImagenes[index].url_imagen || placeholder;
+    }
+
+    const thumbs = document.querySelectorAll('.modal-thumb-btn');
+    thumbs.forEach((b, idx) => {
+        if (idx === index) {
+            b.classList.remove('border-pink-100');
+            b.classList.add('border-accent-fuchsia');
+        } else {
+            b.classList.remove('border-accent-fuchsia');
+            b.classList.add('border-pink-100');
+        }
+    });
 }
 
 /* Cierra el modal de detalle */
@@ -631,6 +700,68 @@ document.addEventListener("DOMContentLoaded", () => {
 )});
 
 $('#btnAyuda').on("click", function () {
+    const currentURL = window.location.href;
+    const driver = window.driver.js.driver;
+
+    let steps = [
+        { element: '#search-form', popover: { title: 'Buscador', description: 'Aquí puedes buscar cualquier producto de nuestro catálogo', side: "left" }},
+        { element: '.help-carrito', popover: { title: 'Carrito de compras', description: 'Haz clic aquí para ver los productos que has agregado al carrito.', side: "left", align: 'start' }},
+        { element: '.help-login', popover: { title: 'Cerrar sesión', description: 'Este botón te permite cerrar sesión en tu cuenta.', side: "left", align: 'start' }},
+        { element: '.heplp-productotop', popover: { title:'Productos más vendidos', description: 'Un listado de nuestros 10 productos más vendidos.', side: "top", align: 'start' }},
+        { element: '.product-item', popover: { title: 'Productos', description: 'Estas son las cartas de nuestros productos. Puedes dar clic en la imagen para ver más detalles del producto.', side: "left", align: 'start' }},
+        { element: '.categorias', popover: { title: 'Filtrado por categoría', description: 'Aquí podrás seleccionar las categorías y te saldrán los productos asociados', side: "left", align: 'start' }},
+        { popover: { title: 'Eso es todo', description: 'Este es el fin de la guía, espero que hayas entendido' }}
+    ];
+
+    // Si la URL contiene "catalogo_producto", modificar ciertos pasos
+    if (currentURL.includes("catalogo_producto")) {
+        steps = steps.map(step => {
+            if (step.element === '.section-title') {
+                step.popover.title = 'Lista de productos';
+                step.popover.description = 'Nuestra selección completa de productos';
+            }
+            return step;
+        });
+        steps = steps.map(step => {
+            if (step.element === '#Botonlado') {
+                step.popover.title = 'Ir hacia el carrito';
+                step.popover.description = 'Este botón te llevará a tu carrito de compras.';
+            }
+            return step;
+        });
+    }
+
+    // Si la URL contiene "ver_carrito", mostrar solo los primeros 3 pasos y agregar uno con ".table-light"
+    if (currentURL.includes("vercarrito")) {
+        steps = [
+            { element: '.orden', popover: { title: 'Lista del carrito', description: 'Aquí puedes ver los productos que has añadido al carrito.', side: "left", align: 'start' }},
+            
+        ];
+    }
+    if (currentURL.includes("verpedidoweb")) {
+        steps = [
+            { element: '#formPedido', popover: { title: 'Datos del pago', description: 'Aquí colocaras los datos del pago movil realizado y despues esperaras a la confirmacion', side: "left", align: 'start' }},
+            { element: '.Enlacecarrito', popover: { title: 'Lista del carrito', description: 'Aquí puedes ver los productos que has añadido al carrito.', side: "top", align: 'start' }},
+            { element: '.header2', popover: { title: 'Tu resumen de pedido', description: 'Aqui ves el resumen de compra de los productos con su total y detalles', side: "top", align: 'start' }},
+            { element: '.btn-rp', popover: { title: 'Listo para comprar', description: 'Una vez completado el rellenado', side: "left", align: 'start' }}
+        ];
+    }
+
+    const driverObj = new driver({
+        nextBtnText: 'Siguiente',
+        prevBtnText: 'Anterior',
+        doneBtnText: 'Listo',
+        popoverClass: 'driverjs-theme',
+        modal: true,
+        closeBtn: false,
+        steps: steps
+    });
+
+    // Iniciar el tour con los pasos actualizados
+    driverObj.drive();
+});
+
+$('#btnAyuda1').on("click", function () {
     const currentURL = window.location.href;
     const driver = window.driver.js.driver;
 

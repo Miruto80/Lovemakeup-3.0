@@ -60,17 +60,22 @@ class Catalogo extends Conexion {
         $sql = "
             SELECT p.*,
                    c.nombre AS nombre_categoria,
-                                     m.nombre AS nombre_marca
+                   m.nombre AS nombre_marca
             FROM producto p
             INNER JOIN categoria c ON p.id_categoria = c.id_categoria
             INNER JOIN marca m ON p.id_marca = m.id_marca
             WHERE p.estatus = 1
-              AND (p.nombre LIKE :busqueda OR m.nombre LIKE :busqueda)
+              AND (p.nombre LIKE :busqueda1 OR m.nombre LIKE :busqueda2)
         ";
+        
         $stmt = $conex->prepare($sql);
         $busqueda = '%' . $termino . '%';
-        $stmt->bindParam(':busqueda', $busqueda, \PDO::PARAM_STR);
-        $stmt->execute();
+        
+        $stmt->execute([
+            ':busqueda1' => $busqueda,
+            ':busqueda2' => $busqueda
+        ]);
+        
         $resultado = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($resultado as &$producto) {
@@ -80,6 +85,7 @@ class Catalogo extends Conexion {
 
         $conex = null;
         return $resultado;
+
     } catch (\PDOException $e) {
         if ($conex) {
             $conex = null;

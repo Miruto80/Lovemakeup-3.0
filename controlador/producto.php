@@ -2,6 +2,7 @@
 
 use LoveMakeup\Proyecto\Modelo\Producto;
 use LoveMakeup\Proyecto\Modelo\Bitacora;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -70,12 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($_FILES['imagenarchivo']['name'] as $indice => $nombreArchivo) {
                     if ($_FILES['imagenarchivo']['error'][$indice] == 0) {
                         $rutaTemporal = $_FILES['imagenarchivo']['tmp_name'][$indice];
-                        // Generar nombre seguro para el archivo
-                        $nuevoNombre = uniqid('img_') . "_" . basename($nombreArchivo);
-                        $rutaDestino = 'assets/img/Imgproductos/' . $nuevoNombre;
-                        
-                        if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
-                            $imagenes[] = $rutaDestino;
+                        try {
+                            $imagenes[] = CloudinaryConfig::uploadImage($rutaTemporal);
+                        } catch (\Throwable $e) {
+                            echo json_encode([
+                                'respuesta' => 0,
+                                'accion' => 'incluir',
+                                'mensaje' => $e->getMessage()
+                            ]);
+                            exit;
                         }
                     }
                 }
@@ -161,20 +165,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($_FILES['imagenarchivo']['name'] as $indice => $nombreArchivo) {
                 if ($_FILES['imagenarchivo']['error'][$indice] === 0) {
                     $rutaTemporal = $_FILES['imagenarchivo']['tmp_name'][$indice];
-                    $nuevoNombre  = uniqid('img_') . "_" . basename($nombreArchivo);
-                    $rutaDestino  = 'assets/img/Imgproductos/' . $nuevoNombre;
 
-                    if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
-                        // Si el nombre original está en reemplazos → UPDATE
-                        if (isset($mapReemplazos[$nombreArchivo])) {
-                            $imagenesReemplazos[] = [
-                                'id_imagen'  => $mapReemplazos[$nombreArchivo],
-                                'url_imagen' => $rutaDestino
-                            ];
-                        } else {
-                            // Si no, es imagen nueva → INSERT
-                            $imagenes[] = ['url_imagen' => $rutaDestino];
-                        }
+                    try {
+                        $rutaDestino = CloudinaryConfig::uploadImage($rutaTemporal);
+                    } catch (\Throwable $e) {
+                        echo json_encode([
+                            'respuesta' => 0,
+                            'accion' => 'actualizar',
+                            'mensaje' => $e->getMessage()
+                        ]);
+                        exit;
+                    }
+
+                    // Si el nombre original está en reemplazos → UPDATE
+                    if (isset($mapReemplazos[$nombreArchivo])) {
+                        $imagenesReemplazos[] = [
+                            'id_imagen'  => $mapReemplazos[$nombreArchivo],
+                            'url_imagen' => $rutaDestino['url_imagen'],
+                            'public_id'  => $rutaDestino['public_id']
+                        ];
+                    } else {
+                        // Si no, es imagen nueva → INSERT
+                        $imagenes[] = $rutaDestino;
                     }
                 }
             }

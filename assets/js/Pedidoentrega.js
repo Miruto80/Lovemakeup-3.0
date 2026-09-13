@@ -25,28 +25,28 @@ $(document).ready(function() {
   function validarnomSu(input) {
     const valor = input.val().trim();
 
-    // Solo letras, números y espacios
-    const regex = /^[A-Za-z0-9\s]{10,50}$/;
+    // Letras (con acentos), números, espacios y puntuación común de direcciones
+    const regex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9\s.,#\-_()\/]{10,100}$/;
 
     const valido = regex.test(valor);
 
     valido
         ? limpiarError(input)
-        : mostrarError(input, "Debe tener entre 10 y 50 caracteres y solo letras, números y espacios.");
+        : mostrarError(input, "Debe tener entre 10 y 100 caracteres (letras, números y signos como . , # - / ( )).");
 
     return valido;
 }
   function validarDireccion(input) {
     const valor = input.val().trim();
 
-    // Solo letras, números y espacios
-    const regex = /^[A-Za-z0-9\s]{10,100}$/;
+    // Letras (con acentos), números, espacios y puntuación común de direcciones
+    const regex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9\s.,#\-_()\/]{10,150}$/;
 
     const valido = regex.test(valor);
 
     valido
         ? limpiarError(input)
-        : mostrarError(input, "Debe tener entre 10 y 100 caracteres y solo letras, números y espacios.");
+        : mostrarError(input, "Debe tener entre 10 y 150 caracteres (letras, números y signos como . , # - / ( )).");
 
     return valido;
 }
@@ -85,7 +85,7 @@ $(document).ready(function() {
 
   // En tiempo real
   $('#codigoSucursal').on('input', function() {
-    let v = this.value.replace(/\D/g, '').slice(0,6);
+    let v = this.value.replace(/\D/g, '').slice(0,7);
     $(this).val(v);
     validarCodigoSu($(this));
   });
@@ -105,7 +105,7 @@ $(document).ready(function() {
     function bindValidations() {
       // Borra handlers anteriores para evitar duplicados
       $('#codigoSucursal').off('input').on('input', function() {
-        let v = this.value.replace(/\D/g, '').slice(0,6);
+        let v = this.value.replace(/\D/g, '').slice(0,7);
         $(this).val(v);
         validarCodigoSu($(this));
       });

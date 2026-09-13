@@ -5,11 +5,14 @@ TODO.md
 
 # Dependencias de Composer
 /vendor/
+AGENTS.md
+TODO.md
 
 # Imagenes de archivos
 /assets/img/captures/
-/assets/img/Imgproductos/
 /assets/img/grafica_reportes/
+/assets/img/Imgproductos/*
+!assets/img/Imgproductos/.gitkeep
 
 # PHPUnit
 .phpunit.result.cache

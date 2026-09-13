@@ -19,6 +19,8 @@ if (file_exists($autoload)) {
 }
 
 use LoveMakeup\Proyecto\Modelo\VentaWeb;
+use LoveMakeup\Proyecto\Modelo\Delivery;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 // Ruta del public key
 $publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
@@ -156,7 +158,7 @@ try {
             exit;
         }
 
-        // Si imagen viene como base64 (data URI), guardarla como archivo
+        // Si imagen viene como base64 (data URI), subirla a Cloudinary
         $tieneImagen = !empty($decodedData['datos']['imagen']);
         $tipoImagen = $tieneImagen ? gettype($decodedData['datos']['imagen']) : 'none';
         $lenImagen = $tieneImagen ? strlen($decodedData['datos']['imagen']) : 0;
@@ -168,31 +170,133 @@ try {
         if ($tieneImagen && preg_match('/^data:image\/(\w+);base64,/', $decodedData['datos']['imagen'], $m)) {
             $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
             $extsPermitidas = ['jpg', 'jpeg', 'png', 'webp'];
-            $ext = in_array($ext, $extsPermitidas) ? $ext : 'jpg';
+            if (!in_array($ext, $extsPermitidas)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Formato de imagen no permitido.']);
+                exit;
+            }
 
-            $base64Data = substr($decodedData['datos']['imagen'], strpos($decodedData['datos']['imagen'], ',') + 1);
-            $binario = base64_decode($base64Data);
-            if ($binario !== false) {
-                $dirCaptures = __DIR__ . '/../../assets/img/captures';
-                if (!is_dir($dirCaptures)) {
-                    mkdir($dirCaptures, 0777, true);
-                }
-                $nombreArchivo = 'img_' . uniqid() . '.' . $ext;
-                $rutaAbsoluta = $dirCaptures . '/' . $nombreArchivo;
-                $guardado = file_put_contents($rutaAbsoluta, $binario);
-                if ($guardado !== false) {
-                    $decodedData['datos']['imagen'] = 'assets/img/captures/' . $nombreArchivo;
-                    $jsonDatos = json_encode($decodedData);
-                    @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | archivo_guardado=$nombreArchivo | bytes=$guardado | ruta=assets/img/captures/$nombreArchivo\n", FILE_APPEND);
-                } else {
-                    @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_guardando_archivo\n", FILE_APPEND);
-                }
-            } else {
-                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_base64_decode_fallo\n", FILE_APPEND);
+            // Subir el comprobante a Cloudinary (paridad con el flujo de productos)
+            try {
+                $upload = CloudinaryConfig::uploadComprobante($decodedData['datos']['imagen']);
+                $decodedData['datos']['imagen'] = $upload['url_imagen'];
+                $jsonDatos = json_encode($decodedData);
+                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | comprobante_subido_cloudinary | bytes=" . $lenImagen . " | url=" . $upload['url_imagen'] . "\n", FILE_APPEND);
+            } catch (\Throwable $e) {
+                @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | ERROR_subida_cloudinary: " . $e->getMessage() . "\n", FILE_APPEND);
+                http_response_code(500);
+                echo json_encode(['error' => 'No se pudo guardar el comprobante.']);
+                exit;
             }
         } else {
             @file_put_contents(__DIR__ . '/debug_comprobante.log', date('Y-m-d H:i:s') . " | imagen_no_es_data_uri_o_vacia\n", FILE_APPEND);
         }
+
+        $datos = $decodedData['datos'];
+        $idMetodoentrega = (int)($datos['id_metodoentrega'] ?? 0);
+
+        if (!in_array($idMetodoentrega, [1, 2, 3, 4], true)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'El método de entrega no es válido.']);
+            exit;
+        }
+
+        if ($idMetodoentrega === 1) {
+            // Delivery propio: validar contra el catálogo y reconstruir direccion_envio en el servidor
+            $deliveriesActivos = (new Delivery())->consultarActivos();
+            $idDelivery = $datos['id_delivery'] ?? null;
+
+            if (empty($idDelivery) || !is_numeric($idDelivery)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Debe seleccionar un delivery.']);
+                exit;
+            }
+
+            $idDelivery = (int)$idDelivery;
+            $deliveryValido = false;
+            foreach ($deliveriesActivos as $d) {
+                if ((int)$d['id_delivery'] === $idDelivery) {
+                    $deliveryValido = true;
+                    break;
+                }
+            }
+            if (!$deliveryValido) {
+                http_response_code(400);
+                echo json_encode(['error' => 'El delivery seleccionado no es válido.']);
+                exit;
+            }
+            $datos['id_delivery'] = $idDelivery;
+
+            foreach (['zona', 'parroquia', 'sector', 'direccion'] as $campo) {
+                if (empty($datos[$campo])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => "Falta el campo {$campo}."]);
+                    exit;
+                }
+            }
+
+            $zona = $objVentaWeb->sanitizarString((string)$datos['zona'], 50);
+            $parroquia = $objVentaWeb->sanitizarString((string)$datos['parroquia'], 100);
+            $sector = $objVentaWeb->sanitizarString((string)$datos['sector'], 100);
+            $dirDetall = $objVentaWeb->sanitizarDireccion((string)$datos['direccion']);
+
+            if (!$zona || !$objVentaWeb->validarZona($zona)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'La zona seleccionada no es válida.']);
+                exit;
+            }
+            if (!$parroquia || !$objVentaWeb->validarParroquia($parroquia)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'La parroquia no es válida.']);
+                exit;
+            }
+            if (!$sector || !$objVentaWeb->validarSector($sector)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'El sector no es válido.']);
+                exit;
+            }
+            if (!$dirDetall) {
+                http_response_code(400);
+                echo json_encode(['error' => 'La dirección no es válida.']);
+                exit;
+            }
+
+            $datos['direccion_envio'] = "Zona: {$zona}, Parroquia: {$parroquia}, Sector: {$sector}, Dirección: {$dirDetall}";
+            $datos['sucursal_envio'] = '';
+        } else {
+            // Tienda física / MRW / ZOOM: sanitizar como hace el flujo web
+            $datos['direccion_envio'] = $objVentaWeb->sanitizarDireccion((string)($datos['direccion_envio'] ?? ''));
+            if ($datos['direccion_envio'] === '') {
+                http_response_code(400);
+                echo json_encode(['error' => 'La dirección de envío es obligatoria.']);
+                exit;
+            }
+
+            if ($idMetodoentrega === 2 || $idMetodoentrega === 3) {
+                // En la app id_metodoentrega ES la empresa de envío (2=MRW, 3=ZOOM)
+                $datos['sucursal_envio'] = $objVentaWeb->sanitizarSucursal((string)($datos['sucursal_envio'] ?? ''));
+                if ($datos['sucursal_envio'] === '') {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Complete el código de la sucursal.']);
+                    exit;
+                }
+            } else {
+                $datos['sucursal_envio'] = $objVentaWeb->sanitizarSucursal((string)($datos['sucursal_envio'] ?? ''));
+            }
+            $datos['id_delivery'] = null;
+        }
+
+        // Referencia bancaria: entre 4 y 6 dígitos (pago móvil)
+        $referencia = preg_replace('/[^0-9]/', '', (string)($datos['referencia_bancaria'] ?? ''));
+        if (!preg_match('/^[0-9]{4,6}$/', $referencia)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'El código de referencia debe tener entre 4 y 6 dígitos.']);
+            exit;
+        }
+        $datos['referencia_bancaria'] = $referencia;
+
+        $decodedData['datos'] = $datos;
+        $jsonDatos = json_encode($decodedData);
 
         // Procesar el pedido
         $resultado = $objVentaWeb->procesarPedido($jsonDatos);

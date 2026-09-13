@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener('click', function (e) {
-        // Manejar botón de eliminar
-        const btnEliminar = e.target.closest('.btn-eliminar');
+        // Manejar botón de eliminar (solo los del carrito lateral, no los de otras vistas)
+        const btnEliminar = e.target.closest('#listgroup .btn-eliminar');
         if (btnEliminar) {
             e.preventDefault();
             const id = btnEliminar.getAttribute('data-id');

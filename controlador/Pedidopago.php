@@ -1,6 +1,7 @@
 <?php  
 
 use LoveMakeup\Proyecto\Modelo\VentaWeb;
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -129,11 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['continuar_pago'])) {
 
     // Manejo de imagen
     if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-        $name = uniqid('img_').".$ext";
-        $dest = __DIR__ . '/../assets/img/captures/' . $name;
-        if (move_uploaded_file($_FILES['imagen']['tmp_name'], $dest)) {
-            $datos['datos']['imagen'] = 'assets/img/captures/'.$name;
+        // Subir el comprobante a Cloudinary
+        try {
+            $upload = CloudinaryConfig::uploadComprobante($_FILES['imagen']['tmp_name']);
+            $datos['datos']['imagen'] = $upload['url_imagen'];
+        } catch (\Throwable $e) {
+            echo json_encode(['success'=>false,'message'=>'No se pudo guardar el comprobante.']);
+            exit;
         }
     }
 

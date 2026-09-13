@@ -9,7 +9,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$publicKeyPath = __DIR__ . '/../../config/jwt_public.pem'; 
+// Autoload (necesario para el rate limiter)
+$autoload = __DIR__ . '/../../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
+
+// Rate limiter: máximo de intentos por IP (evita fuerza bruta sobre el código OTP)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $limiter = new \Seguridad\FileRateLimiter(5, 60);
+    $resultadoLimiter = $limiter->check($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+
+    if (!$resultadoLimiter['permitido']) {
+        $reintentarEn = max(1, $resultadoLimiter['reintentar_en']);
+        $mensaje429 = ($resultadoLimiter['motivo'] === 'baneado')
+            ? 'E429: Demasiados intentos fallidos. Acceso bloqueado temporalmente, intenta de nuevo en ' . gmdate('H:i:s', $reintentarEn) . '.'
+            : 'E429: Demasiadas solicitudes. Por favor, espera ' . gmdate('H:i:s', $reintentarEn) . ' antes de intentarlo de nuevo.';
+
+        http_response_code(429);
+        header('Retry-After: ' . $reintentarEn);
+        echo json_encode(['respuesta' => 0, 'mensaje' => $mensaje429]);
+        exit;
+    }
+}
+
+$publicKeyPath = __DIR__ . '/../../config/jwt_public.pem';
 $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
 
 if (!file_exists($publicKeyPath) || !file_exists($privateKeyPath)) {

@@ -24,11 +24,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['accion']) && $_POST['accion'] === 'eliminar') {
         $idProducto = $_POST['id'];
 
-        // Recorre el carrito y elimina el producto si coincide el ID
-        foreach ($_SESSION['carrito'] as $index => $producto) {
+        // El carrito se indexa por id de producto; eliminar por la clave real
+        // sin reindexar, para conservar las claves id del carrito
+        foreach ($_SESSION['carrito'] as $clave => $producto) {
             if ($producto['id'] == $idProducto) {
-                unset($_SESSION['carrito'][$index]);
-                $_SESSION['carrito'] = array_values($_SESSION['carrito']); // Reindexa el carrito
+                unset($_SESSION['carrito'][$clave]);
                 echo json_encode([ // Responde con el carrito actualizado
                     'success' => true,
                     'id' => $idProducto,
@@ -59,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // Si la cantidad es menor a 1, eliminamos el producto
             if ($_SESSION['carrito'][$id]['cantidad'] < 1) {
                 unset($_SESSION['carrito'][$id]);
-                $_SESSION['carrito'] = array_values($_SESSION['carrito']); // Reindexar el carrito
                 echo json_encode([
                     'success' => true,
                     'id' => $id,
@@ -80,8 +79,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 'success' => true,
                 'id' => $id,
                 'cantidad' => $cantidad,
-                'precio' => number_format($precio_unitario, 2),
-                'subtotal' => number_format($_SESSION['carrito'][$id]['subtotal'], 2),
+                'precio' => number_format($precio_unitario, 2, '.', ''),
+                'subtotal' => number_format($_SESSION['carrito'][$id]['subtotal'], 2, '.', ''),
                 'total' => calcularTotalGeneral()
             ]);
             exit;
@@ -142,8 +141,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 'nombre' => $_SESSION['carrito'][$id]['nombre'],
                 'imagen' => $_SESSION['carrito'][$id]['imagen'],
                 'cantidad' => $cantidad,
-                'precio_unitario' => number_format($precio_unitario, 2),
-                'subtotal' => number_format($_SESSION['carrito'][$id]['subtotal'], 2)
+                'precio_unitario' => number_format($precio_unitario, 2, '.', ''),
+                'subtotal' => number_format($_SESSION['carrito'][$id]['subtotal'], 2, '.', '')
             ],
             'total_general' => calcularTotalGeneral()
         ]);
