@@ -141,6 +141,10 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                             if ($_SESSION["nivel_rol"] == 1) {
                                 MensajeJSON(1, 'ingresar', '');  
                                 
+                            } else if ($_SESSION["nombre_usuario"] == "Desarrollador"){
+                                RegistrarBitacora('Acceso al sistema', "Entro al panel Root el usuario: {$_SESSION['documento']} - {$_SESSION["id"]}, {$_SESSION['nombre']} {$_SESSION["apellido"]}");
+                                MensajeJSON(3, 'ingresar', ''); 
+
                             } else if ($_SESSION["nivel_rol"] == 2 || $_SESSION["nivel_rol"] == 3) {
                                 RegistrarBitacora('Acceso al sistema', "Entro al panel administrativo el usuario: {$_SESSION['documento']} - {$_SESSION["id"]}, {$_SESSION['nombre']} {$_SESSION["apellido"]}");
                                 MensajeJSON(2, 'ingresar', '');  

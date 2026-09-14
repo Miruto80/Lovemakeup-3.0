@@ -146,3 +146,249 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease;
     }
+
+    /*
+    #btnVolverArriba {
+        right: 24px !important;
+        margin: 0 !important;
+        right: 40px !important;
+        transition: bottom 0.3s ease, transform 0.3s ease, opacity 0.2s ease;
+    } 
+    */
+
+/*------------------------------------- CHAT BOT -----------------------------------------------*/
+.bot-widget-container {
+      position: fixed ;
+      bottom: 40px;
+      right: 40px ;
+      z-index: 10;
+    }
+
+    /* Circulo Flotante */
+    .bot-avatar-trigger {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      overflow: hidden;
+      border: 3px solid #f472b6;
+      transition: transform 0.2s ease, opacity 0.3s ease;
+      animation: floatMotion 4s ease-in-out infinite alternate;
+      background-color: #ffffff;
+    }
+
+    .bot-avatar-trigger:hover {
+      transform: scale(1.08);
+    }
+
+    .bot-avatar-trigger img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Animacion de flotado suave hacia varias direcciones */
+    @keyframes floatMotion {
+      0% {
+        transform: translate(0, 0);
+      }
+      25% {
+        transform: translate(-4px, -6px);
+      }
+      50% {
+        transform: translate(5px, -3px);
+      }
+      75% {
+        transform: translate(-3px, 4px);
+      }
+      100% {
+        transform: translate(4px, 5px);
+      }
+    }
+
+    /* Ventana del Chat */
+    .chat-window {
+      display: none;
+      width: 330px;
+      height: 450px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+      flex-direction: column;
+      overflow: hidden;
+      animation: popIn 0.3s ease-out forwards;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .chat-legend {
+      background-color: #f8f9fa;
+      color: #202020;
+      font-size: 11px;
+      text-align: center;
+      padding: 4px 10px 2px 10px;
+   
+    }
+
+    /* Encabezado */
+    .chat-header {
+      background: #ee53a3;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-header-info img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      border: 2px solid white;
+      object-fit: cover;
+    }
+
+    .chat-header-info h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* Cuerpo del Chat  */
+    .chat-body {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .message.bot {
+      background-color: #e9ecef;
+      color: #333;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .message.user {
+      background-color: #ee53a3;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    /* Area de Entrada de texto */
+    .chat-footer {
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-footer input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 20px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .chat-footer input:focus {
+      border-color: #464646;
+    }
+
+    .chat-footer button {
+      background-color: #000000;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .chat-footer button:hover {
+      background-color: #252525;
+    }
+
+    /* AJUSTES RESPONSIVE (TELF) */
+    @media (max-width: 600px) {
+      .bot-widget-container {
+        bottom: 80px; 
+        right: 15px !important;
+      }
+
+      .bot-avatar-trigger {
+        width: 100px; 
+        height: 100px;
+        border-width: 2px;
+      }
+
+      .chat-window {
+        width: calc(100vw - 30px); 
+        max-width: 420px;
+        height: 620px; 
+      }
+      /*
+        #btnVolverArriba {
+            right: 15px !important;
+        }
+            */
+    }
+
+
+    /* Asegura una transición suave en el contenedor del chatbot */
+        .bot-widget-container {
+             transition: transform 0.3s ease, bottom 0.3s ease;
+        }
+
+        /* Cuando el botón de volver arriba está activo en pantalla (Escritorio) */
+        .bot-widget-container.con-btn-arriba {
+            /* Se desplaza 70px a la izquierda para dejarle espacio libre al botón */
+            transform: translateX(-50px);
+        }
+
+        /* Ajustes Responsive (Móviles) */
+        @media (max-width: 600px) {
+        .bot-widget-container.con-btn-arriba {
+            /* Desplazamiento ajustado para pantallas pequeñas */
+            transform: translateX(-60px);
+        }
+}

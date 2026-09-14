@@ -1,3 +1,19 @@
+/* ---------------- ROOT ----------------------
+*/
+
+.sidebar_root {
+  background-color: #1E1E1E !important;
+  color: #E0E0E0 !important;
+  border-right: 1px solid #101011 !important;
+}
+
+.div-principal{
+   background-color: #1E1E1E !important;
+  color: #ffffff !important;
+  border: none;
+}
+
+/*----------------------------*/
 #sidenav-collapse-main {
    height: 150vh; 
 }
@@ -6,6 +22,9 @@
    overflow: hidden; 
 }
 .sidedar-color {
+   background-color: #f172b2; /* #ff69b4 */
+  }
+.sidedar-color-root {
    background-color: #f172b2; /* #ff69b4 */
   }
 
@@ -359,10 +378,7 @@
 }
 
               
-.modo-oscuro .bg-s{
-  background-color: #121212 !important;
-  color: #ffffff !important;
-}
+ 
 
 
 /* Cards */
@@ -491,7 +507,7 @@
 .modo-oscuro .swal2-html-container{
     color: #e2e2e2 !important;
 }
-
+bg-s
 
 /* Transición general para el body */
 body {

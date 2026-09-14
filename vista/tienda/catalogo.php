@@ -513,5 +513,7 @@
 
 
    <?php include 'vista/complementos/footer_catalogo.php' ?>
+   <?php include 'vista/complementos/chat.php' ?>
+
 </body>
 </html>

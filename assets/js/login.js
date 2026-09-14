@@ -411,6 +411,13 @@ function enviaAjax(datos) {
                       location = '?pagina=home';
                     }, 1000);
                 
+                }else if (lee.respuesta == 3) {
+                   muestraMensajetost("success","Inicio de Session - Desarrollador", "Exitosamente", "1000");
+                   desactivarLoaderBoton('#ingresar');
+                   setTimeout(function () {
+                      location = '?pagina=root_home';
+                    }, 1000);
+                
                 }else{
                   muestraMensaje("error", 2000, lee.text);
                    desactivarLoaderBoton('#ingresar');

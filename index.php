@@ -122,6 +122,10 @@ error_reporting(E_ALL);
             'bitacora',
             'usuario',
             'tipousuario'
+        ],
+
+        'solo_root' => [
+            'root_home'
         ]
     ];
     
@@ -147,9 +151,11 @@ error_reporting(E_ALL);
     $rutaAutenticada = in_array($pagina, $configRutas['autenticadas']);
     $rutaAdministrativa = in_array($pagina, $configRutas['administrativas']);
     $rutaSoloAdmin = in_array($pagina, $configRutas['solo_admin']);
+    $rutaSoloRoot = in_array($pagina, $configRutas['solo_root']);
     
     $usuarioLogueado = !empty($_SESSION['id']);
     $nivelRol = isset($_SESSION['nivel_rol']) ? (int)$_SESSION['nivel_rol'] : 0;
+    $nombreRol = isset($_SESSION['nombre_usuario']);
     
     // 1. Si el usuario está logueado pero intenta acceder a login, redirigir según su rol
     // EXCEPCIÓN: Permitir acceso a login si viene un POST de cerrar sesión
@@ -181,8 +187,33 @@ error_reporting(E_ALL);
         }
         
         // Validar rutas solo para administradores (nivel 3)
+        if ($rutaSoloAdmin && $nombreRol === "Desarrollador") {
+            header("Location: ?pagina=root_home");
+            exit;
+        }
+
+        // Validar rutas solo para administradores (nivel 3)
         if ($rutaSoloAdmin && $nivelRol != 3) {
             header("Location: ?pagina=home");
+            exit;
+        }
+    }
+     elseif ($rutaSoloRoot) {
+        // Requiere autenticación
+        if (!$usuarioLogueado) {
+            header("Location: ?pagina=login");
+            exit;
+        }
+        
+        // Clientes (nivel 1) no pueden acceder a rutas administrativas
+        if ($nivelRol <= 2) {
+            header("Location: ?pagina=catalogo");
+            exit;
+        }
+        
+        // Validar rutas solo para administradores (nivel 3)
+        if ($nombreRol === "Desarrollador") {
+            header("Location: ?pagina=root_home");
             exit;
         }
     }

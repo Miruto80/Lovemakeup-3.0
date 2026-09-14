@@ -174,15 +174,21 @@ $(document).ready(function () {
             }
         });
     });
+    
     const $btnVolverArriba = $("#btnVolverArriba");
+    const $chatbot = $(".bot-widget-container");
 
-    // Mostrar u ocultar el boton según la posición del scroll
+    // Mostrar u ocultar el botón según la posición del scroll
     $(window).scroll(function () {
         if ($(this).scrollTop() > 300) {
             $btnVolverArriba.removeClass("hidden").fadeIn(200);
+            // Añade la clase cuando el botón se muestra
+            $chatbot.addClass("con-btn-arriba");
         } else {
-            $btnVolverArriba.fadeOut(200, function() {
+            $btnVolverArriba.fadeOut(500, function() {
                 $(this).addClass("hidden");
+                // Remueve la clase cuando el botón se oculta
+                $chatbot.removeClass("con-btn-arriba");
             });
         }
     });
@@ -192,6 +198,9 @@ $(document).ready(function () {
         e.preventDefault();
         $("html, body").animate({ scrollTop: 0 }, 500); 
     });
+
+
+
 });
 /* -------------------------------- FIN TIENDA ----------------------------------------*/
 
