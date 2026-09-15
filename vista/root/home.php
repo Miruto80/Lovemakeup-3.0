@@ -39,107 +39,108 @@
  
      <div class="row">
 
-       <!-- CARD 1: CPU del Servidor -->
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card div-principal shadow-sm border-0">
-            <div class="card-body p-3">
-              <div class="row">
-                <div class="col-8">
-                  <div class="numbers">
-                    <p class="text-sm mb-0 text-uppercase font-weight-bold">CPU del Servidor</p>
-                    <h5 class="font-weight-bolder mb-0 text-primary">
-                      45%
-                    </h5>
-                    <p class="text-xs text-white mt-1 mb-0">Uso actual en tiempo real</p>
+   
+          <!-- CARD 1: CPU del Servidor -->
+          <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card div-principal shadow-sm border-0">
+              <div class="card-body p-3">
+                <div class="row">
+                  <div class="col-8">
+                    <div class="numbers">
+                      <p class="text-sm mb-0 text-uppercase font-weight-bold">CPU del Servidor</p>
+                      <h5 class="font-weight-bolder mb-0 text-primary" id="cpu-porcentaje-header">
+                        0%
+                      </h5>
+                      <p class="text-xs text-white mt-1 mb-0">Uso actual en tiempo real</p>
+                    </div>
+                  </div>
+                  <div class="col-4 d-flex justify-content-end align-items-start">
+                    <div class="icon icon-shape bg-primary shadow-primary rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 48px; height: 48px; min-width: 48px;">
+                      <i class="fa-solid fa-microchip text-lg opacity-10 text-white m-0 p-0" style="top: 0; line-height: 0;"></i>
+                    </div>
                   </div>
                 </div>
-                <div class="col-4 d-flex justify-content-end align-items-start">
-                  <div class="icon icon-shape bg-primary shadow-primary rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="fa-solid fa-microchip text-lg opacity-10 text-white m-0 p-0" style="top: 0; line-height: 0;"></i>
+                <!-- Barra de Progreso CPU -->
+                <div class="mt-3">
+                  <div class="d-flex justify-content-between align-items-center text-xs mb-1">
+                    <span class="text-white">Consumo</span>
+                    <span class="font-weight-bold" id="cpu-texto-detalle">0% / 100%</span>
                   </div>
-                </div>
-              </div>
-              <!-- Barra de Progreso -->
-              <div class="mt-3">
-                <div class="d-flex justify-content-between align-items-center text-xs mb-1">
-                  <span class="text-white">Consumo</span>
-                  <span class="font-weight-bold">45% / 100%</span>
-                </div>
-                <div class="progress progress-s">
-                  <div class="progress-bar bg-gradient-primary" role="progressbar" style="width: 45%;" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                  <div class="progress progress-s">
+                    <div id="barra-cpu" class="progress-bar bg-gradient-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- CARD 2: Memoria del Servidor -->
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card div-principal shadow-sm border-0">
-            <div class="card-body p-3">
-              <div class="row">
-                <div class="col-8">
-                  <div class="numbers">
-                    <p class="text-sm mb-0 text-uppercase font-weight-bold">Memoria RAM</p>
-                    <h5 class="font-weight-bolder text-info mb-0">
-                      12.4 GB
-                    </h5>
-                    <p class="text-xs text-white mt-1 mb-0">RAM en uso del sistema</p>
+          <!-- CARD 2: Memoria del Servidor -->
+          <div class="col-xl-3 col-sm-6">
+            <div class="card div-principal shadow-sm border-0">
+              <div class="card-body p-3">
+                <div class="row">
+                  <div class="col-8">
+                    <div class="numbers">
+                      <p class="text-sm mb-0 text-uppercase font-weight-bold">Memoria RAM</p>
+                      <h5 class="font-weight-bolder text-info mb-0" id="ram-usada-header">
+                        0 MB
+                      </h5>
+                      <p class="text-xs text-white mt-1 mb-0">RAM en uso del sistema</p>
+                    </div>
+                  </div>
+                  <div class="col-4 d-flex justify-content-end align-items-start">
+                    <div class="icon icon-shape bg-info shadow-primary rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 48px; height: 48px; min-width: 48px;">
+                      <i class="fa-solid fa-memory text-lg opacity-10 text-dark m-0 p-0" style="top: 0; line-height: 0;"></i>
+                    </div>
                   </div>
                 </div>
-                <div class="col-4 d-flex justify-content-end align-items-start">
-                  <div class="icon icon-shape bg-info shadow-primary rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="fa-solid fa-memory text-lg opacity-10 text-dark m-0 p-0"  style="top: 0; line-height: 0;"></i>
+                <!-- Barra de Progreso RAM -->
+                <div class="mt-3">
+                  <div class="d-flex justify-content-between align-items-center text-xs mb-1">
+                    <span class="text-white">Uso de RAM</span>
+                    <span class="font-weight-bold" id="ram-texto-detalle">0 MB / 0 MB</span>
                   </div>
-                </div>
-              </div>
-              <!-- Barra de Progreso -->
-              <div class="mt-3">
-                <div class="d-flex justify-content-between align-items-center text-xs mb-1">
-                  <span class="text-white">Uso de RAM</span>
-                  <span class="font-weight-bold">12.4 GB / 16 GB</span>
-                </div>
-                <div class="progress progress-s">
-                  <div class="progress-bar bg-gradient-info" role="progressbar" style="width: 77.5%;" aria-valuenow="77.5" aria-valuemin="0" aria-valuemax="100"></div>
+                  <div class="progress progress-s">
+                    <div id="barra-ram" class="progress-bar bg-gradient-info" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- CARD 3: Disco del Servidor -->
-        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-          <div class="card div-principal shadow-sm border-0">
-            <div class="card-body p-3">
-              <div class="row">
-                <div class="col-8">
-                  <div class="numbers">
-                    <p class="text-sm mb-0 text-uppercase font-weight-bold">Disco Almacenamiento</p>
-                    <h5 class="font-weight-bolder text-warning mb-0">
-                      320 GB
-                    </h5>
-                    <p class="text-xs text-white mt-1 mb-0">Espacio en SSD principal</p>
+          <!-- CARD 3: Disco del Servidor -->
+          <div class="col-xl-3 col-sm-6">
+            <div class="card div-principal shadow-sm border-0">
+              <div class="card-body p-3">
+                <div class="row">
+                  <div class="col-8">
+                    <div class="numbers">
+                      <p class="text-sm mb-0 text-uppercase font-weight-bold">Disco Almacenamiento</p>
+                      <h5 class="font-weight-bolder text-warning mb-0" id="disco-usado-header">
+                        0 GB
+                      </h5>
+                      <p class="text-xs text-white mt-1 mb-0">Espacio en SSD principal</p>
+                    </div>
+                  </div>
+                  <div class="col-4 d-flex justify-content-end align-items-start">
+                    <div class="icon icon-shape bg-warning shadow-warning rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 48px; height: 48px; min-width: 48px;">
+                      <i class="fa-solid fa-hard-drive text-lg opacity-10 text-white m-0 p-0" style="top: 0; line-height: 0;"></i>
+                    </div>
                   </div>
                 </div>
-                <div class="col-4 d-flex justify-content-end align-items-start">
-                  <div class="icon icon-shape bg-warning shadow-warning rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="fa-solid fa-hard-drive text-lg opacity-10 text-white m-0 p-0"  style="top: 0; line-height: 0;"></i>
+                <!-- Barra de Progreso Disco -->
+                <div class="mt-3">
+                  <div class="d-flex justify-content-between align-items-center text-xs mb-1">
+                    <span class="text-white">Ocupado</span>
+                    <span class="font-weight-bold" id="disco-texto-detalle">0 GB / 0 GB</span>
                   </div>
-                </div>
-              </div>
-              <!-- Barra de Progreso -->
-              <div class="mt-3">
-                <div class="d-flex justify-content-between align-items-center text-xs mb-1">
-                  <span class="text-white">Ocupado</span>
-                  <span class="font-weight-bold">320 GB / 500 GB</span>
-                </div>
-                <div class="progress progress-s">
-                  <div class="progress-bar bg-gradient-warning" role="progressbar" style="width: 64%;" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100"></div>
+                  <div class="progress progress-s">
+                    <div id="barra-disco" class="progress-bar bg-gradient-warning" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
         <!-- CARD 4: Último Backup -->
         <div class="col-xl-3 col-sm-6">
@@ -276,5 +277,81 @@
 <!-- php Footer-->
 <?php include 'vista/complementos/footer_root.php' ?>
 
+<script>
+$(document).ready(function() {
+
+    //  convertir Bytes a KB MB  GB con formato legible
+    function formatearUnidades(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const unidades = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + unidades[i];
+    }
+
+    // AJAX para consultar el controlador
+    function cargarMetricasServidor() {
+        $.ajax({
+            async: true,
+            url: '',
+            type: 'POST',
+            data: {
+              accion: 'obtener_metricas'
+            },
+            dataType: 'json',
+            success: function(respuesta) {
+                const metricas = respuesta.metricas;
+
+                // ---  TARJETA CPU ---
+                $('#cpu-porcentaje-header').text(metricas.uso_cpu + '%');
+                $('#cpu-texto-detalle').text(metricas.uso_cpu + '% / 100%');
+                $('#barra-cpu')
+                    .css('width', metricas.uso_cpu + '%')
+                    .attr('aria-valuenow', metricas.uso_cpu);
+
+                // --- TARJETA RAM ---
+                const ramUsada = formatearUnidades(metricas.ram_usada);
+                const ramTotal = formatearUnidades(metricas.ram_total);
+
+                $('#ram-usada-header').text(ramUsada);
+                $('#ram-texto-detalle').text(ramUsada + ' / ' + ramTotal);
+                $('#barra-ram')
+                    .css('width', metricas.porcentaje_ram + '%')
+                    .attr('aria-valuenow', metricas.porcentaje_ram);
+
+                // ---  TARJETA DISCO ---
+                const discoUsado = formatearUnidades(metricas.disco_usado);
+                const discoTotal = formatearUnidades(metricas.disco_total);
+
+                $('#disco-usado-header').text(discoUsado);
+                $('#disco-texto-detalle').text(discoUsado + ' / ' + discoTotal);
+                $('#barra-disco')
+                    .css('width', metricas.porcentaje_disco + '%')
+                    .attr('aria-valuenow', metricas.porcentaje_disco);
+
+                // --- ADVERTENCIA SI ESTÁ EN HOSTING RESTRENGIDO ---
+                if (metricas.mensaje_advertencia) {
+                    if ($('#alerta-hosting').length === 0) {
+                        $('.row').first().before(`
+                            <div id="alerta-hosting" class="alert alert-warning text-white alert-dismissible fade show" role="alert">
+                                <span class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                                <span class="alert-text"><strong>Modo Hosting:</strong> ${metricas.mensaje_advertencia}</span>
+                            </div>
+                        `);
+                    }
+                }
+            },
+            error: function(xhr, estado, error) {
+                console.error("Error al obtener los datos del servidor:", error);
+            }
+        });
+    }
+
+   
+    cargarMetricasServidor();
+
+    setInterval(cargarMetricasServidor, 3000);
+});
+</script>
 </body>
 </html>

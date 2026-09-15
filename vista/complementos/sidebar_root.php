@@ -4,14 +4,13 @@
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0" href="?pagina=root_home">
           <img src="assets/img/icono.png" width="30px" height="30px" class="navbar-brand-img h-100" alt="main_logo">
-          <span class="ms-1 font-weight-bold texto-negro">Love Makeup C.A</span>
+          <span class="ms-1 font-weight-bold texto-negro">PANEL ROOT</span>
         </a>
-      <p class="text-center text-white m-0" style="font-size: 14px;">Panel ROOT </p>
+     
 
-
-    </div>
+  </div>
     
-    <hr class="horizontal dark mt-0 texto-hr">
+    <hr class="horizontal dark mt-0 texto-hr bg-white">
 
    <div class="collapse navbar-collapse sidebar" id="sidenav-collapse-main">
       
@@ -21,62 +20,60 @@
         <li class="nav-item ">
            <a class="nav-link <?= $pagina_actual == 'root_home' ? 'bg-activo' : '' ?>" href="?pagina=root_home">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="fa-solid fa-house text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
+              <i class="fa-solid fa-server text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
             </div>
             <span class="nav-link-text ms-1 texto-negro">Inicio</span>
           </a>
         </li>
 
          <li class="nav-item ">
-           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="?pagina=home">
+           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="#">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="fa-solid fa-house text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
+              <i class="fa-solid fa-hard-drive text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
             </div>
             <span class="nav-link-text ms-1 texto-negro">Backups</span>
           </a>
         </li>
 
          <li class="nav-item ">
-           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="?pagina=home">
+           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="#">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="fa-solid fa-house text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
+              <i class="fa-solid fa-database text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
             </div>
             <span class="nav-link-text ms-1 texto-negro">Base de datos</span>
           </a>
         </li>
 
-         <li class="nav-item ">
-           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="?pagina=home">
+        <li class="nav-item ">
+           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="#">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="fa-solid fa-house text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
+              <i class="fa-solid fa-file-contract text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
+            </div>
+            <span class="nav-link-text ms-1 texto-negro">Auditoria</span>
+          </a>
+        </li>
+
+         <li class="nav-item ">
+           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="#">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="fa-solid fa-book  text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
+            </div>
+            <span class="nav-link-text ms-1 texto-negro">Bitacora</span>
+          </a>
+        </li>
+
+        <li class="nav-item ">
+           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="#">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="fa-solid fa-users text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
             </div>
             <span class="nav-link-text ms-1 texto-negro">Usuarios</span>
           </a>
         </li>
-
-         <li class="nav-item mt-3">
-          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder texto-rosa">Visualizar</h6>
-        </li>
-
-        <li class="nav-item ">
-           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="?pagina=home">
-            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="fa-solid fa-house text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
-            </div>
-            <span class="nav-link-text ms-1 texto-negro">Modo Admin</span>
-          </a>
-        </li>
-
-         <li class="nav-item ">
-           <a class="nav-link <?= $pagina_actual == 'home' ? 'bg-activo' : '' ?>" href="?pagina=home">
-            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="fa-solid fa-house text-sm texto-negro <?= $pagina_actual == 'home' ? 'text-white' : 'text-dark' ?>"></i>
-            </div>
-            <span class="nav-link-text ms-1 texto-negro">Modo Tienda</span>
-          </a>
-        </li>
         
 
+         
+      
         
       
     </ul>
