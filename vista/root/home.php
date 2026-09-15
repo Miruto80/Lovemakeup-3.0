@@ -178,23 +178,25 @@
 <!-- FIN  -->
 
     <div class="row mt-4">
-
-        <!-- BASE DE DATOS 1  -->
+        <!-- BASE DE DATOS 1 (NEGOCIO) -->
         <div class="col-lg-6 mb-lg-0 mb-4">
           <div class="card shadow-sm border-0 div-principal">
             <div class="card-body p-4">
-             
+              
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                  <span class="badge badge-sm bg-success text-dark mb-2">
+                  <!-- Estado Negocio -->
+                  <span id="bd-negocio-estado" class="badge badge-sm bg-success text-dark mb-2">
                     <i class="fas fa-check-circle me-1"></i> Activa
                   </span>
                   <h4 class="font-weight-bolder mb-0 text-white">Base de Datos - Negocio</h4>
-                  <p class="text-xs text-white mb-0">lovemakeupbd1</p>
+                  <p id="bd-negocio-nombre" class="text-xs text-white mb-0">lovemakeupbd1</p>
                 </div>
+
                   <div class="icon icon-shape bg-primary shadow-primary rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 52px; height: 52px; min-width: 52px;">
                       <i class="fa-solid fa-basket-shopping text-lg opacity-10 text-white m-0 p-0" style="top: 0; line-height: 0;" aria-hidden="true"></i>
                   </div>
+
               </div>
 
               <hr class="horizontal dark my-3">
@@ -202,18 +204,15 @@
               <div class="row text-center my-3">
                 <div class="col-6 border-end">
                   <p class="text-xs text-uppercase text-white font-weight-bold mb-1">Tamaño Total</p>
-                  <h5 class="font-weight-bolder mb-0 text-primary">
-                    <i class="fa-solid fa-folder text-primary me-1"></i>  14.8 GB
+                  <h5 id="bd-negocio-tamano" class="font-weight-bolder mb-0 text-primary">
+                    <i class="fa-solid fa-folder text-primary me-1"></i> 0 MB
                   </h5>
-                
                 </div>
                 <div class="col-6">
                   <p class="text-xs text-uppercase text-white font-weight-bold mb-1">Tiempo de Respuesta</p>
-                  <h5 class="font-weight-bolder mb-0 text-success">
-                    <i class="fa-solid fa-signal text-success me-1"></i>
-                     24 ms
+                  <h5 id="bd-negocio-latencia" class="font-weight-bolder mb-0 text-success">
+                    <i class="fa-solid fa-signal text-success me-1"></i> 0 ms
                   </h5>
-                
                 </div>
               </div>
             
@@ -221,50 +220,45 @@
           </div>
         </div>
 
-        <!-- BASE DE DATOS SEGURIDAD -->
+        <!-- BASE DE DATOS 2 (SEGURIDAD) -->
         <div class="col-lg-6">
           <div class="card shadow-sm border-0 div-principal">
-            <div class="card-body p-4 ">
+            <div class="card-body p-4">
               
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                 
-                  <span class="badge badge-sm bg-success text-dark mb-2">
+                  <!-- Estado Seguridad -->
+                  <span id="bd-seguridad-estado" class="badge badge-sm bg-success text-dark mb-2">
                     <i class="fas fa-check-circle me-1"></i> Activa
                   </span>
                   <h4 class="font-weight-bolder mb-0 text-white">Base de Datos - Seguridad</h4>
-                  <p class="text-xs text-white mb-0">lovemakeupbds2</p>
+                  <p id="bd-seguridad-nombre" class="text-xs text-white mb-0">lovemakeupbds2</p>
                 </div>
                 <div class="icon icon-shape bg-primary shadow-primary rounded-circle d-inline-flex align-items-center justify-content-center p-0" style="width: 52px; height: 52px; min-width: 52px;">
-                      <i class="fa-solid fa-key text-lg opacity-10 text-white m-0 p-0" style="top: 0; line-height: 0;" aria-hidden="true"></i>
-                  </div>
+                    <i class="fa-solid fa-key text-lg opacity-10 text-white m-0 p-0" style="top: 0; line-height: 0;" aria-hidden="true"></i>
+                </div>
               </div>
-             
 
               <hr class="horizontal white my-3">
 
-              
               <div class="row text-center my-3">
                 <div class="col-6 border-end">
                   <p class="text-xs text-uppercase text-white font-weight-bold mb-1">Tamaño</p>
-                  <h5 class="font-weight-bolder mb-0 text-primary">
-                    <i class="fa-solid fa-folder text-primary me-1"></i> 8.2 GB
+                  <h5 id="bd-seguridad-tamano" class="font-weight-bolder mb-0 text-primary">
+                    <i class="fa-solid fa-folder text-primary me-1"></i> 0 MB
                   </h5>
                 </div>
                 <div class="col-6">
                   <p class="text-xs text-uppercase text-white font-weight-bold mb-1">Respuesta</p>
-                  <h5 class="font-weight-bolder mb-0 text-success">
-                    <i class="fa-solid fa-signal text-success me-1"></i>
-                     24 ms
+                  <h5 id="bd-seguridad-latencia" class="font-weight-bolder mb-0 text-success">
+                    <i class="fa-solid fa-signal text-success me-1"></i> 0 ms
                   </h5>
                 </div>
               </div>
 
-          
             </div>
           </div>
         </div>
-   
       <!-- FIN  -->
     </div>
 <!-- FIN  -->
@@ -287,6 +281,33 @@ $(document).ready(function() {
         const unidades = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + unidades[i];
+    }
+
+    function actualizarTarjetaBD(prefix, datos) {
+        if (!datos) return;
+
+        // Nombre de la base de datos
+        $('#' + prefix + '-nombre').text(datos.nombre);
+
+        // Estado (Activa / Inactiva)
+        const $badge = $('#' + prefix + '-estado');
+        if (datos.activa) {
+            $badge.removeClass('bg-danger').addClass('bg-success text-dark')
+                  .html('<i class="fas fa-check-circle me-1"></i> Activa');
+        } else {
+            $badge.removeClass('bg-success text-dark').addClass('bg-danger text-white')
+                  .html('<i class="fas fa-times-circle me-1"></i> Inactiva');
+        }
+
+        // Tamaño formateado en KB, MB o GB
+        $('#' + prefix + '-tamano').html(
+            `<i class="fa-solid fa-folder text-primary me-1"></i> ${formatearUnidades(datos.tamano_bytes)}`
+        );
+
+        // Tiempo de respuesta / Latencia
+        $('#' + prefix + '-latencia').html(
+            `<i class="fa-solid fa-signal text-success me-1"></i> ${datos.latencia_ms} ms`
+        );
     }
 
     // AJAX para consultar el controlador
@@ -340,6 +361,9 @@ $(document).ready(function() {
                         `);
                     }
                 }
+
+                actualizarTarjetaBD('bd-negocio', respuesta.bd_negocio);
+                actualizarTarjetaBD('bd-seguridad', respuesta.bd_seguridad);
             },
             error: function(xhr, estado, error) {
                 console.error("Error al obtener los datos del servidor:", error);

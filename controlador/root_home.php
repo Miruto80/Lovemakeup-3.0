@@ -29,7 +29,9 @@ if ($accion === 'obtener_metricas') {
 
     echo json_encode([
         'metricas' => $objhome->obtenerMetricasSistema(),
-        'procesos' => $objhome->obtenerProcesosActivos()
+        'procesos' => $objhome->obtenerProcesosActivos(),
+        'bd_negocio'   => $objhome->obtenerInfoBDNegocio(),
+        'bd_seguridad' => $objhome->obtenerInfoBDSeguridad()
     ], JSON_UNESCAPED_UNICODE);
 
     exit(); // Detiene la ejecución para NO cargar el HTML de abajo

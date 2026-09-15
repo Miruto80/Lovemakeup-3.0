@@ -2,10 +2,15 @@
 namespace LoveMakeup\Proyecto\Modelo;
 
 use LoveMakeup\Proyecto\Config\Conexion;
+use PDO;
+use Exception;
 
 class Homeroot extends Conexion {
-
-public function obtenerMetricasSistema(): array
+    
+    public function __construct() {
+        parent::__construct();
+    }
+    public function obtenerMetricasSistema(): array
     {
         $sistemaOperativo = PHP_OS_FAMILY;
         $ejecucionPermitida = function_exists('shell_exec') && !in_array('shell_exec', array_map('trim', explode(',', ini_get('disable_functions'))));
@@ -138,8 +143,71 @@ public function obtenerMetricasSistema(): array
     }
 
 
+   public function obtenerInfoBDConexion($pdo, $nombreBD) {
+        $inicio = microtime(true);
+        $activa = false;
+        $tamanoBytes = 0;
 
+        if ($pdo instanceof PDO) {
+            try {
 
+                $test = $pdo->query("SELECT 1");
+                if ($test !== false) {
+                    $activa = true;
+
+                    $sql = "SHOW TABLE STATUS FROM `$nombreBD`";
+                    $stmt = $pdo->query($sql);
+                    
+                    if ($stmt) {
+                        $tablas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($tablas as $tabla) {
+                            $tamanoBytes += ($tabla['Data_length'] + $tabla['Index_length']);
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $activa = false;
+            }
+        }
+
+        $fin = microtime(true);
+        $tiempoRespuestaMs = round(($fin - $inicio) * 1000);
+
+        return [
+            'nombre'       => $nombreBD,
+            'activa'       => $activa,
+            'tamano_bytes' => (float)$tamanoBytes,
+            'latencia_ms'  => $tiempoRespuestaMs
+        ];
+    }
+
+    public function obtenerInfoBDNegocio() {
+        try {
+            $conex = $this->getConex1();
+            return $this->obtenerInfoBDConexion($conex, 'lovemakeupbd1');
+        } catch (Exception $e) {
+            return [
+                'nombre'       => 'lovemakeupbd1',
+                'activa'       => false,
+                'tamano_bytes' => 0,
+                'latencia_ms'  => 0
+            ];
+        }
+    }
+
+    public function obtenerInfoBDSeguridad() {
+        try {
+            $conex = $this->getConex2();
+            return $this->obtenerInfoBDConexion($conex, 'lovemakeupbds2');
+        } catch (Exception $e) {
+            return [
+                'nombre'       => 'lovemakeupbds2',
+                'activa'       => false,
+                'tamano_bytes' => 0,
+                'latencia_ms'  => 0
+            ];
+        }
+    }
 
 
 }
