@@ -3,7 +3,7 @@
     
         <!-- Circulo Angel -->
         <div class="bot-avatar-trigger" id="avatarTrigger" onclick="abrirchat()">
-            <img src="assets/img/angel.png" alt="Angel Avatar">
+            <img src="assets/img/angel2.png" alt="Angel Avatar">
         </div>
 
         <!-- Ventana del Chat -->
@@ -11,7 +11,7 @@
             <div class="chat-header">
                 <div class="chat-header-info">
                     <!-- Miniatura -->
-                    <img src="assets/img/angel.png" alt="Angel">
+                    <img src="assets/img/angel2.png" alt="Angel">
                     <h4>Angel, Asesor de Belleza </h4>
                 </div>
                 <button class="close-btn" onclick="cerrarchat()">&times;</button>
