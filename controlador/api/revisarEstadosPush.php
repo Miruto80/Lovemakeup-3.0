@@ -262,11 +262,15 @@ try {
         $sent = 0;
         $changed = 0;
         $failures = 0;
+        $pedidos_nuevos = 0;
+        $cambios_con_tokens = 0;
+        $cambios_sin_tokens = 0;
         $updated = $previous;
         foreach ($latest as $id => $status) {
             if (!array_key_exists($id, $previous)) {
                 // Nuevo pedido: no enviar cambio de estado ficticio.
                 $updated[$id] = $status;
+                $pedidos_nuevos++;
                 continue;
             }
             if ((string)$previous[$id] === $status) {
@@ -279,8 +283,10 @@ try {
             if ($tokens === []) {
                 // Sin telefono asociado: se registra el nuevo estado sin enviar.
                 $updated[$id] = $status;
+                $cambios_sin_tokens++;
                 continue;
             }
+            $cambios_con_tokens++;
             $diagnosticStage = 'send_to_expo';
             if (sendPush($tokens, (string) $id, $status)) {
                 $sent += count($tokens);
@@ -300,6 +306,9 @@ try {
             'changed' => $changed,
             'sent' => $sent,
             'failed' => $failures,
+            'pedidos_nuevos' => $pedidos_nuevos,
+            'cambios_con_tokens' => $cambios_con_tokens,
+            'cambios_sin_tokens' => $cambios_sin_tokens,
         ]);
     } finally {
         flock($lockHandle, LOCK_UN);
