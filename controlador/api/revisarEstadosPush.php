@@ -282,7 +282,7 @@ try {
                 continue;
             }
             $diagnosticStage = 'send_to_expo';
-            if (sendPush($tokens, $id, $status)) {
+            if (sendPush($tokens, (string) $id, $status)) {
                 $sent += count($tokens);
                 $updated[$id] = $status;
             } else {
