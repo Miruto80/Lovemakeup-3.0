@@ -212,8 +212,10 @@ function sendPush(array $tokens, string $orderId, string $status): bool {
     return true;
 }
 
+$diagnosticStage = 'storage_directory';
 try {
     $dir = privateStateDirectory();
+    $diagnosticStage = 'monitor_lock';
     $lockHandle = @fopen($dir . '/.push_monitor.lock', 'c');
     if (!$lockHandle) {
         throw new RuntimeException('No se pudo abrir archivo de bloqueo');
@@ -226,15 +228,18 @@ try {
 
     try {
         $storage = $dir . '/pedido_estados_push.json';
+        $diagnosticStage = 'read_previous_statuses';
         $previous = readStatuses($storage);
 
         // Misma conexion de lectura utilizada por el modelo existente.
+        $diagnosticStage = 'database_connection';
         $connection = new class extends \LoveMakeup\Proyecto\Config\Conexion {
             public function readOnlyPdo(): \PDO {
                 return $this->getConex1();
             }
         };
         $pdo = $connection->readOnlyPdo();
+        $diagnosticStage = 'read_orders';
         $query = $pdo->query('SELECT id_pedido, cedula, estatus FROM pedido WHERE tipo = 2');
         if ($query === false) {
             throw new RuntimeException('No se pudo consultar pedidos web');
@@ -249,6 +254,7 @@ try {
         }
 
         if ($previous === null) {
+            $diagnosticStage = 'write_baseline';
             writeStatuses($storage, $dir, $latest);
             respond(200, ['ok' => true, 'baseline' => true, 'orders' => count($latest), 'sent' => 0]);
         }
@@ -268,12 +274,14 @@ try {
             }
             $changed++;
             $cedula = $details[$id];
+            $diagnosticStage = 'lookup_device_tokens';
             $tokens = \LoveMakeup\Proyecto\Config\PushTokenStore::getTokensForCedula($cedula);
             if ($tokens === []) {
                 // Sin telefono asociado: se registra el nuevo estado sin enviar.
                 $updated[$id] = $status;
                 continue;
             }
+            $diagnosticStage = 'send_to_expo';
             if (sendPush($tokens, $id, $status)) {
                 $sent += count($tokens);
                 $updated[$id] = $status;
@@ -284,6 +292,7 @@ try {
         }
         // Quitar del historial los pedidos que ya no aparecen en la consulta.
         $updated = array_intersect_key($updated, $latest);
+        $diagnosticStage = 'write_updated_statuses';
         writeStatuses($storage, $dir, $updated);
         respond($failures > 0 ? 503 : 200, [
             'ok' => $failures === 0,
@@ -297,6 +306,13 @@ try {
         fclose($lockHandle);
     }
 } catch (\Throwable $e) {
-    error_log('LoveApp push watcher: ' . $e->getMessage());
-    respond(500, ['ok' => false, 'error' => 'Fallo interno del monitor, revisar log PHP']);
+    // El mensaje detallado solo se guarda en el log privado de PHP.
+    // GitHub Actions recibe la etapa y el tipo de error, sin rutas, tokens ni credenciales.
+    error_log('LoveApp push watcher [' . $diagnosticStage . '] (' . get_class($e) . '): ' . $e->getMessage());
+    respond(500, [
+        'ok' => false,
+        'error' => 'Fallo interno del monitor',
+        'stage' => $diagnosticStage,
+        'exception_type' => (new \ReflectionClass($e))->getShortName(),
+    ]);
 }
