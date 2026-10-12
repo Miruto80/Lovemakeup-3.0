@@ -6,6 +6,12 @@ RewriteEngine On
     Deny from all
 </FilesMatch>
 
+# Permitir al manifest.json PWA
+<Files "manifest.json">
+    Require all granted
+    Allow from all
+</Files>
+
 # LISTADO DE CARPETAS
 Options -Indexes
 
