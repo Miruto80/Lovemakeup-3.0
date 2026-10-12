@@ -125,9 +125,6 @@ function statusLabel(string $status): string {
 
 /** Devuelve true solo si Expo acepta todos los mensajes del pedido. */
 function sendPush(array $tokens, string $orderId, string $status): bool {
-    if (!function_exists('curl_init')) {
-        throw new RuntimeException('Extension PHP cURL no disponible');
-    }
     $messages = [];
     foreach (array_values(array_unique($tokens)) as $token) {
         $messages[] = [
@@ -139,22 +136,65 @@ function sendPush(array $tokens, string $orderId, string $status): bool {
             'data' => ['orderId' => $orderId, 'status' => $status],
         ];
     }
+
     foreach (array_chunk($messages, 100) as $batch) {
-        $curl = curl_init('https://exp.host/--/api/v2/push/send');
-        curl_setopt_array($curl, [
-            CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
-            CURLOPT_POSTFIELDS => json_encode($batch, JSON_THROW_ON_ERROR),
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 8,
-            CURLOPT_TIMEOUT => 20,
-        ]);
-        $response = curl_exec($curl);
-        $httpCode = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-        $error = curl_error($curl);
-        curl_close($curl);
+        $payload = json_encode($batch, JSON_THROW_ON_ERROR);
+        $httpCode = 0;
+        $response = false;
+        $transportError = '';
+        $url = 'https://exp.host/--/api/v2/push/send';
+
+        // Preferir cURL si esta disponible. En hostings sin la extension,
+        // usar el transporte HTTPS de PHP sin cambiar modulos existentes.
+        if (function_exists('curl_init')) {
+            $curl = curl_init($url);
+            if ($curl === false) {
+                $transportError = 'curl_init no disponible';
+            } else {
+                try {
+                    curl_setopt_array($curl, [
+                        CURLOPT_POST => true,
+                        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+                        CURLOPT_POSTFIELDS => $payload,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_CONNECTTIMEOUT => 8,
+                        CURLOPT_TIMEOUT => 20,
+                    ]);
+                    $response = curl_exec($curl);
+                    $httpCode = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                    $transportError = curl_error($curl);
+                } finally {
+                    curl_close($curl);
+                }
+            }
+        } else {
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
+                    'content' => $payload,
+                    'timeout' => 20,
+                    'ignore_errors' => true,
+                ],
+                'ssl' => [
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                ],
+            ]);
+            $response = @file_get_contents($url, false, $context);
+            foreach ($http_response_header ?? [] as $header) {
+                if (preg_match('/^HTTP\/\S+\s+(\d{3})/', $header, $matches)) {
+                    $httpCode = (int)$matches[1];
+                    break;
+                }
+            }
+            if ($response === false) {
+                $transportError = 'Transporte HTTPS no disponible';
+            }
+        }
+
         if ($response === false || $httpCode < 200 || $httpCode >= 300) {
-            error_log('LoveApp Push: error de Expo: ' . $httpCode . ' ' . $error);
+            error_log('LoveApp Push: envio Expo rechazado o fallido (HTTP ' . $httpCode . '): ' . $transportError);
             return false;
         }
         $parsed = json_decode($response, true);
