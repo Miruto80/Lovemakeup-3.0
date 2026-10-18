@@ -24,5 +24,6 @@ TODO.md
 
 #Llaves privadas
 /config/jwt_private.pem
+/config/ai_private.pem
 
 seguridad/data/
