@@ -46,12 +46,9 @@ $buildAngelJwt = static function (
     $signingInput = $encodedHeader . '.' . $encodedPayload;
 
     if (!openssl_sign($signingInput, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
-        openssl_free_key($privateKey);
         error_log('No se pudo firmar el JWT de Ángel.');
         return '';
     }
-
-    openssl_free_key($privateKey);
 
     return $signingInput . '.' . $base64UrlEncode($signature);
 };
