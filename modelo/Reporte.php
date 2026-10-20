@@ -1092,13 +1092,6 @@ public static function venta(
             $marcaSt->execute([':marca' => $marcaId]);
             $filtroParts[] = 'Marca: '.htmlspecialchars($marcaSt->fetchColumn());
         }
-        if ($provId) {
-            $provSt = $conex->prepare(
-                'SELECT nombre FROM proveedor WHERE id_proveedor = :prov'
-            );
-            $provSt->execute([':prov' => $provId]);
-            $filtroParts[] = 'Proveedor: '.htmlspecialchars($provSt->fetchColumn());
-        }
         if ($metodoPago) {
             $metodoPagoText = '';
             switch($metodoPago) {
@@ -1449,13 +1442,6 @@ public static function pedidoWeb(
             );
             $marcaSt->execute([':marca' => $marcaId]);
             $filtroParts[] = 'Marca: '.htmlspecialchars($marcaSt->fetchColumn());
-        }
-        if ($catId) {
-            $cSt = $conex->prepare(
-                'SELECT nombre FROM categoria WHERE id_categoria = :cid'
-            );
-            $cSt->execute([':cid' => $catId]);
-            $filtroParts[] = 'Categoría: '.htmlspecialchars($cSt->fetchColumn());
         }
         if ($estado !== null) {
             $estados = [
@@ -1948,5 +1934,3 @@ public static function countPedidoWeb($start = null, $end = null, $prodId = null
 
 
 }
-
-
