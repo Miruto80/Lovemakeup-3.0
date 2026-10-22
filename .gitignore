@@ -1,12 +1,8 @@
 # Configuración y Secretos
 passconfig.env
-AGENTS.md
-TODO.md
 
 # Dependencias de Composer
 /vendor/
-AGENTS.md
-TODO.md
 
 # Postman
 /.postman/
