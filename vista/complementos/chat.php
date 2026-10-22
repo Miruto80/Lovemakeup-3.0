@@ -89,6 +89,8 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
             </div>
         </div>
 
+        <div class="chat-image-preview" id="imagePreview" hidden aria-label="Imágenes seleccionadas"></div>
+
         <div class="chat-legend">
             Las respuestas son basadas en IA
         </div>
@@ -100,7 +102,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
                 id="imageButton"
                 type="button"
                 aria-label="Seleccionar imágenes"
-                title="Seleccionar imágenes (todavía no se enviarán)"
+                title="Seleccionar imágenes"
                 onclick="document.getElementById('imageInput').click()"
             >
                 <i class="fa-solid fa-image" aria-hidden="true"></i>
@@ -122,10 +124,13 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   const sendBtn = document.getElementById('sendBtn');
   const imageInput = document.getElementById('imageInput');
   const imageButton = document.getElementById('imageButton');
+  const imagePreview = document.getElementById('imagePreview');
   const historialConversacion = [];
+  let imagePreviewUrls = [];
 
   imageInput.addEventListener('change', () => {
-    const count = imageInput.files.length;
+    const archivos = Array.from(imageInput.files || []).slice(0, 3);
+    const count = archivos.length;
     imageButton.dataset.count = count > 0 ? String(count) : '';
     imageButton.title = count > 0
       ? `${count} imagen(es) seleccionada(s)`
@@ -133,6 +138,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     imageButton.innerHTML = count > 0
       ? `<i class="fa-solid fa-image" aria-hidden="true"></i><span class="chat-image-count">${count}</span>`
       : '<i class="fa-solid fa-image" aria-hidden="true"></i>';
+    mostrarVistaPrevia(archivos);
   });
 
   function abrirchat() {
@@ -149,7 +155,23 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   function añadirmensaje(text, sender) {
     const msgDiv = document.createElement('div');
     msgDiv.classList.add('message', sender);
-    msgDiv.textContent = text;
+    msgDiv.append(document.createTextNode(text));
+    chatBody.appendChild(msgDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function añadirmensajeConImagenes(text, imagenes) {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', 'user');
+    msgDiv.append(document.createTextNode(text));
+
+    imagenes.forEach((imagen, index) => {
+      const img = document.createElement('img');
+      img.src = imagen;
+      img.alt = `Imagen enviada ${index + 1}`;
+      msgDiv.appendChild(img);
+    });
+
     chatBody.appendChild(msgDiv);
     chatBody.scrollTop = chatBody.scrollHeight;
   }
@@ -161,9 +183,15 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
       || (conImagen ? 'Recomiéndame según la imagen que envié' : '');
     if (texto === '') return;
 
-    añadirmensaje(texto + (conImagen ? ` (envié ${imagenes.length} imagen${imagenes.length > 1 ? 'es' : ''})` : ''), 'user');
+    if (conImagen) {
+      añadirmensajeConImagenes(texto, imagenes);
+    } else {
+      añadirmensaje(texto, 'user');
+    }
     userInput.value = '';
+    limpiarimagenes();
     sendBtn.disabled = true;
+    const indicadorEscribiendo = mostrarIndicadorEscribiendo();
 
     try {
       const usarApi = !!ANGEL_TOKEN && !!ANGEL_API_URL && ANGEL_API_URL !== '' && ANGEL_API_URL !== 'null';
@@ -209,10 +237,21 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
         : 'No pude conectar con Ángel en este momento.';
       añadirmensaje(mensajeError, 'bot');
     } finally {
+      indicadorEscribiendo.remove();
       sendBtn.disabled = false;
       userInput.focus();
-      limpiarimagenes();
     }
+  }
+
+  function mostrarIndicadorEscribiendo() {
+    const indicador = document.createElement('div');
+    indicador.classList.add('message', 'bot', 'typing-indicator');
+    indicador.setAttribute('role', 'status');
+    indicador.setAttribute('aria-label', 'Ángel está escribiendo');
+    indicador.innerHTML = '<span></span><span></span><span></span>';
+    chatBody.appendChild(indicador);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return indicador;
   }
 
   function limpiarimagenes() {
@@ -220,6 +259,26 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     imageButton.dataset.count = '';
     imageButton.title = 'Seleccionar imágenes';
     imageButton.innerHTML = '<i class="fa-solid fa-image" aria-hidden="true"></i>';
+    imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    imagePreviewUrls = [];
+    imagePreview.replaceChildren();
+    imagePreview.hidden = true;
+  }
+
+  function mostrarVistaPrevia(archivos) {
+    imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    imagePreviewUrls = [];
+    imagePreview.replaceChildren();
+
+    archivos.forEach((archivo, index) => {
+      const url = URL.createObjectURL(archivo);
+      imagePreviewUrls.push(url);
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = `Vista previa de imagen ${index + 1}`;
+      imagePreview.appendChild(img);
+    });
+    imagePreview.hidden = archivos.length === 0;
   }
 
   // Reduce la imagen en el navegador (máx 1024 px, JPEG 0.85) y devuelve
