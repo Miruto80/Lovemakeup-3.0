@@ -313,6 +313,8 @@ body {
 
     /* Area de Entrada de texto */
     .chat-footer {
+      box-sizing: border-box;
+      min-width: 0;
       padding: 10px;
       background-color: #fff;
       border-top: 1px solid #e9ecef;
@@ -320,8 +322,10 @@ body {
       gap: 8px;
     }
 
-    .chat-footer input {
-      flex: 1;
+    .chat-footer input[type="text"] {
+      box-sizing: border-box;
+      flex: 1 1 0;
+      min-width: 0;
       padding: 8px 12px;
       border: 1px solid #ced4da;
       border-radius: 20px;
@@ -333,11 +337,49 @@ body {
       border-color: #464646;
     }
 
+    .chat-footer .chat-image-button {
+      position: relative;
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background-color: #fce7f3;
+      color: #be185d;
+      font-size: 15px;
+    }
+
+    .chat-footer .chat-image-button:hover {
+      background-color: #fbcfe8;
+    }
+
+    .chat-image-button[data-count]:not([data-count=""])::after {
+      content: attr(data-count);
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 3px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #fff;
+      border-radius: 10px;
+      background: #be185d;
+      color: #fff;
+      font-size: 10px;
+      line-height: 1;
+    }
+
     .chat-footer button {
+      flex: 0 0 auto;
+      white-space: nowrap;
       background-color: #000000;
       color: white;
       border: none;
-      padding: 8px 15px;
+      padding: 8px 12px;
       border-radius: 20px;
       cursor: pointer;
       font-size: 14px;

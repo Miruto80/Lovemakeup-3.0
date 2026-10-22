@@ -85,6 +85,17 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
         </div>
 
         <div class="chat-footer">
+            <input type="file" id="imageInput" accept="image/*" multiple hidden>
+            <button
+                class="chat-image-button"
+                id="imageButton"
+                type="button"
+                aria-label="Seleccionar imágenes"
+                title="Seleccionar imágenes (todavía no se enviarán)"
+                onclick="document.getElementById('imageInput').click()"
+            >
+                <i class="fa-solid fa-camera" aria-hidden="true"></i>
+            </button>
             <input type="text" id="userInput" placeholder="Escribe un mensaje..." onkeypress="handleKeyPress(event)">
             <button id="sendBtn" onclick="enviarmensaje()">Enviar</button>
         </div>
@@ -100,7 +111,17 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   const chatBody = document.getElementById('chatBody');
   const userInput = document.getElementById('userInput');
   const sendBtn = document.getElementById('sendBtn');
+  const imageInput = document.getElementById('imageInput');
+  const imageButton = document.getElementById('imageButton');
   const historialConversacion = [];
+
+  imageInput.addEventListener('change', () => {
+    const count = imageInput.files.length;
+    imageButton.dataset.count = count > 0 ? String(count) : '';
+    imageButton.title = count > 0
+      ? `${count} imagen(es) seleccionada(s); todavía no se enviarán.`
+      : 'Seleccionar imágenes (todavía no se enviarán)';
+  });
 
   function abrirchat() {
     avatarTrigger.style.display = 'none';
