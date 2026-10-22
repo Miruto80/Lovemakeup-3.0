@@ -3,6 +3,16 @@ $loveMakeupRoot = dirname(__DIR__, 2);
 require_once $loveMakeupRoot . '/vendor/autoload.php';
 \Dotenv\Dotenv::createImmutable($loveMakeupRoot, 'passconfig.env')->safeLoad();
 
+// Identidad real para la memoria del chat: la BD de Ángel asocia cada
+// conversación al sub del JWT. Si hay sesión iniciada, sub = id del usuario;
+// invitados: anon_* (su conversación no se guarda).
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
+$angelUsuario = isset($_SESSION['id']) && !empty($_SESSION['id'])
+    ? (string) $_SESSION['id']
+    : null;
+
 $angelApiUrl = $_ENV['ANGEL_API_URL'] ?? 'http://127.0.0.1:8000/api/chat';
 $angelPrivateKeyPath = $_ENV['ANGEL_PRIVATE_KEY_PATH'] ?? '';
 $angelPrivateKeyPassphrase = $_ENV['ANGEL_PRIVATE_KEY_PASSPHRASE'] ?? '';
@@ -37,7 +47,9 @@ $buildAngelJwt = static function (
     $issuedAt = time();
     $header = ['alg' => 'RS256', 'typ' => 'JWT'];
     $payload = [
-        'sub' => 'love_makeup_user',
+        'sub' => $angelUsuario !== null
+            ? $angelUsuario
+            : 'anon_' . bin2hex(random_bytes(4)),
         'iat' => $issuedAt,
         'exp' => $issuedAt + $ttlSeconds,
     ];
