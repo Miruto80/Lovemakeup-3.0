@@ -94,7 +94,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
                 title="Seleccionar imágenes (todavía no se enviarán)"
                 onclick="document.getElementById('imageInput').click()"
             >
-                <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                <i class="fa-solid fa-image" aria-hidden="true"></i>
             </button>
             <input type="text" id="userInput" placeholder="Escribe un mensaje..." onkeypress="handleKeyPress(event)">
             <button id="sendBtn" onclick="enviarmensaje()">Enviar</button>
