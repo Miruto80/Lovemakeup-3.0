@@ -58,6 +58,15 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
 
 <!-- WIDGET DEL CHATBOT -->
 <div class="bot-widget-container">
+<style>
+  .chat-image-button { position: relative; }
+  .chat-image-count {
+    position: absolute; top: -5px; right: -5px;
+    background: #e91e63; color: #fff; border-radius: 50%;
+    font-size: 10px; line-height: 14px; min-width: 14px;
+    text-align: center; font-weight: 600;
+  }
+</style>
 
     <!-- Circulo Angel -->
     <div class="bot-avatar-trigger" id="avatarTrigger" onclick="abrirchat()">
@@ -119,8 +128,11 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     const count = imageInput.files.length;
     imageButton.dataset.count = count > 0 ? String(count) : '';
     imageButton.title = count > 0
-      ? `${count} imagen(es) seleccionada(s); todavía no se enviarán.`
-      : 'Seleccionar imágenes (todavía no se enviarán)';
+      ? `${count} imagen(es) seleccionada(s)`
+      : 'Seleccionar imágenes';
+    imageButton.innerHTML = count > 0
+      ? `<i class="fa-solid fa-image" aria-hidden="true"></i><span class="chat-image-count">${count}</span>`
+      : '<i class="fa-solid fa-image" aria-hidden="true"></i>';
   });
 
   function abrirchat() {
@@ -143,10 +155,13 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   }
 
   async function enviarmensaje() {
-    const text = userInput.value.trim();
-    if (text === '') return;
+    const imagenes = await convertirimagenes();
+    const conImagen = imagenes.length > 0;
+    const texto = userInput.value.trim()
+      || (conImagen ? 'Recomiéndame según la imagen que envié' : '');
+    if (texto === '') return;
 
-    añadirmensaje(text, 'user');
+    añadirmensaje(texto + (conImagen ? ` (envié ${imagenes.length} imagen${imagenes.length > 1 ? 'es' : ''})` : ''), 'user');
     userInput.value = '';
     sendBtn.disabled = true;
 
@@ -164,8 +179,9 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
           'Authorization': `Bearer ${ANGEL_TOKEN}`
         },
         body: JSON.stringify({
-          mensaje: text,
-          historial: historialConversacion.slice(-12)
+          mensaje: texto,
+          historial: historialConversacion.slice(-12),
+          imagenes: conImagen ? imagenes : undefined
         })
       });
 
@@ -181,7 +197,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
       }
       añadirmensaje(data.respuesta, 'bot');
       historialConversacion.push(
-        { role: 'user', content: text },
+        { role: 'user', content: texto },
         { role: 'assistant', content: data.respuesta }
       );
       if (historialConversacion.length > 12) {
@@ -195,7 +211,41 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     } finally {
       sendBtn.disabled = false;
       userInput.focus();
+      limpiarimagenes();
     }
+  }
+
+  function limpiarimagenes() {
+    imageInput.value = '';
+    imageButton.dataset.count = '';
+    imageButton.title = 'Seleccionar imágenes';
+    imageButton.innerHTML = '<i class="fa-solid fa-image" aria-hidden="true"></i>';
+  }
+
+  // Reduce la imagen en el navegador (máx 1024 px, JPEG 0.85) y devuelve
+  // data URLs base64: mantiene el payload liviano para /api/chat.
+  function convertirimagenes() {
+    const promesas = Array.from(imageInput.files || [])
+      .slice(0, 3)
+      .map((file) => new Promise((resolve) => {
+        const lector = new FileReader();
+        lector.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const escala = Math.min(1, 1024 / Math.max(img.width, img.height));
+            const lienzo = document.createElement('canvas');
+            lienzo.width = Math.max(1, Math.round(img.width * escala));
+            lienzo.height = Math.max(1, Math.round(img.height * escala));
+            lienzo.getContext('2d').drawImage(img, 0, 0, lienzo.width, lienzo.height);
+            resolve(lienzo.toDataURL('image/jpeg', 0.85));
+          };
+          img.onerror = () => resolve('');
+          img.src = lector.result;
+        };
+        lector.onerror = () => resolve('');
+        lector.readAsDataURL(file);
+      }));
+    return Promise.all(promesas).then((lista) => lista.filter(Boolean));
   }
 
   function handleKeyPress(event) {
