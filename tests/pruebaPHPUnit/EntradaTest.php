@@ -99,6 +99,8 @@ class EntradaTest extends TestCase {
         $resultado = $entradaDirecto->procesarCompra($json);
         $this->assertEquals(0, $resultado['respuesta']);
         $this->assertEquals('Operación no válida', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de operación inválida:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     public function testConsultarCompras() { /*|||||| CONSULTAR COMPRAS ||||| 2 | */
@@ -114,6 +116,8 @@ class EntradaTest extends TestCase {
             $this->assertArrayHasKey('proveedor_telefono', $resultado['datos'][0]);
             $this->assertArrayHasKey('id_proveedor', $resultado['datos'][0]);
         }
+        fwrite(STDOUT, "Compras obtenidas:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testConsultarProductos() { /*|||||| CONSULTAR PRODUCTOS ||||| 3 | */
@@ -128,6 +132,8 @@ class EntradaTest extends TestCase {
             $this->assertArrayHasKey('marca', $resultado['datos'][0]);
             $this->assertArrayHasKey('stock_disponible', $resultado['datos'][0]);
         }
+        fwrite(STDOUT, "Productos obtenidos:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testConsultarProveedores() { /*|||||| CONSULTAR PROVEEDORES ||||| 4 | */
@@ -140,6 +146,8 @@ class EntradaTest extends TestCase {
             $this->assertArrayHasKey('id_proveedor', $resultado['datos'][0]);
             $this->assertArrayHasKey('nombre', $resultado['datos'][0]);
         }
+        fwrite(STDOUT, "Proveedores obtenidos:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testConsultarDetallesCompra() { /*|||||| CONSULTAR DETALLES COMPRA ||||| 5 | */
@@ -162,6 +170,8 @@ class EntradaTest extends TestCase {
             $this->assertArrayHasKey('producto_nombre', $resultado['datos'][0]);
             $this->assertArrayHasKey('marca', $resultado['datos'][0]);
         }
+        fwrite(STDOUT, "Detalles de compra obtenidos:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testRegistrarCompraValida() { /*|||||| REGISTRAR COMPRA VÁLIDA ||||| 6 | */
@@ -178,9 +188,9 @@ class EntradaTest extends TestCase {
             'productos' => [
                 [
                     'id_producto' => $this->idProductoDisponible,
-                    'cantidad' => 10,
+                    'cantidad' => 2,
                     'precio_unitario' => 25.50,
-                    'precio_total' => 255.00
+                    'precio_total' => 51.00
                 ]
             ]
         ];
@@ -190,6 +200,8 @@ class EntradaTest extends TestCase {
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertEquals('Compra registrada exitosamente', $resultado['mensaje']);
         $this->assertArrayHasKey('id_compra', $resultado);
+        fwrite(STDOUT, "Resultado del registro de compra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
         
         // Guardar el ID de la compra creada para otros tests
         if (isset($resultado['id_compra'])) {
@@ -280,9 +292,16 @@ class EntradaTest extends TestCase {
             ]
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('El producto ID 99999 no existe o está inactivo');
-        $this->entrada->testEjecutarRegistro($datos);
+        try {
+            $this->entrada->testEjecutarRegistro($datos);
+            $this->fail('Se esperaba una excepción porque el producto no existe.');
+        } catch (\Exception $e) {
+            $this->assertSame(
+                'El producto ID 99999 no existe o está inactivo',
+                $e->getMessage()
+            );
+            fwrite(STDOUT, "Mensaje de producto inexistente: " . $e->getMessage() . PHP_EOL);
+        }
     }
 
     public function testActualizarCompraExistente() { /*|||||| ACTUALIZAR COMPRA EXISTENTE ||||| 11 | */
@@ -314,6 +333,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertEquals('Compra actualizada exitosamente', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de actualización de compra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     public function testActualizarCompraInexistente() { /*|||||| ACTUALIZAR COMPRA INEXISTENTE ||||| 12 | */
@@ -354,6 +375,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertEquals('Compra eliminada exitosamente', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de eliminación de compra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
         
         // Limpiar la referencia ya que la compra fue eliminada
         $this->idCompraDisponible = null;
@@ -394,8 +417,10 @@ class EntradaTest extends TestCase {
 
         $resultado = $entradaDirecto->procesarCompra($json);
         $this->assertIsArray($resultado);
-        $this->assertEquals(1, $resultado['respuesta']);
+        $this->assertEquals(1, $resultado['respuesta'], print_r($resultado, true));
         $this->assertEquals('Compra registrada exitosamente', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de procesar registro de compra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     public function testProcesarCompraConsultar() { /*|||||| PROCESAR COMPRA CONSULTAR ||||| 16 | */
@@ -409,6 +434,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertArrayHasKey('datos', $resultado);
+        fwrite(STDOUT, "Compras obtenidas mediante procesarCompra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testProcesarCompraConsultarProductos() { /*|||||| PROCESAR COMPRA CONSULTAR PRODUCTOS ||||| 17 | */
@@ -422,6 +449,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertArrayHasKey('datos', $resultado);
+        fwrite(STDOUT, "Productos obtenidos mediante procesarCompra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testProcesarCompraConsultarProveedores() { /*|||||| PROCESAR COMPRA CONSULTAR PROVEEDORES ||||| 18 | */
@@ -435,6 +464,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertArrayHasKey('datos', $resultado);
+        fwrite(STDOUT, "Proveedores obtenidos mediante procesarCompra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testProcesarCompraConsultarDetalles() { /*|||||| PROCESAR COMPRA CONSULTAR DETALLES ||||| 19 | */
@@ -452,6 +483,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertArrayHasKey('datos', $resultado);
+        fwrite(STDOUT, "Detalles de compra obtenidos mediante procesarCompra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado['datos'], true));
     }
 
     public function testProcesarCompraActualizar() { /*|||||| PROCESAR COMPRA ACTUALIZAR ||||| 20 | */
@@ -487,6 +520,8 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertEquals('Compra actualizada exitosamente', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de procesar actualización de compra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     public function testProcesarCompraEliminar() { /*|||||| PROCESAR COMPRA ELIMINAR ||||| 21 | */
@@ -504,5 +539,7 @@ class EntradaTest extends TestCase {
         $this->assertIsArray($resultado);
         $this->assertEquals(1, $resultado['respuesta']);
         $this->assertEquals('Compra eliminada exitosamente', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de procesar eliminación de compra:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 }

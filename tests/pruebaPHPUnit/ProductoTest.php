@@ -102,11 +102,33 @@ class ProductoTest extends TestCase {
 
         $this->assertIsArray($resultado);
 
-        if (!empty($resultado)) {
-            $this->assertArrayHasKey('id_producto', $resultado[0]);
-            $this->assertArrayHasKey('nombre', $resultado[0]);
-            $this->assertArrayHasKey('estatus', $resultado[0]);
+        if (empty($resultado)) {
+            fwrite(STDOUT, "No se encontraron productos." . PHP_EOL);
+            return;
         }
+
+        fwrite(STDOUT, "Productos consultados:" . PHP_EOL);
+        foreach ($resultado as $producto) {
+            $this->assertIsArray($producto);
+            $this->assertArrayHasKey('id_producto', $producto);
+            $this->assertArrayHasKey('nombre', $producto);
+            $this->assertArrayHasKey('estatus', $producto);
+            $this->assertNotEmpty($producto['id_producto']);
+            $this->assertNotEmpty($producto['nombre']);
+
+            fwrite(
+                STDOUT,
+                sprintf(
+                    "ID: %s | Nombre: %s | Estatus: %s%s",
+                    $producto['id_producto'],
+                    $producto['nombre'],
+                    $producto['estatus'],
+                    PHP_EOL
+                )
+            );
+        }
+
+        fwrite(STDOUT, "Prueba de consulta de productos finalizada correctamente." . PHP_EOL);
     }
 
     /*|||||||||||| PRODUCTOS ACTIVOS ||||||||||||*/
@@ -117,6 +139,11 @@ class ProductoTest extends TestCase {
         foreach ($resultado as $p) {
             $this->assertEquals(1, $p['estatus']);
         }
+
+        fwrite(
+            STDOUT,
+            "Cantidad de productos activos: " . count($resultado) . PHP_EOL
+        );
     }
 
     /*|||||||||||| CATEGORÍAS ||||||||||||*/
@@ -124,6 +151,15 @@ class ProductoTest extends TestCase {
         $resultado = $this->producto->getProducto()->obtenerCategoria();
 
         $this->assertIsArray($resultado);
+        foreach ($resultado as $categoria) {
+            $this->assertIsArray($categoria);
+            $this->assertArrayHasKey('id_categoria', $categoria);
+            $this->assertArrayHasKey('nombre', $categoria);
+        }
+
+        fwrite(STDOUT, "Categorías obtenidas:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
+        fwrite(STDOUT, "Prueba de obtención de categorías finalizada correctamente." . PHP_EOL);
     }
 
     /*|||||||||||| MÉTODOS PRIVADOS ||||||||||||*/
@@ -131,12 +167,14 @@ class ProductoTest extends TestCase {
         // nombre + ID de marca que no existe
         $resp = $this->producto->testVerificarProductoExistente('ProductoInexistenteXYZ', 9999);
         $this->assertFalse($resp);
+        fwrite(STDOUT, "Prueba de producto inexistente finalizada correctamente." . PHP_EOL);
     }
 
     public function testVerificarProductoExistenteFallido() {
         // Producto real → Base de gotero con id_marca = 1 (ajusta si en BD es otro)
         $resp = $this->producto->testVerificarProductoExistente('Base de gotero', 1);
         $this->assertTrue($resp, "Debe devolver true porque el producto sí existe");
+        fwrite(STDOUT, "Prueba de producto existente finalizada correctamente." . PHP_EOL);
     }
 
     public function testCambioEstatus() {
@@ -149,6 +187,7 @@ class ProductoTest extends TestCase {
 
         $this->assertIsArray($resultado);
         $this->assertEquals('cambiarEstatus', $resultado['accion']);
+        fwrite(STDOUT, "Prueba de cambio de estatus finalizada correctamente." . PHP_EOL);
     }
     public function testRegistrarVariosProductos() {
     fwrite(STDOUT, "\n\n >---- INICIO DEL TEST DE REGISTRO MASIVO DE PRODUCTOS ------<\n");
@@ -219,6 +258,6 @@ class ProductoTest extends TestCase {
         }
     }
 
-    fwrite(STDOUT, "\n _-_-____ FIN DEL TEST DE PRODUCTOS _-_-____\n\n");
+    fwrite(STDOUT, "\nPrueba de registro masivo finalizada correctamente.\n\n");
 }
 }
