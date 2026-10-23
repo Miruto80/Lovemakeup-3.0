@@ -233,7 +233,16 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const detail = typeof data.detail === 'string' ? data.detail : 'Ángel no está disponible.';
+        const detail = Array.isArray(data.detail)
+          ? data.detail.map((error) => {
+            const location = Array.isArray(error.loc)
+              ? error.loc.filter((part) => part !== 'body').join('.')
+              : '';
+            return `${location ? `${location}: ` : ''}${error.msg || 'Dato inválido.'}`;
+          }).join(' ')
+          : typeof data.detail === 'string'
+            ? data.detail
+            : 'Ángel no está disponible.';
         throw new Error(detail);
       }
 
