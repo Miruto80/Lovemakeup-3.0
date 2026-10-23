@@ -137,7 +137,12 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   const imageInput = document.getElementById('imageInput');
   const imageButton = document.getElementById('imageButton');
   const imagePreview = document.getElementById('imagePreview');
-  const historialConversacion = [];
+  const historialConversacion = [
+    {
+      role: 'assistant',
+      content: '¡Hola! Soy Angel, Asesor de Belleza. ¿En qué puedo ayudarte hoy?'
+    }
+  ];
   let imagePreviewUrls = [];
 
   imageInput.addEventListener('change', () => {
