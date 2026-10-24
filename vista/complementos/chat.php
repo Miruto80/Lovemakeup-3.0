@@ -119,6 +119,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
 <script>
   const ANGEL_API_URL = <?= json_encode($angelApiUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
   const ANGEL_TOKEN = <?= json_encode($angelJwt, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+  const ANGEL_USUARIO_LOGUEADO = <?= json_encode($angelUsuario !== null); ?>;
   const avatarTrigger = document.getElementById('avatarTrigger');
   const chatWindow = document.getElementById('chatWindow');
   const chatBody = document.getElementById('chatBody');
@@ -128,6 +129,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   const imageButton = document.getElementById('imageButton');
   const imagePreview = document.getElementById('imagePreview');
   const MAX_IMAGENES = 3;
+  const MAX_RESPUESTAS_INVITADO = 3;
   const IMAGEN_MAX_BYTES = 5 * 1024 * 1024;
   const TIPOS_IMAGEN_PERMITIDOS = new Set([
     'image/jpeg',
@@ -144,6 +146,9 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   ];
   let imagePreviewUrls = [];
   let archivosImagenesSeleccionados = [];
+  let respuestasInvitado = 0;
+  let limiteInvitadoAlcanzado = false;
+  let enviandoMensaje = false;
 
   imageInput.addEventListener('change', () => {
     const seleccionados = Array.from(imageInput.files || []);
@@ -209,11 +214,29 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   }
 
   async function enviarmensaje() {
-    const imagenes = await convertirimagenes();
+    if (limiteInvitadoAlcanzado || enviandoMensaje) return;
+
+    enviandoMensaje = true;
+    sendBtn.disabled = true;
+    let imagenes;
+    try {
+      imagenes = await convertirimagenes();
+    } catch (error) {
+      const detalle = error instanceof Error ? error.message : 'Error inesperado.';
+      añadirmensaje(`No pude procesar las imágenes: ${detalle}`, 'bot');
+      enviandoMensaje = false;
+      sendBtn.disabled = limiteInvitadoAlcanzado;
+      userInput.focus();
+      return;
+    }
     const conImagen = imagenes.length > 0;
     const texto = userInput.value.trim()
       || (conImagen ? 'Recomiéndame según la imagen que envié' : '');
-    if (texto === '') return;
+    if (texto === '') {
+      enviandoMensaje = false;
+      sendBtn.disabled = false;
+      return;
+    }
 
     if (conImagen) {
       añadirmensajeConImagenes(texto, imagenes);
@@ -272,6 +295,12 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
       if (historialConversacion.length > 12) {
         historialConversacion.splice(0, historialConversacion.length - 12);
       }
+      if (!ANGEL_USUARIO_LOGUEADO) {
+        respuestasInvitado += 1;
+        if (respuestasInvitado >= MAX_RESPUESTAS_INVITADO) {
+          limitarChatInvitado();
+        }
+      }
     } catch (error) {
       const mensajeError = error instanceof Error
         ? `No pude conectar con Ángel: ${error.message}`
@@ -279,9 +308,20 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
       añadirmensaje(mensajeError, 'bot');
     } finally {
       indicadorEscribiendo.remove();
-      sendBtn.disabled = false;
-      userInput.focus();
+      enviandoMensaje = false;
+      sendBtn.disabled = limiteInvitadoAlcanzado;
+      if (!limiteInvitadoAlcanzado) userInput.focus();
     }
+  }
+
+  function limitarChatInvitado() {
+    limiteInvitadoAlcanzado = true;
+    añadirmensaje('Necesitas loguearte para seguir hablando.', 'bot');
+    userInput.disabled = true;
+    userInput.placeholder = 'Inicia sesión para continuar';
+    sendBtn.disabled = true;
+    imageInput.disabled = true;
+    imageButton.disabled = true;
   }
 
   function mostrarIndicadorEscribiendo() {
