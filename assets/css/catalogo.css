@@ -310,6 +310,35 @@ body {
       object-fit: cover;
     }
 
+    .chat-image-preview-item {
+      position: relative;
+      flex: 0 0 52px;
+      width: 52px;
+      height: 52px;
+    }
+
+    .chat-image-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      background-color: #be185d;
+      color: #fff;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .chat-image-remove:hover {
+      background-color: #9d174d;
+    }
+
     .message {
       max-width: 80%;
       padding: 8px 12px;

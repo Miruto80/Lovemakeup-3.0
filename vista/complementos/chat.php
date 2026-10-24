@@ -70,16 +70,6 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
 
 <!-- WIDGET DEL CHATBOT -->
 <div class="bot-widget-container">
-<style>
-  .chat-image-button { position: relative; }
-  .chat-image-count {
-    position: absolute; top: -5px; right: -5px;
-    background: #e91e63; color: #fff; border-radius: 50%;
-    font-size: 10px; line-height: 14px; min-width: 14px;
-    text-align: center; font-weight: 600;
-  }
-</style>
-
     <!-- Circulo Angel -->
     <div class="bot-avatar-trigger" id="avatarTrigger" onclick="abrirchat()">
         <img src="assets/img/angel2.png" alt="Angel Avatar">
@@ -179,14 +169,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
       añadirmensaje(rechazados.join(' '), 'bot');
     }
 
-    const count = archivosImagenesSeleccionados.length;
-    imageButton.dataset.count = count > 0 ? String(count) : '';
-    imageButton.title = count > 0
-      ? `${count} imagen(es) seleccionada(s) de ${MAX_IMAGENES} máximo`
-      : 'Hasta 3 imágenes JPEG, PNG, WEBP, GIF o AVIF; máximo 5 MB cada una';
-    imageButton.innerHTML = count > 0
-      ? `<i class="fa-solid fa-image" aria-hidden="true"></i><span class="chat-image-count">${count}</span>`
-      : '<i class="fa-solid fa-image" aria-hidden="true"></i>';
+    actualizarBotonImagenes();
     mostrarVistaPrevia(archivosImagenesSeleccionados);
   });
 
@@ -324,6 +307,22 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     imagePreview.hidden = true;
   }
 
+  function actualizarBotonImagenes() {
+    const count = archivosImagenesSeleccionados.length;
+    imageButton.dataset.count = count > 0 ? String(count) : '';
+    imageButton.title = count > 0
+      ? `${count} imagen(es) seleccionada(s) de ${MAX_IMAGENES} máximo`
+      : 'Hasta 3 imágenes JPEG, PNG, WEBP, GIF o AVIF; máximo 5 MB cada una';
+    imageButton.innerHTML = '<i class="fa-solid fa-image" aria-hidden="true"></i>';
+  }
+
+  function quitarImagen(index) {
+    archivosImagenesSeleccionados.splice(index, 1);
+    imageInput.value = '';
+    actualizarBotonImagenes();
+    mostrarVistaPrevia(archivosImagenesSeleccionados);
+  }
+
   function mostrarVistaPrevia(archivos) {
     imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
     imagePreviewUrls = [];
@@ -332,10 +331,20 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     archivos.forEach((archivo, index) => {
       const url = URL.createObjectURL(archivo);
       imagePreviewUrls.push(url);
+      const contenedor = document.createElement('div');
+      contenedor.classList.add('chat-image-preview-item');
       const img = document.createElement('img');
       img.src = url;
       img.alt = `Vista previa de imagen ${index + 1}`;
-      imagePreview.appendChild(img);
+      const botonQuitar = document.createElement('button');
+      botonQuitar.type = 'button';
+      botonQuitar.classList.add('chat-image-remove');
+      botonQuitar.setAttribute('aria-label', `Quitar imagen ${index + 1}`);
+      botonQuitar.title = `Quitar imagen ${index + 1}`;
+      botonQuitar.textContent = '×';
+      botonQuitar.addEventListener('click', () => quitarImagen(index));
+      contenedor.append(img, botonQuitar);
+      imagePreview.appendChild(contenedor);
     });
     imagePreview.hidden = archivos.length === 0;
   }
