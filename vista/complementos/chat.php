@@ -108,13 +108,13 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
         </div>
 
         <div class="chat-footer">
-            <input type="file" id="imageInput" accept="image/*" multiple hidden>
+            <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.avif" multiple hidden>
             <button
                 class="chat-image-button"
                 id="imageButton"
                 type="button"
                 aria-label="Seleccionar imágenes"
-                title="Seleccionar imágenes"
+                title="Hasta 3 imágenes JPEG, PNG, WEBP, GIF o AVIF; máximo 5 MB cada una"
                 onclick="document.getElementById('imageInput').click()"
             >
                 <i class="fa-solid fa-image" aria-hidden="true"></i>
@@ -137,6 +137,15 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   const imageInput = document.getElementById('imageInput');
   const imageButton = document.getElementById('imageButton');
   const imagePreview = document.getElementById('imagePreview');
+  const MAX_IMAGENES = 3;
+  const IMAGEN_MAX_BYTES = 5 * 1024 * 1024;
+  const TIPOS_IMAGEN_PERMITIDOS = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/avif'
+  ]);
   const historialConversacion = [
     {
       role: 'assistant',
@@ -144,18 +153,41 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     }
   ];
   let imagePreviewUrls = [];
+  let archivosImagenesSeleccionados = [];
 
   imageInput.addEventListener('change', () => {
-    const archivos = Array.from(imageInput.files || []).slice(0, 3);
-    const count = archivos.length;
+    const seleccionados = Array.from(imageInput.files || []);
+    const validos = [];
+    const rechazados = [];
+
+    seleccionados.forEach((archivo) => {
+      if (!TIPOS_IMAGEN_PERMITIDOS.has(archivo.type)) {
+        rechazados.push('Formato de archivo no permitido.');
+      } else if (archivo.size > IMAGEN_MAX_BYTES) {
+        rechazados.push(`${archivo.name}: supera el máximo de 5 MB.`);
+      } else {
+        validos.push(archivo);
+      }
+    });
+
+    if (validos.length > MAX_IMAGENES) {
+      rechazados.push(`Solo puedes adjuntar hasta ${MAX_IMAGENES} imágenes por mensaje.`);
+    }
+    archivosImagenesSeleccionados = validos.slice(0, MAX_IMAGENES);
+
+    if (rechazados.length > 0) {
+      añadirmensaje(rechazados.join(' '), 'bot');
+    }
+
+    const count = archivosImagenesSeleccionados.length;
     imageButton.dataset.count = count > 0 ? String(count) : '';
     imageButton.title = count > 0
-      ? `${count} imagen(es) seleccionada(s)`
-      : 'Seleccionar imágenes';
+      ? `${count} imagen(es) seleccionada(s) de ${MAX_IMAGENES} máximo`
+      : 'Hasta 3 imágenes JPEG, PNG, WEBP, GIF o AVIF; máximo 5 MB cada una';
     imageButton.innerHTML = count > 0
       ? `<i class="fa-solid fa-image" aria-hidden="true"></i><span class="chat-image-count">${count}</span>`
       : '<i class="fa-solid fa-image" aria-hidden="true"></i>';
-    mostrarVistaPrevia(archivos);
+    mostrarVistaPrevia(archivosImagenesSeleccionados);
   });
 
   function abrirchat() {
@@ -282,8 +314,9 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
 
   function limpiarimagenes() {
     imageInput.value = '';
+    archivosImagenesSeleccionados = [];
     imageButton.dataset.count = '';
-    imageButton.title = 'Seleccionar imágenes';
+    imageButton.title = 'Hasta 3 imágenes JPEG, PNG, WEBP, GIF o AVIF; máximo 5 MB cada una';
     imageButton.innerHTML = '<i class="fa-solid fa-image" aria-hidden="true"></i>';
     imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
     imagePreviewUrls = [];
@@ -307,12 +340,10 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     imagePreview.hidden = archivos.length === 0;
   }
 
-  // Reduce la imagen en el navegador (máx 1024 px, JPEG 0.85) y devuelve
-  // data URLs base64: mantiene el payload liviano para /api/chat.
-  function convertirimagenes() {
-    const promesas = Array.from(imageInput.files || [])
-      .slice(0, 3)
-      .map((file) => new Promise((resolve) => {
+  // Reduce cada imagen antes de enviarla y respeta el límite de payload de la API.
+  async function convertirimagenes() {
+    const resultados = await Promise.all(archivosImagenesSeleccionados.map((file) =>
+      new Promise((resolve) => {
         const lector = new FileReader();
         lector.onload = () => {
           const img = new Image();
@@ -321,16 +352,31 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
             const lienzo = document.createElement('canvas');
             lienzo.width = Math.max(1, Math.round(img.width * escala));
             lienzo.height = Math.max(1, Math.round(img.height * escala));
-            lienzo.getContext('2d').drawImage(img, 0, 0, lienzo.width, lienzo.height);
-            resolve(lienzo.toDataURL('image/jpeg', 0.85));
+            const contexto = lienzo.getContext('2d');
+            if (!contexto) {
+              resolve({ error: `${file.name}: no se pudo procesar la imagen.` });
+              return;
+            }
+            contexto.drawImage(img, 0, 0, lienzo.width, lienzo.height);
+            const dataUrl = lienzo.toDataURL('image/jpeg', 0.85);
+            resolve(dataUrl.length <= 4_000_000
+              ? { dataUrl }
+              : { error: `${file.name}: la imagen procesada supera el máximo permitido.` });
           };
-          img.onerror = () => resolve('');
+          img.onerror = () => resolve({ error: 'El archivo seleccionado no es una imagen válida.' });
           img.src = lector.result;
         };
-        lector.onerror = () => resolve('');
+        lector.onerror = () => resolve({ error: `${file.name}: no se pudo leer el archivo.` });
         lector.readAsDataURL(file);
-      }));
-    return Promise.all(promesas).then((lista) => lista.filter(Boolean));
+      })
+    ));
+    const errores = resultados.filter((resultado) => resultado.error).map((resultado) => resultado.error);
+    if (errores.length > 0) {
+      añadirmensaje(errores.join(' '), 'bot');
+    }
+    return resultados
+      .filter((resultado) => resultado.dataUrl)
+      .map((resultado) => resultado.dataUrl);
   }
 
   function handleKeyPress(event) {
