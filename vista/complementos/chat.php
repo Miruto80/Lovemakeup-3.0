@@ -21,7 +21,7 @@ $buildAngelJwt = static function (
     string $keyPath,
     string $passphrase = '',
     int $ttlSeconds = 3600
-): string {
+) use ($angelUsuario): string {
     if ($keyPath === '') {
         error_log('ANGEL_PRIVATE_KEY_PATH no está configurado.');
         return '';
