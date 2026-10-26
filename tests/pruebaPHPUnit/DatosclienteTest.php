@@ -2,15 +2,15 @@
 namespace Tests\PruebaPHPUnit;
 
 use PHPUnit\Framework\TestCase;
-use LoveMakeup\Proyecto\Modelo\Datoscliente;
+use LoveMakeup\Proyecto\Modelo\Catalogo_datos;
 use ReflectionClass;
 
 class DatosclienteTestable {
-    private Datoscliente $datoscliente;
+    private Catalogo_datos $datoscliente;
     private ReflectionClass $reflection;
 
     public function __construct() {
-        $this->datoscliente = new Datoscliente();
+        $this->datoscliente = new Catalogo_datos();
         $this->reflection = new ReflectionClass($this->datoscliente);
     }
 
@@ -97,20 +97,39 @@ class DatosclienteTest extends TestCase {
         $this->assertEquals($claveOriginal, $claveDesencriptada);
     }
 
-    public function testActualizarDatosCliente() {
-        $datos = [
-            'cedula' => '10200300',
-            'correo' => 'actualizado@example.com',
-            'nombre' => 'Daniel',
-            'apellido' => 'Sánchez',
-            'telefono' => '04141234567',
-            'id_persona' => 1
-        ];
-        $resultado = $this->datoscliente->testEjecutarActualizacion($datos);
-        $this->assertIsArray($resultado);
-        $this->assertEquals(1, $resultado['respuesta']);
-        $this->assertEquals('actualizar', $resultado['accion']);
+ public function testActualizarDatosCliente() {
+    $datos = [
+        'cedula' => '30754263',
+        'correo' => 'actualizado@example.com',
+        'nombre' => 'Daniel',
+        'apellido' => 'Sánchez',
+        'telefono' => '04141234567',
+        'id_persona' => 27
+    ];
+
+    $resultado = $this->datoscliente->testEjecutarActualizacion($datos);
+    
+    $this->assertIsArray($resultado, "El resultado devuelto debe ser un arreglo.");
+    $this->assertArrayHasKey('respuesta', $resultado, "El arreglo no contiene la clave 'respuesta'.");
+    $this->assertArrayHasKey('accion', $resultado, "El arreglo no contiene la clave 'accion'.");
+
+    if (isset($resultado['respuesta']) && $resultado['respuesta'] === 0) {
+        $mensajeError = $resultado['text'] ?? 'Error desconocido';
+        $this->fail("Error en la actualización: " . $mensajeError);
     }
+
+    $this->assertEquals(
+        1, 
+        $resultado['respuesta'], 
+        "Actualización exitosa del cliente (La respuesta esperada era 1)."
+    );
+    
+    $this->assertEquals(
+        'actualizar', 
+        $resultado['accion'], 
+        "La acción devuelta no coincide con 'actualizar'."
+    );
+}
 
     public function testValidarClaveActual() {
         $resultado = $this->datoscliente->testValidarClaveActual(1, 'love1234');

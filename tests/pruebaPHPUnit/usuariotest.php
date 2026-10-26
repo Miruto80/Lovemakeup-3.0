@@ -42,12 +42,12 @@ class UsuarioTest extends TestCase {
         $datosUsuario = [
             'operacion' => 'registrar',
             'datos' => [
-                'nombre' => 'Juan',
-                'apellido' => 'Pérez',
-                'cedula' => '30716547',
+                'nombre' => 'daniel',
+                'apellido' => 'sanchez',
+                'cedula' => '12241541',
                 'tipo_documento' => 'V',
                 'telefono' => '04141234567',
-                'correo' => 'juan@tes1214t.com',
+                'correo' => 'americodelser500@tes1214t.com',
                 'clave' => '12345',
                 'id_rol' => 3,
                 'nivel' => 1
@@ -87,20 +87,21 @@ class UsuarioTest extends TestCase {
 
    public function testActualizarUsuario() {
         $datosUsuario = [
+
             'operacion' => 'actualizar',
             'datos' => [
                 'cedula' => '30716547',
                 'correo' => 'juan@tes1214t.com',
-                'cedula_actual' => '30716547',
-                'correo_actual' => 'juan@tes1214t.com',
-                'id_rol' => 3,
+                'cedula_actual' => '12241541',
+                'correo_actual' => 'americodelser500@tes1214t.com',
+                'id_rol' => 4,
                 'nivel' => 3
             ]
         ];
 
         $resultado = $this->usuario->procesarUsuario(json_encode($datosUsuario));
         fwrite(STDOUT, "\n testActualizarUsuario | Respuesta recibida.\n");
-       
+
         $this->assertIsArray($resultado);
         $this->assertArrayHasKey('accion', $resultado);
         $this->assertEquals('actualizar', $resultado['accion']);
@@ -110,11 +111,10 @@ class UsuarioTest extends TestCase {
             fwrite(STDOUT, "\n  Actualización exitosa del usuario.\n");
             $this->assertEquals(1, $resultado['respuesta']);
         //  Error en la actualización
-        } elseif ($resultado['respuesta'] === 0) {
 
+        } elseif ($resultado['respuesta'] === 0) {
             fwrite(STDOUT, "\n  Error en la actualización: " . $resultado['text'] . "\n");
             $this->assertArrayHasKey('text', $resultado);
-        
             $this->assertContains(
                 $resultado['text'],
                 [
@@ -135,7 +135,7 @@ class UsuarioTest extends TestCase {
         $datosUsuario = [
             'operacion' => 'eliminar',
             'datos' => [
-                'cedula' => '12345678'
+                'cedula' => '30716547'
             ]
         ];
         $resultado = $this->usuario->procesarUsuario(json_encode($datosUsuario));

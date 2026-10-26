@@ -93,7 +93,7 @@ class TasacambioTest extends TestCase {
             'datos' => [
                 'fecha' => $fecha,
                 'tasa' => 40.0,
-                'fuente' => 'Monitor'
+                'fuente' => 'PHPUNIT'
             ]
         ]);
 
@@ -137,12 +137,12 @@ class TasacambioTest extends TestCase {
         $this->assertTrue(is_array($resultado) || $resultado === false);
     }
 
-    /*|||||||||||| TEST MASIVO (🔥 IMPORTANTE) ||||||||||||*/
+    /*|||||||||||| TEST MASIVO  ||||||||||||*/
     public function testRegistrarVariasTasas() {
 
         fwrite(STDOUT, "\n\n >---- INICIO TEST MASIVO DE TASAS ------<\n");
 
-        $cantidad = 100;
+        $cantidad = 2200;
 
         for ($i = 1; $i <= $cantidad; $i++) {
 

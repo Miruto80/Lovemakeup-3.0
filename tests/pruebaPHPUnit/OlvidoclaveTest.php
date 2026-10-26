@@ -18,7 +18,7 @@ class OlvidoClaveTest extends TestCase {
         $datosOlvido = [
             'operacion' => 'actualizar',
             'datos' => [
-                'cedula' => '30716541',
+                'cedula' => '10200300',
                 'clave' => 'love1234'
             ]
         ];

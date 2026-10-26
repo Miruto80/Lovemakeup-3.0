@@ -211,7 +211,7 @@
             <label for="cedula" class="form-label text-g">Cédula</label>
              <div class="input-group mb-3">
                   <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                   <select class="form-select" name="tipo_documento" id="rolSelect2"  required >
+                   <select class="form-select" name="tipo_documento" id="rolSelect2" required >
                     <option id="modaldocumento">  </option>
                     <option value="V"> V </option>
                     <option value="E"> E </option>
@@ -234,7 +234,7 @@
              <label for="rol" class="form-label text-g">Estatus</label>
                  <div class="input-group mb-3">
                   <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tag"></i></span>
-                    <select class="form-select" name="estatus">
+                    <select class="form-select" name="estatus" id="estatusmodal">
                       <option id="modalestatus"> </option>
                        <option value="1">Activo</option>
                        <option value="2">Inactivo</option>

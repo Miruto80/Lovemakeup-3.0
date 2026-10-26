@@ -1,7 +1,7 @@
 <?php
 namespace Tests\PruebaPHPUnit;
 use PHPUnit\Framework\TestCase;
-use LoveMakeup\Proyecto\Modelo\Login; // Asegúrate de que el namespace y ruta sean correctos
+use LoveMakeup\Proyecto\Modelo\Login; 
 use ReflectionClass;
 
 class LoginTestable {
@@ -50,32 +50,32 @@ class LoginTest extends TestCase {
         $this->assertEquals($claveOriginal, $claveDesencriptada);
     }
 
-
     public function testVerificarCredencialesOperacionVerificar() {
+    $datosLogin = [
+        'operacion' => 'verificar',
+        'datos' => [
+            'tipo_documento' => 'V',
+            'cedula' => '10202300',
+            'clave' => 'love1234',
+        ]
+    ];
 
-        $datosLogin = [
-            'operacion' => 'verificar',
-            'datos' => [
-                'tipo_documento' => 'V',
-                'cedula' => '10200300',
-                'clave' => 'love1234',
-            ]
-        ];
-        $resultado = $this->login->procesarLogin(json_encode($datosLogin));
+    $resultado = $this->login->procesarLogin(json_encode($datosLogin));
 
-        // Mostrar mensaje según el resultado
-        if ($resultado !== null) {
-            fwrite(STDOUT, "\n Credenciales verificadas correctamente. Usuario encontrado.\n");
-            $this->assertIsObject($resultado);
-            $this->assertObjectHasProperty('cedula', $resultado);
-            $this->assertObjectHasProperty('estatus', $resultado);
+    // Si $resultado es null, esto fallará automáticamente con el mensaje limpio.
+    // Si NO es null, la prueba continúa.
+    $this->assertNotNull(
+        $resultado, 
+        "No se encontró el usuario o la clave es incorrecta. Comportamiento inválido."
+    );
 
-        } else {
-            fwrite(STDOUT, "\n No se encontró el usuario o la clave es incorrecta.\n");
-            // Si esperas que SIEMPRE exista, puedes forzar fallo:
-            $this->fail("El módulo devolvió null. No se verificaron las credenciales.");
-        }
-    }
+    // Si llegó hasta aquí, significa que el usuario fue encontrado exitosamente
+    fwrite(STDOUT, "\n Credenciales verificadas correctamente. Usuario encontrado.\n");
+    
+    $this->assertIsObject($resultado);
+    $this->assertObjectHasProperty('cedula', $resultado);
+    $this->assertObjectHasProperty('estatus', $resultado);
+}
 
     public function testOperacionDolar() {
 
@@ -111,12 +111,12 @@ class LoginTest extends TestCase {
             'operacion' => 'registrar',
             'datos' => [
                 'nombre' => 'Daniel',
-                'apellido' => 'Sánchez',
-                'cedula' => '30716541',          
+                'apellido' => 'Sanchez',
+                'cedula' => '28506555',          
                 'telefono' => '04141234567',
                 'correo' => 'daniel.sanc3hez.test@gmail.com',
                 'tipo_documento' => 'V',
-                'clave' => 'ClaveSegura123'
+                'clave' => 'ClaveSegura123.'
             ]
         ];
 
