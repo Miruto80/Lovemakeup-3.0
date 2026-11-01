@@ -159,13 +159,7 @@
             </div>
         </div>
 
-        <!-- Botón Volver Arriba -->
-       <button id="btnVolverArriba" 
-                type="button" 
-                class="fixed bottom-20 right-6 z-[10000] hidden bg-accent-fuchsia text-white hover:bg-pink-900 p-3.5 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none"
-                title="Volver arriba">
-        <i class="fa-solid fa-arrow-up text-lg"></i>
-        </button>
+       
 
         <script src="assets/js/catalago/jquery-1.11.0.min.js"></script>
         <script src="assets/js/catalago/catalogo.js?v=<?= filemtime('assets/js/catalago/catalogo.js') ?>"></script>
