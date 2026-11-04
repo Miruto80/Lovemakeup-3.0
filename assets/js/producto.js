@@ -567,7 +567,10 @@ $('#reemplazarImagenInput').on('change', function(e){
     let precioDetal = parseFloat($("#precio_detal").val());
     let precioMayor = parseFloat($(this).val());
 
-    if (precioMayor > precioDetal) {
+    if (precioMayor === 0) {
+        $("#sprecio_mayor").text("El precio al mayor debe ser mayor que 0");
+        $(this).removeClass('is-valid').addClass('is-invalid');
+    } else if (precioMayor > precioDetal) {
         $("#sprecio_mayor").text("El precio al mayor no puede ser mayor que el precio al detal");
         $(this).val("").removeClass('is-valid').addClass('is-invalid');
     } else {
@@ -661,7 +664,12 @@ function validarenvio() {
     muestraMensaje("error", 2000, "Error", "Datos incorrectos en campo precio detal");
     return false;
   }
-  
+  else if (!Number.isFinite(Number($("#precio_mayor").val())) || Number($("#precio_mayor").val()) <= 0) {
+    $("#precio_mayor").removeClass('is-valid').addClass('is-invalid');
+    $("#sprecio_mayor").text("El precio al mayor debe ser mayor que 0");
+    muestraMensaje("error", 2000, "Error", "El precio al mayor debe ser mayor que 0");
+    return false;
+  }
   else if (validarkeyup(/^[0-9]{1,8}(\.[0-9]{1,2})?$/,
   $("#precio_mayor"), $("#sprecio_mayor"), "Solo numeros hasta 8 digitos y 2 decimales") == 0) {
     muestraMensaje("error", 2000, "Error", "Datos incorrectos en campo precio mayor");

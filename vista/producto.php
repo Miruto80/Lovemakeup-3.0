@@ -476,7 +476,7 @@
                   <label for="precio_mayor" class="form-label">Precio al mayor</label>
                   <div class="input-group">
                     <span class="input-group-text">$</span>
-                    <input class="form-control" type="number" id="precio_mayor" name="precio_mayor" placeholder="0.00" step="0.01" min="0" />
+                    <input class="form-control" type="number" id="precio_mayor" name="precio_mayor" placeholder="0.00" step="0.01" min="0.01" />
                   </div>
                   <span id="sprecio_mayor" class="error-message"></span>
                 </div>
