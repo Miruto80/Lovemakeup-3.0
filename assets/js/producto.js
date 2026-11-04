@@ -693,7 +693,7 @@ function validarenvio() {
   }
 
   else if ($("#categoria").val() === null || $("#categoria").val() === "") {
-      muestraMensaje("error", 2000, "Error", "Debes seleccionar una categoría");
+      muestraMensaje("error", 2000, "Error", "Debes seleccionar una categoría existente");
       return false;
   }
   
