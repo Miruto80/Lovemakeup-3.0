@@ -489,7 +489,7 @@
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="stock_maximo" class="form-label">Stock máximo</label>
-                  <input class="form-control" type="number" id="stock_maximo" name="stock_maximo" placeholder="Ej: 100" min="1" />
+                  <input class="form-control" type="number" id="stock_maximo" name="stock_maximo" placeholder="Ej: 100" min="1" max="3000" />
                   <span id="sstock_maximo" class="error-message"></span>
                 </div>
                 <div class="col-md-4">
