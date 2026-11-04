@@ -543,6 +543,13 @@ $('#reemplazarImagenInput').on('change', function(e){
     let precioDetal = parseFloat($(this).val());
     let precioMayor = parseFloat($("#precio_mayor").val());
 
+    if (precioDetal === 0) {
+      $("#sprecio_detal").text("No puedes poner un 0 inicial");
+        $(this).val("").removeClass('is-valid').addClass('is-invalid');
+    } else {
+        validarkeyup(/^[0-9]{1,8}$/, $(this), $("#sprecio_detal"), "Solo números hasta 8 dígitos");
+    }
+
     if (precioDetal < precioMayor) {
         $("#sprecio_detal").text("El precio al detal no puede ser menor que el precio al mayor");
         $(this).val("").removeClass('is-valid').addClass('is-invalid');
@@ -630,6 +637,11 @@ function validarenvio() {
       muestraMensaje("error", 2000, "Error", "La descripción no puede estar vacía");
       return false;
   }
+  else if ($("#descripcion").val().length > 1500) {
+      $("#descripcion").addClass('is-invalid');
+      muestraMensaje("error", 2000, "Error", "La descripción no puede superar los 1500 caracteres");
+      return false;
+  }
   
   else if (validarkeyup(/^[0-9]{1,8}$/,
       $("#cantidad_mayor"), $("#scantidad_mayor"), "Solo numeros hasta 8 digitos") == 0) {
@@ -638,6 +650,12 @@ function validarenvio() {
   }
 
   
+  else if (!Number.isFinite(Number($("#precio_detal").val())) || Number($("#precio_detal").val()) <= 0) {
+    $("#precio_detal").removeClass('is-valid').addClass('is-invalid');
+    $("#sprecio_detal").text("El precio al detal debe ser mayor que 0");
+    muestraMensaje("error", 2000, "Error", "El precio al detal debe ser mayor que 0");
+    return false;
+  }
   else if (validarkeyup(/^[0-9]{1,8}(\.[0-9]{1,2})?$/,
   $("#precio_detal"), $("#sprecio_detal"), "Solo numeros hasta 8 digitos y 2 decimales") == 0) {
     muestraMensaje("error", 2000, "Error", "Datos incorrectos en campo precio detal");
