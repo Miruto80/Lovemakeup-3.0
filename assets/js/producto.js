@@ -543,7 +543,10 @@ $('#reemplazarImagenInput').on('change', function(e){
     let precioDetal = parseFloat($(this).val());
     let precioMayor = parseFloat($("#precio_mayor").val());
 
-    if (precioDetal < precioMayor) {
+    if (precioDetal === 0) {
+      $("#sprecio_detal").text("No puedes poner un 0 inicial");
+        $(this).val("").removeClass('is-valid').addClass('is-invalid');
+    } else if (precioDetal < precioMayor) {
         $("#sprecio_detal").text("El precio al detal no puede ser menor que el precio al mayor");
         $(this).val("").removeClass('is-valid').addClass('is-invalid');
     } else {
@@ -560,7 +563,10 @@ $('#reemplazarImagenInput').on('change', function(e){
     let precioDetal = parseFloat($("#precio_detal").val());
     let precioMayor = parseFloat($(this).val());
 
-    if (precioMayor > precioDetal) {
+    if (precioMayor === 0) {
+        $("#sprecio_mayor").text("No puedes poner un 0 inicial");
+        $(this).val("").removeClass('is-valid').addClass('is-invalid');
+    } else if (precioMayor > precioDetal) {
         $("#sprecio_mayor").text("El precio al mayor no puede ser mayor que el precio al detal");
         $(this).val("").removeClass('is-valid').addClass('is-invalid');
     } else {
@@ -581,6 +587,9 @@ $("#stock_maximo").on("keyup", function() {
 
   if (stockMaximo === 0) {
     $("#sstock_maximo").text("No puedes poner un 0 inicial");
+    $(this).val("").removeClass('is-valid').addClass('is-invalid');
+} else if (stockMaximo > 3000) {
+    $("#sstock_maximo").text("El stock máximo no puede ser mayor que 3000");
     $(this).val("").removeClass('is-valid').addClass('is-invalid');
 } else if (stockMaximo < stockMinimo) {
     $("#sstock_maximo").text("El stock máximo no puede ser menor que el stock mínimo");
@@ -630,6 +639,11 @@ function validarenvio() {
       muestraMensaje("error", 2000, "Error", "La descripción no puede estar vacía");
       return false;
   }
+  else if ($("#descripcion").val().length > 1500) {
+      $("#descripcion").addClass('is-invalid');
+      muestraMensaje("error", 2000, "Error", "La descripción no puede superar los 1500 caracteres");
+      return false;
+  }
   
   else if (validarkeyup(/^[0-9]{1,8}$/,
       $("#cantidad_mayor"), $("#scantidad_mayor"), "Solo numeros hasta 8 digitos") == 0) {
@@ -638,16 +652,33 @@ function validarenvio() {
   }
 
   
+  else if (!Number.isFinite(Number($("#precio_detal").val())) || Number($("#precio_detal").val()) <= 0) {
+    $("#precio_detal").removeClass('is-valid').addClass('is-invalid');
+    $("#sprecio_detal").text("No puedes poner un 0 inicial");
+    muestraMensaje("error", 2000, "Error", "No puedes poner un 0 inicial en el precio al detal");
+    return false;
+  }
   else if (validarkeyup(/^[0-9]{1,8}(\.[0-9]{1,2})?$/,
   $("#precio_detal"), $("#sprecio_detal"), "Solo numeros hasta 8 digitos y 2 decimales") == 0) {
     muestraMensaje("error", 2000, "Error", "Datos incorrectos en campo precio detal");
     return false;
   }
-  
+  else if (!Number.isFinite(Number($("#precio_mayor").val())) || Number($("#precio_mayor").val()) <= 0) {
+    $("#precio_mayor").removeClass('is-valid').addClass('is-invalid');
+    $("#sprecio_mayor").text("No puedes poner un 0 inicial");
+    muestraMensaje("error", 2000, "Error", "No puedes poner un 0 inicial en el precio al mayor");
+    return false;
+  }
   else if (validarkeyup(/^[0-9]{1,8}(\.[0-9]{1,2})?$/,
   $("#precio_mayor"), $("#sprecio_mayor"), "Solo numeros hasta 8 digitos y 2 decimales") == 0) {
     muestraMensaje("error", 2000, "Error", "Datos incorrectos en campo precio mayor");
     return false;
+  }
+  else if (Number($("#stock_maximo").val()) > 3000) {
+      $("#stock_maximo").removeClass('is-valid').addClass('is-invalid');
+      $("#sstock_maximo").text("El stock máximo no puede ser mayor que 3000");
+      muestraMensaje("error", 2000, "Error", "El stock máximo no puede ser mayor que 3000");
+      return false;
   }
   else if (validarkeyup(/^[0-9]{1,8}$/,
       $("#stock_maximo"), $("#sstock_maximo"), "Solo numeros hasta 8 digitos") == 0) {

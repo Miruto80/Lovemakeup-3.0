@@ -449,7 +449,7 @@
               <div class="row mb-3">
                 <div class="col-md-12">
                   <label for="descripcion" class="form-label">Descripción</label>
-                  <textarea class="form-control" id="descripcion" name="descripcion" placeholder="Escribe una descripción detallada del producto" rows="3" required></textarea>
+                  <textarea class="form-control" id="descripcion" name="descripcion" placeholder="Escribe una descripción detallada del producto" rows="3" maxlength="1500" required></textarea>
                   <span id="sdescripcion" class="error-message"></span>
                 </div>
               </div>
@@ -468,7 +468,7 @@
                   <label for="precio_detal" class="form-label">Precio al detal</label>
                   <div class="input-group">
                     <span class="input-group-text">$</span>
-                    <input class="form-control" type="number" id="precio_detal" name="precio_detal" placeholder="0.00" step="0.01" min="0" />
+                    <input class="form-control" type="number" id="precio_detal" name="precio_detal" placeholder="0.00" step="0.01" min="0.01" />
                   </div>
                   <span id="sprecio_detal" class="error-message"></span>
                 </div>
@@ -476,7 +476,7 @@
                   <label for="precio_mayor" class="form-label">Precio al mayor</label>
                   <div class="input-group">
                     <span class="input-group-text">$</span>
-                    <input class="form-control" type="number" id="precio_mayor" name="precio_mayor" placeholder="0.00" step="0.01" min="0" />
+                    <input class="form-control" type="number" id="precio_mayor" name="precio_mayor" placeholder="0.00" step="0.01" min="0.01" />
                   </div>
                   <span id="sprecio_mayor" class="error-message"></span>
                 </div>
@@ -489,7 +489,7 @@
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="stock_maximo" class="form-label">Stock máximo</label>
-                  <input class="form-control" type="number" id="stock_maximo" name="stock_maximo" placeholder="Ej: 100" min="1" />
+                  <input class="form-control" type="number" id="stock_maximo" name="stock_maximo" placeholder="Ej: 100" min="1" max="3000" />
                   <span id="sstock_maximo" class="error-message"></span>
                 </div>
                 <div class="col-md-4">
@@ -550,8 +550,7 @@
   <?php include 'complementos/footer.php' ?>
   <script src="assets/js/demo/datatables-demo.js"></script>
 
-  <script src="assets/js/producto.js"></script>
-
+  <script src="assets/js/producto.js?v=<?= filemtime('assets/js/producto.js') ?>"></script>
   <!-- Modal de Detalles del Producto -->
   <div class="modal fade" id="modalDetallesProducto" tabindex="-1" aria-labelledby="tituloModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
