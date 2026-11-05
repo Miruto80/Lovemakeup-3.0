@@ -752,6 +752,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Eventos para productos
     function inicializarEventosProducto() {
+        // Permitir únicamente números en el campo Cantidad
+        const teclasPermitidasCantidad = [
+            'Backspace', 'Delete', 'Tab',
+            'ArrowLeft', 'ArrowRight',
+            'ArrowUp', 'ArrowDown',
+            'Home', 'End'
+        ];
+
+        document.addEventListener('keydown', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            if (
+                /^[0-9]$/.test(e.key) ||
+                teclasPermitidasCantidad.includes(e.key) ||
+                e.ctrlKey || e.metaKey || e.altKey
+            ) {
+                return;
+            }
+
+            e.preventDefault();
+        });
+
+        // Bloquear caracteres incorrectos en teclados móviles
+        document.addEventListener('beforeinput', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            if (e.data && !/^[0-9]+$/.test(e.data)) {
+                e.preventDefault();
+            }
+        });
+
+        // Impedir pegar letras, símbolos o decimales
+        document.addEventListener('paste', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            const texto = e.clipboardData?.getData('text') || '';
+
+            if (!/^[0-9]+$/.test(texto)) {
+                e.preventDefault();
+            }
+        });
+
+        // Control adicional para entradas no previstas
+        document.addEventListener('input', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            const campo = e.target;
+
+            if (campo.validity.badInput || !/^[0-9]*$/.test(campo.value)) {
+                campo.value = '';
+            }
+
+            calcularSubtotalVenta(campo.closest('tr'));
+        });
+
         // Evento para agregar producto
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('agregar-producto-venta')) {
@@ -1154,7 +1209,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function calcularSubtotalVenta(fila) {
-        const cantidad = parseFloat(fila.querySelector('.cantidad-input-venta').value) || 0;
+        const cantidadTexto = fila.querySelector('.cantidad-input-venta').value.trim();
+        const cantidad = /^[0-9]+$/.test(cantidadTexto)
+            ? Number(cantidadTexto)
+            : 0;
         const precio = parseFloat(fila.querySelector('.precio-input-venta').value) || 0;
         const subtotal = cantidad * precio;
         fila.querySelector('.subtotal-venta').textContent = subtotal.toFixed(2);
@@ -2880,9 +2938,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     const valorSelect = obtenerValorSelect(select);
-                    const cantidadValor = parseFloat(cantidad.value) || 0;
+                    const cantidadTexto = cantidad.value.trim();
+                    const cantidadValor = Number(cantidadTexto);
+
+                    const cantidadValida =
+                        /^[0-9]+$/.test(cantidadTexto) &&
+                        Number.isSafeInteger(cantidadValor) &&
+                        cantidadValor >= 1 &&
+                        cantidadValor <= 9999;
                     
-                    if (valorSelect && valorSelect !== '' && cantidadValor > 0) {
+                    if (valorSelect && valorSelect !== '' && cantidadValida) {
                         productosValidos++;
                     }
                 });
