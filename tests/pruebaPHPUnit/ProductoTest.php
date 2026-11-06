@@ -131,6 +131,90 @@ class ProductoTest extends TestCase {
         fwrite(STDOUT, "Prueba de consulta de productos finalizada correctamente." . PHP_EOL);
     }
 
+    public function testEliminarProductoInexistenteDevuelveErrorGenerico() {
+        $this->producto->getProducto()->getConex1();
+
+        foreach ([-1, 'null'] as $idProducto) {
+            $resultado = $this->producto->getProducto()->procesarProducto(json_encode([
+                'operacion' => 'eliminar',
+                'datos' => ['id_producto' => $idProducto]
+            ], JSON_THROW_ON_ERROR));
+
+            fwrite(STDOUT, "Resultado al eliminar ID " . json_encode($idProducto) . ":" . PHP_EOL);
+            fwrite(STDOUT, json_encode($resultado, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL);
+
+            $this->assertSame(0, $resultado['respuesta']);
+            $this->assertSame('eliminar', $resultado['accion']);
+            $this->assertSame('Ocurrió un error interno', $resultado['mensaje']);
+            $this->assertStringNotContainsString('SQL', strtoupper($resultado['mensaje']));
+            $this->assertStringNotContainsString('PDO', strtoupper($resultado['mensaje']));
+        }
+    }
+
+    public function testRegistroPersisteDatosExactosYDevuelveJsonEstandar() {
+        $producto = $this->producto->getProducto();
+        $conexion = $producto->getConex1();
+
+        $marca = $conexion->query('SELECT id_marca FROM marca LIMIT 1')->fetchColumn();
+        $categoria = $conexion->query('SELECT id_categoria FROM categoria LIMIT 1')->fetchColumn();
+
+        if ($marca === false || $categoria === false) {
+            $this->markTestSkipped('Se requiere al menos una marca y una categoría en la base de pruebas.');
+        }
+
+        $sufijo = bin2hex(random_bytes(6));
+        $nombre = 'QaPersistencia' . $sufijo;
+        $descripcion = 'Descripcion exacta ' . $sufijo;
+
+        try {
+            $resultado = $producto->procesarProducto(json_encode([
+                'operacion' => 'registrar',
+                'datos' => [
+                    'nombre' => $nombre,
+                    'descripcion' => $descripcion,
+                    'id_marca' => (int) $marca,
+                    'cantidad_mayor' => 10,
+                    'precio_mayor' => 20,
+                    'precio_detal' => 25,
+                    'stock_maximo' => 100,
+                    'stock_minimo' => 1,
+                    'id_categoria' => (int) $categoria,
+                    'imagenes' => []
+                ]
+            ], JSON_THROW_ON_ERROR));
+
+            fwrite(STDOUT, "Respuesta del registro:" . PHP_EOL);
+            fwrite(STDOUT, json_encode($resultado, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL);
+
+            $this->assertSame(1, $resultado['respuesta']);
+
+            $respuestaJson = json_encode($resultado, JSON_THROW_ON_ERROR);
+            $respuestaDecodificada = json_decode($respuestaJson, true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame(['respuesta', 'accion', 'mensaje'], array_keys($respuestaDecodificada));
+            $this->assertSame(1, $respuestaDecodificada['respuesta']);
+            $this->assertSame('incluir', $respuestaDecodificada['accion']);
+            $this->assertNotSame('', $respuestaDecodificada['mensaje']);
+
+            $consulta = $conexion->prepare(
+                'SELECT nombre, descripcion FROM producto WHERE nombre = :nombre AND id_marca = :id_marca ORDER BY id_producto DESC LIMIT 1'
+            );
+            $consulta->execute(['nombre' => $nombre, 'id_marca' => (int) $marca]);
+            $productoPersistido = $consulta->fetch();
+
+            fwrite(STDOUT, "Producto consultado inmediatamente después del registro:" . PHP_EOL);
+            fwrite(STDOUT, json_encode($productoPersistido, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL);
+
+            $this->assertIsArray($productoPersistido, 'El producto registrado debe poder consultarse inmediatamente.');
+            $this->assertSame($nombre, $productoPersistido['nombre']);
+            $this->assertSame($descripcion, $productoPersistido['descripcion']);
+        } finally {
+            $limpiar = $conexion->prepare(
+                'UPDATE producto SET estatus = 0 WHERE nombre = :nombre AND id_marca = :id_marca'
+            );
+            $limpiar->execute(['nombre' => $nombre, 'id_marca' => (int) $marca]);
+        }
+    }
+
     /*|||||||||||| PRODUCTOS ACTIVOS ||||||||||||*/
     public function testProductosActivos() {
         $resultado = $this->producto->getProducto()->ProductosActivos();
