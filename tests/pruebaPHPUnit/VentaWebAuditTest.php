@@ -84,13 +84,6 @@ class VentaWebAuditTest extends TestCase
      *  PLANILLA 1.1 — Inyección de Código (SQLi / XSS)
      * ================================================================= */
 
-    /**
-     * HALLAZGO DOCUMENTADO: el detector NO atrapa "1' OR '1'='1" por la comilla
-     * (la regex '1\s*=\s*1' no casa con "1'='1"). La petición sí se rechaza
-     * igualmente, porque sanitizarString() elimina las comillas y tras eso el
-     * detector (o la whitelist de bancos) la mata a la siguiente capa.
-     * => Defender sencela en planilla 1.1 (Pasa con observación).
-     */
     public function testSqliOr1igual1EsRechazadaEnCadena(): void
     {
         $entrada  = "1' OR '1'='1";
