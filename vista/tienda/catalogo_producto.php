@@ -14,18 +14,18 @@
   <!-- BOTÓN FLOTANTE SOLO EN TELEFONO -->
 <button type="button" 
         onclick="toggleFilterDrawer(true)"
-        class="md:hidden fixed bottom-20 left-4 z-40 bg-accent-fuchsia text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-2 text-xs font-bold hover:bg-pink-700 transition-all active:scale-95">
+        class="md:hidden fixed bottom-20 left-4 z-20 bg-accent-fuchsia text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-2 text-xs font-bold hover:bg-pink-700 transition-all active:scale-95">
     <i class="fa-solid fa-filter text-sm"></i>
     <span>Filtrar por categorias</span>
 </button>
 
 <!-- PANEL LATERAL DE CATEGORÍAS  -->
-<div id="offcanvasCategorias" class="fixed inset-0 z-50 flex hidden">
+<div id="offcanvasCategorias" class="fixed inset-0 z-40 flex hidden">
     <!-- Backdrop oscuro -->
     <div onclick="toggleFilterDrawer(false)" class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"></div>
     
     <!-- Drawer panel -->
-    <div class="relative bg-white w-4/5 max-w-xs h-full shadow-2xl p-5 flex flex-col z-10 space-y-4">
+    <div class="relative bg-white w-4/5 max-w-xs h-full shadow-2xl p-5 flex flex-col z-50 space-y-4">
         <!-- Cabecera -->
         <div class="flex items-center justify-between border-b border-pink-100 pb-3">
             <h5 class="font-bold text-gray-900 text-sm flex items-center gap-2">
@@ -251,7 +251,7 @@
 <!-- MODAL: DETALLE DEL PRODUCTO -->
 <div id="productDetailModal" 
      onclick="cierremodalfuera(event)"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs hidden p-3 sm:p-4 transition-opacity duration-300 opacity-0">
+     class="fixed inset-0 z-40 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs hidden p-3 sm:p-4 transition-opacity duration-300 opacity-0">
     
     <div id="productModalContent" 
          class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-pink-100 p-6 sm:p-8 relative transform transition-all duration-300 scale-95 opacity-0">

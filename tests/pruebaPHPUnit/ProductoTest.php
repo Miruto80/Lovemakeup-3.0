@@ -270,7 +270,24 @@ class ProductoTest extends TestCase {
         $resultado = $this->producto->testEjecutarCambioEstatus($datos);
 
         $this->assertIsArray($resultado);
-        $this->assertEquals('cambiarEstatus', $resultado['accion']);
+        $json = json_encode($resultado, JSON_THROW_ON_ERROR);
+        $respuesta = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+
+        $this->assertSame(
+            ['respuesta', 'accion', 'nuevo_estatus', 'mensaje'],
+            array_keys($respuesta)
+        );
+        $this->assertSame(1, $respuesta['respuesta']);
+        $this->assertSame('cambiarEstatus', $respuesta['accion']);
+        $this->assertContains($respuesta['nuevo_estatus'], [1, 2]);
+        $this->assertNotSame('', trim($respuesta['mensaje']));
+
+        fwrite(
+            STDOUT,
+            "JSON de respuesta:" . PHP_EOL .
+            json_encode($respuesta, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) .
+            PHP_EOL
+        );
         fwrite(STDOUT, "Prueba de cambio de estatus finalizada correctamente." . PHP_EOL);
     }
     public function testRegistrarVariosProductos() {

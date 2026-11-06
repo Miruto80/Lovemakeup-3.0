@@ -37,8 +37,8 @@ class RolTest extends TestCase {
         $datosRol = [
             'operacion' => 'registrar',
             'datos' => [
-                'nombre' => 'RolTest',
-                'nivel' => 2
+                'nombre' => 'prueba de rol',
+                'nivel' => rand(2, 3)
             ]
         ];
 
@@ -59,18 +59,16 @@ class RolTest extends TestCase {
         }
     }
 
-    /* ============================================================
-       TEST: Actualizar Rol
-    ============================================================ */
+
     public function testActualizarRol() {
 
         $datosRol = [
             'operacion' => 'actualizar',
             'datos' => [
-                'id_rol' => 5,
+                'id_rol' => 11,
                 'nombre' => 'RolActualizado',
-                'nivel' => 2,
-                'nivel_actual' => 2
+                'nivel' => rand(2, 3),
+                'nivel_actual' => 3
             ]
         ];
 
@@ -102,7 +100,7 @@ class RolTest extends TestCase {
         $datosRol = [
             'operacion' => 'eliminar',
             'datos' => [
-                'id_rol' => 4
+                'id_rol' => 11
             ]
         ];
 
@@ -126,8 +124,11 @@ class RolTest extends TestCase {
         $datosRol = [
             'operacion' => 'actualizar_permisos',
             'datos' => [
-                ['id_permiso' => 1, 'estado' => 1],
-                ['id_permiso' => 2, 'estado' => 1]
+                ['id_permiso' => 422, 'estado' => 2],
+                ['id_permiso' => 423, 'estado' => 0],
+                ['id_permiso' => 424, 'estado' => 0],
+                ['id_permiso' => 425, 'estado' => 0],
+                ['id_permiso' => 426, 'estado' => 0]
             ]
         ];
 

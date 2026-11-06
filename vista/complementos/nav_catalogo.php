@@ -64,7 +64,7 @@ if ($json) {
     </div>
 
     <!-- HEADER  -->
-    <header class="sticky top-0 z-40 glass-header border-b border-pink-100">
+    <header class="sticky top-0 z-10 glass-header border-b border-pink-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20 gap-3">
                 
