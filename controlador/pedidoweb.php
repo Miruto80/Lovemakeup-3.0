@@ -1,6 +1,7 @@
 <?php  
 
 use LoveMakeup\Proyecto\Modelo\PedidoWeb;
+use LoveMakeup\Proyecto\Config\NotificadorPedidos;
 
 // Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -41,7 +42,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'operacion' => 'confirmar',
                 'datos' => $id_pedido
             ];
-            echo json_encode($objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion)));
+            $respuesta = $objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion));
+            // Notificación best-effort tras el commit; no cambia el JSON del pedido.
+            if (($respuesta['respuesta'] ?? 0) == 1) {
+                try {
+                    require_once __DIR__ . '/../config/NotificadorPedidos.php';
+                    NotificadorPedidos::notificarDespuesDeCambio((int)$id_pedido);
+                } catch (\Throwable $e) {
+                    // Error interno: no afectar la respuesta al admin
+                }
+            }
+            echo json_encode($respuesta);
         } else {
             echo json_encode(['respuesta' => 0, 'mensaje' => 'Falta el ID del pedido para confirmar']);
         }
@@ -119,7 +130,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'operacion' => 'enviar',
                 'datos' => $id_pedido
             ];
-            echo json_encode($objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion)));
+            $respuesta = $objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion));
+            // Notificación best-effort tras el commit; no cambia el JSON del pedido.
+            if (($respuesta['respuesta'] ?? 0) == 1) {
+                try {
+                    require_once __DIR__ . '/../config/NotificadorPedidos.php';
+                    NotificadorPedidos::notificarDespuesDeCambio((int)$id_pedido);
+                } catch (\Throwable $e) {
+                    // Error interno: no afectar la respuesta al admin
+                }
+            }
+            echo json_encode($respuesta);
         } else {
             echo json_encode(['respuesta' => 0, 'mensaje' => 'Falta el ID del pedido para enviar']);
         }
@@ -141,7 +162,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'operacion' => 'entregar',
                 'datos' => $id_pedido
             ];
-            echo json_encode($objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion)));
+            $respuesta = $objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion));
+            // Notificación best-effort tras el commit; no cambia el JSON del pedido.
+            if (($respuesta['respuesta'] ?? 0) == 1) {
+                try {
+                    require_once __DIR__ . '/../config/NotificadorPedidos.php';
+                    NotificadorPedidos::notificarDespuesDeCambio((int)$id_pedido);
+                } catch (\Throwable $e) {
+                    // Error interno: no afectar la respuesta al admin
+                }
+            }
+            echo json_encode($respuesta);
         } else {
             echo json_encode(['respuesta' => 0, 'mensaje' => 'Falta el ID del pedido para entregar']);
         }

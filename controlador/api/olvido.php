@@ -59,6 +59,7 @@ $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
 
 $accion = isset($dataJson['accion']) ? (int)$dataJson['accion'] : 0;
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
 
 try {
     $correo = '';
@@ -108,6 +109,8 @@ try {
 
         $correo = trim($dataJson['correo']);
         $objolvido = new Olvidoclave();
+
+            validarExpresionesAPP('correo', $correo, "Correo (F) invalido");
 
         $datosRegistro = [
             'operacion' => 'verificar',

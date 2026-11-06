@@ -1,0 +1,24 @@
+name: Revisar estados LoveApp Push
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  comprobar-pedidos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Consultar cambios de estado de pedidos
+        env:
+          LOVEAPP_PUSH_KEY: ${{ secrets.LOVEAPP_PUSH_KEY }}
+        run: |
+          test -n "$LOVEAPP_PUSH_KEY" || { echo "Falta secreto LOVEAPP_PUSH_KEY"; exit 1; }
+          curl --fail-with-body --silent --show-error --connect-timeout 10 --max-time 60 \
+            -X POST 'https://lovemakeuptienda.com/controlador/api/revisarEstadosPush.php' \
+            -H "Authorization: Bearer $LOVEAPP_PUSH_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{}'

@@ -59,6 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => 'No tiene permisos para realizar esta acción']);
             exit;
         }
+        if (!$objproducto->validarStockMaximo($_POST['stock_maximo'] ?? null)) {
+            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000']);
+            exit;
+        }
+        $mensajeValidacion = $objproducto->validarCamposNoCero($_POST);
+        if ($mensajeValidacion !== null) {
+            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => $mensajeValidacion]);
+            exit;
+        }
         // Validación básica de campos requeridos
         if (!empty($_POST['nombre']) && !empty($_POST['descripcion']) && !empty($_POST['marca']) && 
             !empty($_POST['cantidad_mayor']) && !empty($_POST['precio_mayor']) && !empty($_POST['precio_detal']) && 
@@ -125,6 +134,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else if (isset($_POST['actualizar'])) {
         if (!isset($_SESSION['nivel_rol']) || $_SESSION['nivel_rol'] < 2 || !tieneAcceso(6, 3)) { // requiere nivel >=2 y permiso 3
             echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => 'No tiene permisos para realizar esta acción']);
+            exit;
+        }
+        if (!$objproducto->validarStockMaximo($_POST['stock_maximo'] ?? null)) {
+            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000']);
+            exit;
+        }
+        $mensajeValidacion = $objproducto->validarCamposNoCero($_POST);
+        if ($mensajeValidacion !== null) {
+            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => $mensajeValidacion]);
             exit;
         }
         $imagenes = [];

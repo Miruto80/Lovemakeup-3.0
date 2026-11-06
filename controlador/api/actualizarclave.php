@@ -107,12 +107,17 @@ if (!isset($payload['data']['autorizado']) || $payload['data']['autorizado'] !==
     exit;
 }
 
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
+
 $cedula = $payload['data']['cedula'];
 
 // Leer contraseña enviada por el formulario
 $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
 $ClaveNueva = trim($dataJson['password'] ?? '');
+
+    validarExpresionesAPP('clave', $ClaveNueva, "Clave Ingresada (F) invalido");
 
 if (empty($ClaveNueva)) {
     http_response_code(400);
@@ -122,6 +127,7 @@ if (empty($ClaveNueva)) {
 
 $objolvido = new Olvidoclave();
 
+   validarExpresionesAPP('clave', $ClaveNueva, "Clave Ingresado (F) invalido");
 
 $datosRegistro = [
     'operacion' => 'actualizar', 

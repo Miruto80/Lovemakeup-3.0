@@ -5,9 +5,71 @@ namespace LoveMakeup\Proyecto\Modelo;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 use LoveMakeup\Proyecto\Config\Conexion;
 
 class Reporte {
+
+    private static function subirGraficoCloudinary(string $rutaArchivo, string $nombreArchivo): string
+    {
+        if (!is_file($rutaArchivo)) {
+            return '';
+        }
+
+        $contenido = file_get_contents($rutaArchivo);
+        if ($contenido === false) {
+            return '';
+        }
+
+        try {
+            $resultado = CloudinaryConfig::uploadReportImage($rutaArchivo, $nombreArchivo);
+            error_log('Reporte::subirGraficoCloudinary URL: ' . ($resultado['url_imagen'] ?? ''));
+        } catch (\Throwable $e) {
+            error_log('Reporte::subirGraficoCloudinary error: ' . $e->getMessage());
+        }
+
+        // Dompdf debe recibir los bytes locales; no depende de descargar la URL remota.
+        return 'data:image/png;base64,' . base64_encode($contenido);
+    }
+
+    private static function emitirPdfCloudinary(string $nombreArchivo, Dompdf $pdf): void
+    {
+        $contenidoPdf = $pdf->output();
+        $rutaTemporal = tempnam(sys_get_temp_dir(), 'lovemakeup-reporte-');
+        if ($rutaTemporal === false) {
+            self::enviarPdfAlNavegador($nombreArchivo, $contenidoPdf);
+            return;
+        }
+
+        $rutaPdf = $rutaTemporal . '.pdf';
+        rename($rutaTemporal, $rutaPdf);
+
+        try {
+            file_put_contents($rutaPdf, $contenidoPdf);
+            $resultado = CloudinaryConfig::uploadReportPdf($rutaPdf, $nombreArchivo);
+
+            if (!empty($resultado['url_archivo'])) {
+                error_log('Reporte::emitirPdfCloudinary archivado en Cloudinary: ' . $resultado['url_archivo']);
+            }
+        } catch (\Throwable $e) {
+            error_log('Reporte::emitirPdfCloudinary error: ' . $e->getMessage());
+        } finally {
+            if (file_exists($rutaPdf)) {
+                @unlink($rutaPdf);
+            }
+        }
+
+        self::enviarPdfAlNavegador($nombreArchivo, $contenidoPdf);
+    }
+
+    private static function enviarPdfAlNavegador(string $nombreArchivo, string $contenidoPdf): void
+    {
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . basename($nombreArchivo) . '"');
+        header('Content-Length: ' . strlen($contenidoPdf));
+        echo $contenidoPdf;
+        exit;
+    }
 
 public static function compra(
     $start   = null,
@@ -134,9 +196,7 @@ public static function compra(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
         // — Tabla de compras con categoría —
         $whereT = []; $paramsT = [];
@@ -447,9 +507,8 @@ public static function compra(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_Compras.pdf',['Attachment'=>false]);
-
         $conex->commit();
+        self::emitirPdfCloudinary('Reporte_Compras.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -570,9 +629,7 @@ public static function producto(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
         // ——— Tabla de producto ———
         $whereT  = ['1=1'];
@@ -755,9 +812,8 @@ public static function producto(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_Productos.pdf',['Attachment'=>false]);
-
         $conex->commit();
+        self::emitirPdfCloudinary('Reporte_Productos.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -913,9 +969,7 @@ public static function venta(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
         // — Tabla de ventas con categoría —
         $whereT  = ['pe.tipo = 1'];
@@ -1038,13 +1092,6 @@ public static function venta(
             $marcaSt->execute([':marca' => $marcaId]);
             $filtroParts[] = 'Marca: '.htmlspecialchars($marcaSt->fetchColumn());
         }
-        if ($provId) {
-            $provSt = $conex->prepare(
-                'SELECT nombre FROM proveedor WHERE id_proveedor = :prov'
-            );
-            $provSt->execute([':prov' => $provId]);
-            $filtroParts[] = 'Proveedor: '.htmlspecialchars($provSt->fetchColumn());
-        }
         if ($metodoPago) {
             $metodoPagoText = '';
             switch($metodoPago) {
@@ -1151,7 +1198,7 @@ public static function venta(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_Ventas.pdf',['Attachment'=>false]);
+        self::emitirPdfCloudinary('Reporte_Ventas.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -1318,9 +1365,7 @@ public static function pedidoWeb(
             $graph->Add($pie);
             $graph->Stroke($imgFile);
         }
-        $graf = file_exists($imgFile)
-              ? 'data:image/png;base64,'.base64_encode(file_get_contents($imgFile))
-              : '';
+        $graf = self::subirGraficoCloudinary($imgFile, basename($imgFile));
 
                 // Detectar si la tabla `cliente` existe en la BD1; si no, omitimos el JOIN
                 try {
@@ -1397,13 +1442,6 @@ public static function pedidoWeb(
             );
             $marcaSt->execute([':marca' => $marcaId]);
             $filtroParts[] = 'Marca: '.htmlspecialchars($marcaSt->fetchColumn());
-        }
-        if ($catId) {
-            $cSt = $conex->prepare(
-                'SELECT nombre FROM categoria WHERE id_categoria = :cid'
-            );
-            $cSt->execute([':cid' => $catId]);
-            $filtroParts[] = 'Categoría: '.htmlspecialchars($cSt->fetchColumn());
         }
         if ($estado !== null) {
             $estados = [
@@ -1501,7 +1539,7 @@ public static function pedidoWeb(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        $pdf->stream('Reporte_PedidosWeb.pdf',['Attachment'=>false]);
+        self::emitirPdfCloudinary('Reporte_PedidosWeb.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;

@@ -52,7 +52,18 @@ if (!$dataJson || !isset($dataJson['cedula']) || !isset($dataJson['nombre']) || 
     exit;
 }
 
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
+
 $objlogin = new Login();
+
+    validarExpresionesAPP('nombre', $dataJson['nombre'], "Nombre Ingresada (F) invalido");
+    validarExpresionesAPP('apellido', $dataJson['apellido'], "Apellido Ingresada (F) invalido");
+    validarExpresionesAPP('cedula', $dataJson['cedula'], "Cedula Ingresada (F) invalido");
+    validarExpresionesAPP('telefono', $dataJson['telefono'], "Telefono Ingresada (F) invalido");
+    validarExpresionesAPP('correo', $dataJson['correo'], "Correo Ingresada (F) invalido");
+    validarExpresionesAPP('documento', $dataJson['tipo_documento'], "documento Ingresada (F) invalido");
+    validarExpresionesAPP('clave', $dataJson['clave'], "Clave Ingresada (F) invalido");
 
 $datosRegistro = [
     'operacion' => 'registrar',
