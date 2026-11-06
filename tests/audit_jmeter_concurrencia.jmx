@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PLAN JMETER — Caso 2.3 (Concurrencia de datos) del Instrumento de Auditoría
+  Módulo: VentaWeb | URL local: Apache 8080 | Prod: ajustar ${HOST}
+
+  Qué reproduce:
+   - Paso 1: solicita un JWT de prueba a /issue_jwt.php y lo extrae a ${token}
+   - Paso 2: 2 hilos (Thread Group) con POST idéntico a /api/VentaWeb.php
+     -> Si el sistema fuera idempotente, el 2do POST devolvería error;
+        en la evidencia local devolvió 2 pedidos distintos (DEF-07).
+
+  Ejecutar: jmeter -n -t tests/audit_jmeter_concurrencia.jmx -l resultados.jtl
+-->
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.2">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="VentaWeb - Auditoria 2.3 Concurrencia">
+      <elementProp name="TestPlan.boot" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="HOST" elementType="Argument">
+            <stringProp name="Argument.name">HOST</stringProp>
+            <stringProp name="Argument.value">127.0.0.1:8080</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="BASE" elementType="Argument">
+            <stringProp name="Argument.name">BASE</stringProp>
+            <stringProp name="Argument.value">/LoveMakeup/Lovemakeup-3.0/controlador/api</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="DoblePago (2 hilos)">
+        <intProp name="ThreadGroup.num_threads">2</intProp>
+        <intProp name="ThreadGroup.ramp_time">0</intProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">1</intProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="1) Obtener JWT de prueba" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.path">${BASE}/issue_jwt.php</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extraer token">
+            <stringProp name="RegexExtractor.refname">token</stringProp>
+            <stringProp name="RegexExtractor.regex">"jwt":"(.*?)"</stringProp>
+            <stringProp name="RegexExtractor.template">$1$</stringProp>
+            <stringProp name="RegexExtractor.default">NO_TOKEN</stringProp>
+          </RegexExtractor>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2) POST VentaWeb (pedido valido)" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;datos&quot;:{&quot;tipo&quot;:2,&quot;estado&quot;:1,&quot;id_persona&quot;:10200999,&quot;id_metodopago&quot;:1,&quot;referencia_bancaria&quot;:&quot;228899&quot;,&quot;banco&quot;:&quot;0102-Banco De Venezuela&quot;,&quot;banco_destino&quot;:&quot;0105-Banco Mercantil&quot;,&quot;monto&quot;:4.70,&quot;monto_usd&quot;:4.70,&quot;precio_total_usd&quot;:4.70,&quot;precio_total_bs&quot;:4.70,&quot;fecha&quot;:&quot;2026-11-05&quot;,&quot;id_metodoentrega&quot;:1,&quot;id_delivery&quot;:1,&quot;zona&quot;:&quot;norte&quot;,&quot;parroquia&quot;:&quot;Tamaca&quot;,&quot;sector&quot;:&quot;Tamaca Centro&quot;,&quot;direccion&quot;:&quot;Av Audit JMETER 12&quot;,&quot;imagen&quot;:&quot;&quot;,&quot;carrito&quot;:[{&quot;id&quot;:6,&quot;cantidad&quot;:1,&quot;cantidad_mayor&quot;:10,&quot;precio_detal&quot;:4.70,&quot;precio_mayor&quot;:3.60}]}}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.path">${BASE}/VentaWeb.php</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Cabeceras autenticadas">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="Authorization" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">Bearer ${token}</stringProp>
+              </elementProp>
+              <elementProp name="CT" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extraer id_pedido">
+            <stringProp name="JSONPostProcessor.referenceNames">id_pedido</stringProp>
+            <stringProp name="JSONPostProcessor.jsonPathExprs">$.id_pedido</stringProp>
+            <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
+            <stringProp name="JSONPostProcessor.defaultValues">NO_ORDER</stringProp>
+          </JSONPostProcessor>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="Ver">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp><name>saveConfig</name><value class="SampleSaveConfiguration"><time>true</time><latency>true</latency><timestamp>true</timestamp><success>true</success><label>true</label><code>true</code><message>true</message><threadName>true</threadName><dataType>true</dataType><encoding>false</encoding><assertions>true</assertions><subresults>true</subresults><responseData>true</responseData></value></objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

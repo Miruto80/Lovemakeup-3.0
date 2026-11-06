@@ -193,6 +193,15 @@ try {
         }
 
         $datos = $decodedData['datos'];
+
+        // DEF-01: el carrito es obligatorio — no se aceptan pedidos vacíos
+        $carritoAudit = $datos['carrito'] ?? null;
+        if (!is_array($carritoAudit) || count($carritoAudit) === 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'El carrito está vacío o no es válido.']);
+            exit;
+        }
+
         $idMetodoentrega = (int)($datos['id_metodoentrega'] ?? 0);
 
         if (!in_array($idMetodoentrega, [1, 2, 3, 4], true)) {
