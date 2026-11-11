@@ -23,6 +23,45 @@ if ($_SESSION["nivel_rol"] == 1) {
 require_once 'permiso.php';
 $objPedidoWeb = new PedidoWeb();
 
+/*
+ * Diagnóstico temporal de notificaciones LoveApp.
+ * Registra intentos y resultados sin modificar pedidos.
+ */
+$diagnosticarPush = static function (int $idPedido, string $accion): void {
+    $inicio = microtime(true);
+
+    error_log(sprintf(
+        '[LoveAppPushDiag] INICIO fecha=%s accion=%s pedido=%d',
+        gmdate('c'),
+        $accion,
+        $idPedido
+    ));
+
+    try {
+        require_once __DIR__ . '/../config/NotificadorPedidos.php';
+
+        $resultado = NotificadorPedidos::notificarDespuesDeCambio($idPedido);
+
+        error_log(sprintf(
+            '[LoveAppPushDiag] FIN fecha=%s accion=%s pedido=%d exitoso=%s motivo=%s duracion_ms=%d',
+            gmdate('c'),
+            $accion,
+            $idPedido,
+            !empty($resultado['exitoso']) ? 'si' : 'no',
+            (string)($resultado['motivo'] ?? 'desconocido'),
+            (int) round((microtime(true) - $inicio) * 1000)
+        ));
+    } catch (\Throwable $e) {
+        error_log(sprintf(
+            '[LoveAppPushDiag] ERROR fecha=%s accion=%s pedido=%d tipo=%s duracion_ms=%d',
+            gmdate('c'),
+            $accion,
+            $idPedido,
+            get_class($e),
+            (int) round((microtime(true) - $inicio) * 1000)
+        ));
+    }
+};
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -45,12 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $respuesta = $objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion));
             // Notificación best-effort tras el commit; no cambia el JSON del pedido.
             if (($respuesta['respuesta'] ?? 0) == 1) {
-                try {
-                    require_once __DIR__ . '/../config/NotificadorPedidos.php';
-                    NotificadorPedidos::notificarDespuesDeCambio((int)$id_pedido);
-                } catch (\Throwable $e) {
-                    // Error interno: no afectar la respuesta al admin
-                }
+                $diagnosticarPush((int)$id_pedido, 'confirmar');
             }
             echo json_encode($respuesta);
         } else {
@@ -133,12 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $respuesta = $objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion));
             // Notificación best-effort tras el commit; no cambia el JSON del pedido.
             if (($respuesta['respuesta'] ?? 0) == 1) {
-                try {
-                    require_once __DIR__ . '/../config/NotificadorPedidos.php';
-                    NotificadorPedidos::notificarDespuesDeCambio((int)$id_pedido);
-                } catch (\Throwable $e) {
-                    // Error interno: no afectar la respuesta al admin
-                }
+                $diagnosticarPush((int)$id_pedido, 'enviar');
             }
             echo json_encode($respuesta);
         } else {
@@ -165,12 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $respuesta = $objPedidoWeb->procesarPedidoweb(json_encode($datosPeticion));
             // Notificación best-effort tras el commit; no cambia el JSON del pedido.
             if (($respuesta['respuesta'] ?? 0) == 1) {
-                try {
-                    require_once __DIR__ . '/../config/NotificadorPedidos.php';
-                    NotificadorPedidos::notificarDespuesDeCambio((int)$id_pedido);
-                } catch (\Throwable $e) {
-                    // Error interno: no afectar la respuesta al admin
-                }
+                $diagnosticarPush((int)$id_pedido, 'entregar');
             }
             echo json_encode($respuesta);
         } else {
