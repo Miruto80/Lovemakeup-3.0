@@ -168,7 +168,19 @@
         </td>
         <td>
           <span class="text-sm texto-secundario">
-            <?= date('d-m-Y g:i a', strtotime($n['fecha'])) ?>
+            <?php
+            $fecha = $n['fecha'] ?? null;
+
+            $timestamp = (
+                is_string($fecha) &&
+                trim($fecha) !== '' &&
+                $fecha !== '0000-00-00 00:00:00'
+            ) ? strtotime($fecha) : false;
+
+            echo $timestamp !== false
+                ? date('d-m-Y g:i a', $timestamp)
+                : 'Fecha no disponible';
+            ?>
           </span>
         </td>
              <?php if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(18, 5)): ?>

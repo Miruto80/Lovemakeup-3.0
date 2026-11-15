@@ -4,7 +4,6 @@ namespace LoveMakeup\Tests\Modelo;
 
 use PHPUnit\Framework\TestCase;
 use LoveMakeup\Proyecto\Modelo\Notificacion;
-use PDO;
 
 class NotificacionGenerarTest extends TestCase
 {
@@ -13,93 +12,112 @@ class NotificacionGenerarTest extends TestCase
         $modelo = new Notificacion();
         $conexion = $modelo->getConex1();
 
-        // Verificar que sea la base local de pruebas.
-        $base = $conexion
-            ->query("SELECT DATABASE()")
-            ->fetchColumn();
+        // Seguridad: trabajar solo con la base local.
+        $base = $conexion->query("SELECT DATABASE()")
+                         ->fetchColumn();
 
         $this->assertSame('lovemakeupbd1', $base);
 
-        // Consultar todos los pedidos que aún no
-        // tienen una notificación.
-        $sql = "
-            SELECT p.id_pedido, p.tracking
+        // Evitar generar notificaciones de pedidos ajenos.
+        $sqlPendientes = "
+            SELECT COUNT(*)
             FROM pedido p
             LEFT JOIN notificaciones n
                 ON n.id_pedido = p.id_pedido
-            WHERE p.tipo IN (2, 3)
+            WHERE p.tipo IN (2,3)
+              AND p.fecha IS NOT NULL
               AND n.id_pedido IS NULL
         ";
 
-        $pendientes = $conexion
-            ->query($sql)
-            ->fetchAll(PDO::FETCH_ASSOC);
+        $pendientes = (int) $conexion
+            ->query($sqlPendientes)->fetchColumn();
 
-        // Evitar modificar pedidos ajenos a la prueba.
-        $this->assertCount(3, $pendientes);
+        $this->assertSame(0, $pendientes,
+            'Existen pedidos pendientes ajenos a la prueba.');
 
-        $tracking = array_column($pendientes, 'tracking');
-        sort($tracking);
-
-        $this->assertSame([
-            'TEST-REPORTE-WEB-01',
-            'TEST-REPORTE-WEB-02',
-            'TEST-REPORTE-WEB-03'
-        ], $tracking);
-
-        // Identificación para los triggers locales.
-        $conexion->exec(
-            "SET @app_cedula = '10200300'"
-        );
-
-        // Proteger las inserciones con una transacción.
+        $conexion->exec("SET @app_cedula = '10200300'");
         $conexion->beginTransaction();
 
         try {
-            // Generar notificaciones automáticamente.
+            // Crear datos temporales de prueba.
+            $insertar = $conexion->prepare("
+                INSERT INTO pedido
+                    (tipo, fecha, estatus, tracking, precio_total_bs)
+                VALUES
+                    (:tipo, :fecha, '1', :tracking, 100)
+            ");
+
+            $casos = [
+                ['2', date('Y-m-d H:i:s'), 'TEST-NOTI-WEB-01'],
+                ['2', date('Y-m-d H:i:s'), 'TEST-NOTI-WEB-02'],
+                ['3', date('Y-m-d H:i:s'), 'TEST-NOTI-RES-03'],
+                ['2', null, 'TEST-NOTI-SIN-FECHA']
+            ];
+
+            $idsValidos = [];
+            $idSinFecha = null;
+
+            foreach ($casos as [$tipo, $fecha, $tracking]) {
+                $insertar->execute([
+                    'tipo' => $tipo,
+                    'fecha' => $fecha,
+                    'tracking' => $tracking
+                ]);
+
+                $id = (int) $conexion->lastInsertId();
+
+                if ($fecha === null) {
+                    $idSinFecha = $id;
+                } else {
+                    $idsValidos[] = $id;
+                }
+            }
+
+            // Generar las notificaciones.
             $generadas = $modelo->generarDePedidos();
 
             $this->assertSame(3, $generadas);
 
-            // Comprobar los registros creados.
-            $sqlVerificar = "
+            // Verificar las tres notificaciones válidas.
+            $verificar = $conexion->prepare("
                 SELECT COUNT(*)
-                FROM notificaciones n
-                INNER JOIN pedido p
-                    ON p.id_pedido = n.id_pedido
-                WHERE p.tracking IN (
-                    'TEST-REPORTE-WEB-01',
-                    'TEST-REPORTE-WEB-02',
-                    'TEST-REPORTE-WEB-03'
-                )
-                  AND n.estado = 1
-            ";
+                FROM notificaciones
+                WHERE id_pedido IN (?, ?, ?)
+                  AND estado = 1
+                  AND fecha IS NOT NULL
+            ");
 
-            $registradas = (int) $conexion
-                ->query($sqlVerificar)
-                ->fetchColumn();
+            $verificar->execute($idsValidos);
 
-            $this->assertSame(3, $registradas);
+            $this->assertSame(
+                3,
+                (int) $verificar->fetchColumn()
+            );
 
-            // Ejecutar nuevamente para comprobar
-            // que no se generen duplicados.
+            // El pedido sin fecha no debe generar notificación.
+            $sinFecha = $conexion->prepare("
+                SELECT COUNT(*)
+                FROM notificaciones
+                WHERE id_pedido = ?
+            ");
+
+            $sinFecha->execute([$idSinFecha]);
+
+            $this->assertSame(
+                0,
+                (int) $sinFecha->fetchColumn()
+            );
+
+            // Comprobar que no se generan duplicados.
             $duplicadas = $modelo->generarDePedidos();
 
             $this->assertSame(0, $duplicadas);
 
-            // Guardar definitivamente las notificaciones.
-            $conexion->commit();
-
-            echo "\nNotificaciones generadas: $generadas";
-            echo "\nNotificaciones registradas: $registradas";
-            echo "\nNotificaciones duplicadas: $duplicadas\n";
-
-        } catch (\Throwable $e) {
+        } finally {
+            // Revertir todos los registros temporales.
             if ($conexion->inTransaction()) {
                 $conexion->rollBack();
             }
-
-            throw $e;
         }
     }
 }

@@ -37,7 +37,7 @@ class ReservaCliente extends Conexion {
             // 1) Registrar pedido
             $idPedido = $this->registrarPedido([
                 'tipo' => $d['tipo'],
-                'fecha' => $d['fecha'] ?? date('Y-m-d H:i:s'),
+                'fecha' => date('Y-m-d H:i:s'),
                 'estatus' => 1,
                 'precio_total_usd' => $d['precio_total_usd'],
                 'precio_total_bs' => $d['precio_total_bs'],
