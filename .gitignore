@@ -1,12 +1,12 @@
 # Configuración y Secretos
 passconfig.env
-AGENTS.md
-TODO.md
 
 # Dependencias de Composer
 /vendor/
-AGENTS.md
-TODO.md
+
+# Postman
+/.postman/
+/postman
 
 # Imagenes de archivos
 /assets/img/captures/
@@ -20,5 +20,6 @@ TODO.md
 
 #Llaves privadas
 /config/jwt_private.pem
+/config/ai_private.pem
 
 seguridad/data/
