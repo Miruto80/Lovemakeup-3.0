@@ -250,7 +250,8 @@ document.addEventListener("DOMContentLoaded", obtenerTasaDolarApi);
 <!-- para el datatable-->
 
 <script src="assets/js/libreria/moment.js"></script>
-<script src="assets/js/tasacambio.js"></script>
+<script type="module" src="assets/js/tasacambio.js"></script>
+
 <script>
  $(document).ready(function () {
   let hoy = moment().format("YYYY-MM-DD");

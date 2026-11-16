@@ -81,12 +81,12 @@ if(isset($_POST['actualizar'])){ //--------------------------------- ACTUALIZAR 
                     }
                 
                 //// Validar Datos - Validacion 5
-                validarExpresiones('cedula', $Cedula, "ROL (F) inválido", "actualizar");
-                validarExpresiones('cedula', $CedulaActual, "ROL (F) inválido", "actualizar");
-                validarExpresiones('correo', $CorreoActual, "ROL (F) inválido", "actualizar");
-                validarExpresiones('correo', $Correo, "ROL (F) inválido", "actualizar");
-                validarExpresiones('documento', $Documento, "ROL (F) inválido", "actualizar");
-                validarExpresiones('estatus', $Estatus, "ROL (F) inválido", "actualizar");
+                validarExpresiones('cedula', $Cedula, "Cedula (F) inválido", "actualizar");
+                validarExpresiones('cedula', $CedulaActual, "Cedula Actual (F) inválido", "actualizar");
+                validarExpresiones('correo', $CorreoActual, "Correo Actual (F) inválido", "actualizar");
+                validarExpresiones('correo', $Correo, "Correo (F) inválido", "actualizar");
+                validarExpresiones('documento', $Documento, "Tipo de Documento (F) inválido", "actualizar");
+                validarExpresiones('estatus', $Estatus, "Estatus (F) inválido", "actualizar");
 
                     if (!validarTipoDocumento($Documento)) {  
                         MensajeJSON(0, 'actualizar', 'El tipo de documento no es válido - ERROR E520');

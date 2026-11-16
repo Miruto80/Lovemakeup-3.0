@@ -587,7 +587,7 @@ document.getElementById('rolSelectedit').addEventListener('change', function() {
 <?php include 'complementos/footer.php' ?>
 <!-- para el datatable-->
  <script src="assets/js/demo/datatables-demo.js"></script>
- <script src="assets/js/usuario.js"></script>
+ <script type="module" src="assets/js/usuario.js"></script>
 
 </body>
 

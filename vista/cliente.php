@@ -49,11 +49,11 @@
         Clientes</h4>
            
        <!-- Button que abre el Modal N1 Registro -->
-       <button type="button" class="btn btn-primary"  title="(CONTROL + ALT + A) click para ver la ayuda">
+       <button type="button" id="ayudacliente" class="btn btn-primary"  title="(CONTROL + ALT + A) click para ver la ayuda">
             <span class="icon text-white">
             <i class="fas fa-info-circle me-2"></i>
             </span>
-            <span class="text-white" id="ayudacliente">Ayuda</span>
+            <span class="text-white">Ayuda</span>
           </button>
       </div>
         
@@ -294,7 +294,7 @@ function copiarCorreo(elemento) {
 <?php include 'complementos/footer.php' ?>
 <!-- para el datatable-->
 <script src="assets/js/demo/datatables-demo.js"></script>
-<script src="assets/js/cliente.js"></script>
+<script type="module" src="assets/js/cliente.js"></script>
 
   
 

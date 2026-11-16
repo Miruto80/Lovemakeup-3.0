@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Olvido de Clave | LoveMakeup C.A</title>
+	<link rel="icon" type="image/png" href="assets/img/icono.png">
 	<link id="pagestyle" href="assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
 	  <!-- JS LIBRERIA -->
   <script src="assets/js/libreria/jquery.min.js"></script>
@@ -75,6 +76,6 @@
     </div>
 
  <script src="assets/js/core/bootstrap.min.js"></script>
-  <script src="assets/js/olvidoclave.js"></script>
+  <script type="module" src="assets/js/olvidoclave.js"></script>
 </body>
 </html>

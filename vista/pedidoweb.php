@@ -369,8 +369,11 @@ if (
 
                       <?php if (!empty($pedido['comprobante_imagen'])): ?>
   <p><strong>Comprobante de Pago:</strong></p>
-  <img src="<?php echo htmlspecialchars($pedido['comprobante_imagen']); ?>" alt="Comprobante de Pago" class="img-fluid rounded border" style="max-width: 300px;">
-<?php endif; ?>
+<img src="<?php echo htmlspecialchars($pedido['comprobante_imagen']); ?>" 
+     alt="Comprobante de Pago" 
+     class="img-fluid rounded border" 
+     style="max-width: 300px;"
+     onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className: 'text-muted fst-italic p-3 border rounded bg-light', innerText: 'Comprobante no encontrado'}));"><?php endif; ?>
 <p><strong>Numero Destinatario:</strong> <?php echo htmlspecialchars($pedido['telefono_emisor'] ?? 'N/A'); ?></p>
 
 
