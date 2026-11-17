@@ -49,11 +49,11 @@
         Clientes</h4>
            
        <!-- Button que abre el Modal N1 Registro -->
-       <button type="button" class="btn btn-primary"  title="(CONTROL + ALT + A) click para ver la ayuda">
+       <button type="button" id="ayudacliente" class="btn btn-primary"  title="(CONTROL + ALT + A) click para ver la ayuda">
             <span class="icon text-white">
             <i class="fas fa-info-circle me-2"></i>
             </span>
-            <span class="text-white" id="ayudacliente">Ayuda</span>
+            <span class="text-white">Ayuda</span>
           </button>
       </div>
         
@@ -69,8 +69,8 @@
                   <th class="text-white text-center">Contactar</th>
                   <th class="text-white text-center">Estatus</th>
                  
-                    <?php  if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(10, 3)): ?>
-                  <th class="text-white text-center">Acción</th>
+                    <?php  if (tieneAcceso(10, 3) === true): ?>
+                      <th class="text-white text-center">Acción</th>
                     <?php endif; ?>
                 </tr>
               </thead>
@@ -146,7 +146,7 @@
 
             
                     
-                  <?php  if ($_SESSION["nivel_rol"] == 3 && tieneAcceso(10, 3)): ?>
+                  <?php  if ($_SESSION["nivel_rol"] >= 2 && tieneAcceso(10, 3)): ?>
                   <td class="text-center">
                       <form method="POST" action="?pagina=cliente" id="formestatus">
                   
@@ -162,7 +162,7 @@
                       </button>
                     </form>
                  </td>
-                     <?php endif; ?>
+                  <?php endif; ?>
 
                      
                 </tr>
@@ -211,7 +211,7 @@
             <label for="cedula" class="form-label text-g">Cédula</label>
              <div class="input-group mb-3">
                   <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                   <select class="form-select" name="tipo_documento" id="rolSelect2"  required >
+                   <select class="form-select" name="tipo_documento" id="rolSelect2" required >
                     <option id="modaldocumento">  </option>
                     <option value="V"> V </option>
                     <option value="E"> E </option>
@@ -234,7 +234,7 @@
              <label for="rol" class="form-label text-g">Estatus</label>
                  <div class="input-group mb-3">
                   <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tag"></i></span>
-                    <select class="form-select" name="estatus">
+                    <select class="form-select" name="estatus" id="estatusmodal">
                       <option id="modalestatus"> </option>
                        <option value="1">Activo</option>
                        <option value="2">Inactivo</option>
@@ -294,7 +294,7 @@ function copiarCorreo(elemento) {
 <?php include 'complementos/footer.php' ?>
 <!-- para el datatable-->
 <script src="assets/js/demo/datatables-demo.js"></script>
-<script src="assets/js/cliente.js"></script>
+<script type="module" src="assets/js/cliente.js"></script>
 
   
 

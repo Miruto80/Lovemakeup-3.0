@@ -66,6 +66,7 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
                 validarExpresiones('cedula', $usuario, "Cédula (F) inválida","ingresar");
                 validarExpresiones('documento', $documento, "Documento (F) inválido","ingresar");
                 validarExpresiones('clave', $clave, "Clave (F) inválida","ingresar");
+                validarExpresiones('cedula', $usuario, "Cédula (F) inválida","ingresar");
 
                 $hoy = date('Y-m-d');
                 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || $fecha < $hoy) {
@@ -176,20 +177,20 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
         /// Sanitización de Entradas
             foreach ($campos as $nombree => $valor) {  /* V2 */ 
                 if (!validarEntradaSQL($valor)) {
-                    MensajeJSON(0, 'registrar', "Entrada inválida detectada en el campo: $nombree");
+                    MensajeJSON(0, 'incluir', "Entrada inválida detectada en el campo: $nombree");
                 }
-            } 
+            }  
                 //// Validar Datos  V5
-                validarExpresiones('cedula', $cedulaR, "Cédula (F) inválida","registrar");
-                validarExpresiones('correo', $correoR, "Correo (F) inválida","registrar");
-                validarExpresiones('documento', $tipoDocumento, "Tipo de Documento (F) inválida","registrar");
-                validarExpresiones('clave', $claveRegistro, "Clave (F) inválida","registrar");
-                validarExpresiones('telefono', $telefono, "Telefono (F) inválida","registrar");
-                validarExpresiones('nombre', $nombre, "Nombre (F) inválida","registrar");
-                validarExpresiones('apellido', $apellido, "Apellido (F) inválida","registrar");
+                validarExpresiones('cedula', $cedulaR, "Cédula (F) inválida","incluir");
+                validarExpresiones('correo', $correoR, "Correo (F) inválida","incluir");
+                validarExpresiones('documento', $tipoDocumento, "Tipo de Documento (F) inválida","incluir");
+                validarExpresiones('clave', $claveRegistro, "Clave (F) inválida","incluir");
+                validarExpresiones('telefono', $telefono, "Telefono (F) inválida","incluir");
+                validarExpresiones('nombre', $nombre, "Nombre (F) inválida","incluir");
+                validarExpresiones('apellido', $apellido, "Apellido (F) inválida","incluir");
 
                 if (!validarTipoDocumento($tipoDocumento)) { // Validar tipo_documento
-                    MensajeJSON(0, 'registrar', 'El tipo de documento no es válido - ERROR E520'); 
+                    MensajeJSON(0, 'incluir', 'El tipo de documento no es válido - ERROR E520'); 
                 }
 
                 $datosRegistro = [
@@ -216,7 +217,7 @@ if (isset($_POST['ingresar'])) { /*|||||||||||||||||||||||||||||||||||||||||||||
               exit;
                
     } else {
-        MensajeJSON(0, 'registrar', 'Datos Vacios - ERROR E300'); 
+        MensajeJSON(0, 'incluir', 'Datos Vacios - ERROR E300'); 
     }
 // -------------
 } else if (isset($_POST['validarclave'])) {

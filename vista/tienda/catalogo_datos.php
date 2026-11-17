@@ -195,7 +195,7 @@
       
 
   </main>
-     <script src="assets/js/catalago_datos.js"></script>
+     <script type="module" src="assets/js/catalago_datos.js"></script>
 
   <?php include 'vista/complementos/footer_catalogo.php' ?>
 </body>
