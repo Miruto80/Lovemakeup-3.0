@@ -62,6 +62,8 @@ class MarcaTest extends TestCase {
 
         $this->assertEquals(0, $resultado['respuesta']);
         $this->assertEquals('Operación no válida', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado de operación inválida:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     /*|||||||||||| REGISTRAR MARCA ||||||||||||*/
@@ -78,6 +80,8 @@ class MarcaTest extends TestCase {
 
         $this->assertIsArray($resultado);
         $this->assertArrayHasKey('respuesta', $resultado);
+        fwrite(STDOUT, "Resultado del registro de marca:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     /*|||||||||||| REGISTRAR MARCA EXISTENTE ||||||||||||*/
@@ -94,6 +98,8 @@ class MarcaTest extends TestCase {
 
         $this->assertEquals(0, $resultado['respuesta']);
         $this->assertStringContainsString('Ya existe', $resultado['mensaje']);
+        fwrite(STDOUT, "Resultado del registro de marca existente:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     /*|||||||||||| CONSULTAR MARCAS ||||||||||||*/
@@ -102,11 +108,14 @@ class MarcaTest extends TestCase {
         $resultado = $this->marca->getMarca()->consultar();
 
         $this->assertIsArray($resultado);
-
-        if (!empty($resultado)) {
-            $this->assertArrayHasKey('id_marca', $resultado[0]);
-            $this->assertArrayHasKey('nombre', $resultado[0]);
+        foreach ($resultado as $marca) {
+            $this->assertIsArray($marca);
+            $this->assertArrayHasKey('id_marca', $marca);
+            $this->assertArrayHasKey('nombre', $marca);
         }
+
+        fwrite(STDOUT, "Marcas obtenidas:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     /*|||||||||||| ACTUALIZAR MARCA ||||||||||||*/
@@ -121,6 +130,8 @@ class MarcaTest extends TestCase {
 
         $this->assertIsArray($resultado);
         $this->assertEquals('actualizar', $resultado['accion']);
+        fwrite(STDOUT, "Resultado de actualización de marca:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     /*|||||||||||| ELIMINAR MARCA ||||||||||||*/
@@ -134,6 +145,8 @@ class MarcaTest extends TestCase {
 
         $this->assertIsArray($resultado);
         $this->assertEquals('eliminar', $resultado['accion']);
+        fwrite(STDOUT, "Resultado de eliminación de marca:" . PHP_EOL);
+        fwrite(STDOUT, print_r($resultado, true));
     }
 
     /*|||||||||||| TEST MASIVO ||||||||||||*/
@@ -157,6 +170,7 @@ class MarcaTest extends TestCase {
             $resultado = $this->marca->getMarca()->procesarMarca($json);
 
             fwrite(STDOUT, "\n → Intento #{$i} | Nombre: {$nombre}\n");
+            fwrite(STDOUT, print_r($resultado, true));
 
             $this->assertIsArray($resultado);
             $this->assertArrayHasKey('accion', $resultado);

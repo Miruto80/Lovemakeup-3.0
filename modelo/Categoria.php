@@ -3,27 +3,19 @@
 namespace LoveMakeup\Proyecto\Modelo;
 
 use LoveMakeup\Proyecto\Config\Conexion;
+use LoveMakeup\Proyecto\Modelo\Bitacora;
 
 class Categoria extends Conexion {
-    private $bitacoraObj;
     function __construct() {
         parent::__construct();
-        $this->bitacoraObj = new Bitacora();
     }
 
-        public function registrarBitacora(string $jsonDatos): bool {
-        $datos = json_decode($jsonDatos, true);
-        try {
-            $this->bitacoraObj->registrarOperacion(
-                $datos['accion'],
-                'categoria',  // nombre del módulo
-                $datos
-            );
-            return true;
-        } catch (\Throwable $e) {
-            error_log('Bitacora fallo (categoria): ' . $e->getMessage());
-            return false;
+    private function prepararAuditoria($conex): void {
+        if (session_status() === PHP_SESSION_NONE || empty($_SESSION['id'])) {
+            throw new \RuntimeException('No hay un usuario autenticado para auditar la operación.');
         }
+
+        $conex->exec('SET @app_cedula = ' . (int) $_SESSION['id']);
     }
 
     // 2) Router JSON → CRUD
@@ -64,6 +56,8 @@ class Categoria extends Conexion {
     private function insertar(array $d): array {
         $conex = $this->getConex1();
         try {
+            $this->prepararAuditoria($conex);
+
             // ========================================
             // VALIDACIÓN ESTRICTA DE DATOS
             // ========================================
@@ -95,6 +89,14 @@ class Categoria extends Conexion {
 
             if ($ok) {
                 $conex->commit();
+                // Registrar en bitácora
+                $bitacora = new Bitacora();
+                $bitacora->registrarOperacion(
+                    'CREAR',
+                    'Categoria',
+                    "ID: " . $conex->lastInsertId() . " | Nombre: " . $d['nombre']
+                );
+                $conex = null;
                 $respuesta = ['respuesta'=>1,'accion'=>'incluir','mensaje'=>'Categoría creada'];
             } else {
                 $conex->rollBack();
@@ -115,6 +117,8 @@ class Categoria extends Conexion {
     private function actualizar(array $d): array {
         $conex = $this->getConex1();
         try {
+            $this->prepararAuditoria($conex);
+
             // ========================================
             // VALIDACIÓN ESTRICTA DE DATOS
             // ========================================
@@ -153,6 +157,14 @@ class Categoria extends Conexion {
 
             if ($ok) {
                 $conex->commit();
+                // Registrar en bitácora
+                $bitacora = new Bitacora();
+                $bitacora->registrarOperacion(
+                    'MODIFICAR',
+                    'Categoria',
+                    "ID: " . $d['id_categoria'] . " | Nombre: " . $d['nombre']
+                );
+                $conex = null;
                 $respuesta = ['respuesta'=>1,'accion'=>'actualizar','mensaje'=>'Categoría modificada'];
             } else {
                 $conex->rollBack();
@@ -173,6 +185,8 @@ class Categoria extends Conexion {
     private function eliminarLogico(array $d): array {
         $conex = $this->getConex1();
         try {
+            $this->prepararAuditoria($conex);
+
             $conex->beginTransaction();
 
             $sql  = "UPDATE categoria
@@ -183,6 +197,14 @@ class Categoria extends Conexion {
 
             if ($ok) {
                 $conex->commit();
+                // Registrar en bitácora
+                $bitacora = new Bitacora();
+                $bitacora->registrarOperacion(
+                    'ELIMINAR',
+                    'Categoria',
+                    "ID: " . $d['id_categoria']
+                );
+                $conex = null;
                 $respuesta = ['respuesta'=>1,'accion'=>'eliminar','mensaje'=>'Categoría eliminada'];
             } else {
                 $conex->rollBack();

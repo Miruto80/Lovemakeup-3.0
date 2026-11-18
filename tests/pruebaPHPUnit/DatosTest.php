@@ -85,12 +85,12 @@ class DatosTest extends TestCase {
 
     public function testActualizarDatosUsuario() {
         $datos = [
-            'cedula' => '10200300',
+            'cedula' => '30754263',
             'correo' => 'actualizado@example.com',
             'nombre' => 'Daniel',
             'apellido' => 'Sánchez',
             'telefono' => '04141234567',
-            'id_persona' => 2
+            'id_persona' => 27
         ];
         $resultado = $this->datos->testEjecutarActualizacion($datos);
         $this->assertIsArray($resultado);

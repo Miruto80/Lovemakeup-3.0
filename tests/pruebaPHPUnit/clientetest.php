@@ -36,12 +36,12 @@ class ClienteTest extends TestCase {
     $datosCliente = [
         'operacion' => 'actualizar',
         'datos' => [
-            'cedula' => '30716541',
+            'cedula' => '10541541',
             'correo' => 'vie21jo@correo.com',
             'estatus' => 1,
-            'cedula_actual' => '30716541', //Validar
+            'cedula_actual' => '12241103', //Validar
             'tipo_documento' => 'V',
-            'correo_actual' => 'vie21jo@correo.com'
+            'correo_actual' => 'acirema229@gmail.com'
         ]
     ];
 
