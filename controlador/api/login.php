@@ -4,8 +4,59 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// --- FUNCIÓN PARA GUARDAR EL LOG SIN CLASES ---
+function registrarConsumoLog($statusCode) {
+    // Ruta directa a la carpeta logs que ya creaste en tu servidor
+    $logDir = __DIR__ . '/../../logs/';
+    
+    // Si por alguna razón la carpeta existe, guardamos; si no, validamos
+    if (!is_dir($logDir)) {
+        @mkdir($logDir, 0755, true);
+    }
+
+    // Nombre del archivo dinámico por día (ej: api_requests_2026-06-07.log)
+    $logFile = $logDir . 'API_consumo_' . date('Y-m-d') . '.log';
+
+    // 1. Obtener IP
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'Desconocida';
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    }
+
+    // 2. Obtener Dispositivo con tus cabeceras personalizadas de React Native
+    $platform   = $_SERVER['HTTP_X_CLIENT_PLATFORM'] ?? '';
+    $brand      = $_SERVER['HTTP_X_CLIENT_BRAND'] ?? '';
+    $model      = $_SERVER['HTTP_X_CLIENT_MODEL'] ?? '';
+    $osVersion  = $_SERVER['HTTP_X_CLIENT_OS_VERSION'] ?? '';
+
+    if (!empty($platform) || !empty($model)) {
+        $dispositivo = trim("$brand $model ($platform OS $osVersion)");
+    } else {
+        $dispositivo = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+    }
+
+    // 3. Endpoint y fecha
+    $endpoint = $_SERVER['REQUEST_URI'] ?? '';
+    $fecha = date('Y-m-d H:i:s');
+
+    // Estructura del log
+    $dataLog = json_encode([
+        'fecha'       => $fecha,
+        'ip'          => $ip,
+        'dispositivo' => $dispositivo,
+        'endpoint'    => $endpoint,
+        'http_code'   => $statusCode
+    ], JSON_UNESCAPED_UNICODE);
+
+    // file_put_contents crea el archivo diario automáticamente si no existe
+    @file_put_contents($logFile, $dataLog . PHP_EOL, FILE_APPEND | LOCK_EX);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
+    registrarConsumoLog(200);
     exit;
 }
 
@@ -34,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Retry-After: ' . $reintentarEn);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['respuesta' => 0, 'accion' => 'error', 'text' => $mensaje429]);
+        registrarConsumoLog(429);
         exit;
     }
 } 
@@ -43,6 +95,7 @@ $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
 if (!file_exists($privateKeyPath)) {
     http_response_code(500);
     echo json_encode(['error' => 'Private key not found. Configure jwt_private.pem in config/']);
+    registrarConsumoLog(500);
     exit;
 }
 
@@ -56,6 +109,7 @@ function base64url_encode($data) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
+    registrarConsumoLog(405);
     exit;
 }
 
@@ -66,6 +120,7 @@ $dataJson = json_decode($body, true);
 if (!$dataJson || !isset($dataJson['usuario']) || !isset($dataJson['clave']) || !isset($dataJson['tipo_documento'])) {
     http_response_code(400);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos o JSON inválido']);
+    registrarConsumoLog(400);
     exit;
 }
 
@@ -93,6 +148,7 @@ $objlogin = new Login();
         if (isset($bloqueado['respuesta']) && $bloqueado['respuesta'] == 0) {
             http_response_code(403);
             echo json_encode(['respuesta' => 0, 'mensaje' => 'Lo sentimos, su cuenta está Bloqueada.']);
+            registrarConsumoLog(403);
             exit;
             
         }
@@ -118,6 +174,7 @@ $objlogin = new Login();
                 if ((int)$resultado->estatus === 2) {
                     http_response_code(403);
                     echo json_encode(['respuesta' => 0, 'mensaje' => 'Lo sentimos, su cuenta está suspendida.']);
+                    registrarConsumoLog(403);
                     exit;
                 }
 
@@ -128,6 +185,7 @@ $objlogin = new Login();
                     if ($privKeyId === false) {
                         http_response_code(500);
                         echo json_encode(['error' => 'Invalid private key configuration']);
+                        registrarConsumoLog(500);
                         exit;
                     }
 
@@ -173,16 +231,19 @@ $objlogin = new Login();
                             'rol'      => $resultado->nombre_rol
                         ]
                     ]);
+                    registrarConsumoLog(200);
                     exit;
                 }
             } else {
                 http_response_code(401);
                 echo json_encode(['respuesta' => 0, 'mensaje' => 'Cédula y/o Clave inválida.']);
+                registrarConsumoLog(401);
                 exit;
             }
 
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
+            registrarConsumoLog(500);
         }
 ?>
