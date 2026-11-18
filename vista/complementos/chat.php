@@ -25,7 +25,9 @@ $buildAngelJwt = static function (
     }
 
     if (!is_file($keyPath)) {
-        $keyPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . ltrim($keyPath, '\\/');
+        $relativeKeyPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $keyPath);
+        $keyPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR
+            . ltrim($relativeKeyPath, DIRECTORY_SEPARATOR);
     }
 
     $privateKeyContents = @file_get_contents($keyPath);
