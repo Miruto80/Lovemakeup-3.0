@@ -1,70 +1,10 @@
 <?php
-$loveMakeupRoot = dirname(__DIR__, 2);
-require_once $loveMakeupRoot . '/vendor/autoload.php';
-\Dotenv\Dotenv::createImmutable($loveMakeupRoot, 'passconfig.env')->safeLoad();
-
 if (session_status() === PHP_SESSION_NONE) {
-    @session_start();
+    session_start();
 }
-$angelUsuario = isset($_SESSION['id']) && !empty($_SESSION['id'])
-    ? (string) $_SESSION['id']
-    : null;
-
-$angelApiUrl = $_ENV['ANGEL_API_URL'] ?? 'http://127.0.0.1:8000/api/chat';
-$angelPrivateKeyPath = $_ENV['ANGEL_PRIVATE_KEY_PATH'] ?? '';
-$angelPrivateKeyPassphrase = $_ENV['ANGEL_PRIVATE_KEY_PASSPHRASE'] ?? '';
-
-$buildAngelJwt = static function (
-    string $keyPath,
-    string $passphrase = '',
-    int $ttlSeconds = 3600
-) use ($angelUsuario): string {
-    if ($keyPath === '') {
-        error_log('ANGEL_PRIVATE_KEY_PATH no está configurado.');
-        return '';
-    }
-
-    if (!is_file($keyPath)) {
-        $relativeKeyPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $keyPath);
-        $keyPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR
-            . ltrim($relativeKeyPath, DIRECTORY_SEPARATOR);
-    }
-
-    $privateKeyContents = @file_get_contents($keyPath);
-    $privateKey = $privateKeyContents === false
-        ? false
-        : openssl_pkey_get_private($privateKeyContents, $passphrase);
-    if ($privateKey === false) {
-        error_log('No se pudo cargar la clave privada JWT de Ángel.');
-        return '';
-    }
-
-    $base64UrlEncode = static function (string $value): string {
-        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
-    };
-
-    $issuedAt = time();
-    $header = ['alg' => 'RS256', 'typ' => 'JWT'];
-    $payload = [
-        'sub' => $angelUsuario !== null
-            ? $angelUsuario
-            : 'anon_' . bin2hex(random_bytes(4)),
-        'iat' => $issuedAt,
-        'exp' => $issuedAt + $ttlSeconds,
-    ];
-    $encodedHeader = $base64UrlEncode(json_encode($header, JSON_THROW_ON_ERROR));
-    $encodedPayload = $base64UrlEncode(json_encode($payload, JSON_THROW_ON_ERROR));
-    $signingInput = $encodedHeader . '.' . $encodedPayload;
-
-    if (!openssl_sign($signingInput, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
-        error_log('No se pudo firmar el JWT de Ángel.');
-        return '';
-    }
-
-    return $signingInput . '.' . $base64UrlEncode($signature);
-};
-
-$angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
+$angelBasePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php')), '/');
+$angelApiUrl = $angelBasePath . '/controlador/api/chat.php';
+$angelUsuarioLogueado = !empty($_SESSION['id']);
 ?>
 
 <!-- CONTENEDOR DEL WIDGET -->
@@ -175,8 +115,7 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
   // CONFIGURACIÓN Y CONSTANTES
 
   const ANGEL_API_URL = <?= json_encode($angelApiUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-  const ANGEL_TOKEN = <?= json_encode($angelJwt, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-  const ANGEL_USUARIO_LOGUEADO = <?= json_encode($angelUsuario !== null); ?>;
+  const ANGEL_USUARIO_LOGUEADO = <?= json_encode($angelUsuarioLogueado); ?>;
 
   const MAX_IMAGENES = 3;
   const MAX_RESPUESTAS_INVITADO = 3;
@@ -513,14 +452,12 @@ $angelJwt = $buildAngelJwt($angelPrivateKeyPath, $angelPrivateKeyPassphrase);
     const indicadorEscribiendo = mostrarIndicadorEscribiendo();
 
     try {
-      const usarApi = !!ANGEL_TOKEN && !!ANGEL_API_URL && ANGEL_API_URL !== '' && ANGEL_API_URL !== 'null';
-      if (!usarApi) throw new Error('El servicio de Ángel no está configurado.');
+      if (!ANGEL_API_URL) throw new Error('El servicio de Ángel no está configurado.');
 
       const response = await fetch(ANGEL_API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${ANGEL_TOKEN}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           mensaje: texto,
