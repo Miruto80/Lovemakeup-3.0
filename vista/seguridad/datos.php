@@ -250,7 +250,7 @@
 
 <!-- php barra de navegacion-->
 <?php include 'vista/complementos/footer.php' ?>
- <script src="assets/js/datos.js"></script>
+ <script type="module" src="assets/js/datos.js"></script>
 </body>
 
 </html>

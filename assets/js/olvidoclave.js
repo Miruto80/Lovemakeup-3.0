@@ -1,67 +1,4 @@
-//Función para validar por Keypress
-function validarkeypress(er,e){
-  key = e.keyCode;
-    tecla = String.fromCharCode(key);
-    a = er.test(tecla);
-    if(!a){
-    e.preventDefault();
-    }
-}
-
-function activarLoaderBoton(idBoton, texto = 'Cargando...') {
-    const $boton = $(idBoton);
-    const textoActual = $boton.html();
-    $boton.data('texto-original', textoActual); // Guarda el texto original
-    $boton.prop('disabled', true);
-    $boton.html(`<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${texto}`);
-}
-
-function desactivarLoaderBoton(idBoton) {
-    const $boton = $(idBoton);
-    const textoOriginal = $boton.data('texto-original');
-    $boton.prop('disabled', false);
-    $boton.html(textoOriginal);
-}
-
-//Función para validar por keyup
-function validarkeyup(er,etiqueta,etiquetamensaje,
-mensaje){
-  a = er.test(etiqueta.val());
-  if(a){
-    etiquetamensaje.text("");
-    return 1;
-  }
-  else{
-    etiquetamensaje.text(mensaje);
-    return 0;
-  }
-}
-
-
-/*||| Funcion para validar compas de formulario |||*/
-function validarCampo(campo, regex, textoError, mensaje) {
-  const valor = campo.val();
-
-  if (campo.is("select")) {
-   
-    if (valor === "") {
-      campo.removeClass("is-valid").addClass("is-invalid");
-      textoError.text(mensaje);
-    } else {
-      campo.removeClass("is-invalid").addClass("is-valid");
-      textoError.text("");
-    }
-  } else { 
-   
-    if (regex.test(valor)) {
-      campo.removeClass("is-invalid").addClass("is-valid");
-      textoError.text("");
-    } else {
-      campo.removeClass("is-valid").addClass("is-invalid");
-      textoError.text(mensaje);
-    }
-  }
-}
+import { activarLoaderBoton, desactivarLoaderBoton, muestraMensaje,  ValidacionExpresiones } from './LoveFunciones.js';
 
 
 function cambiarVista() {
@@ -185,7 +122,7 @@ $(document).ready(function () {
 
     $(document).on("click", "#btnReenviar", function (event) {
         event.preventDefault();
-         activarLoaderBoton('#btnReenviar');
+         activarLoaderBoton('#btnReenviar',"Validando...");
         var datos = new FormData($('#forcambio_clave')[0]);
         datos.append('btnReenviar', 'btnReenviar');
         enviaAjax(datos);
@@ -240,23 +177,9 @@ function cambiarVistaConfirmacion() {
 
     vistaActual.innerHTML = nuevaVista;
     
-    $("#clavenueva").on("keypress", function(e) {
-    validarkeyup(/^.{8,16}$/, e);
-    });
-    
-   $("#clavenueva").on("keyup", function() {
-      validarCampo($(this),/^.{8,16}$/, $("#textoclavenueva"), "El formato debe ser entre 8 y 16 caracteres");
-    });
+    ValidacionExpresiones($("#clavenueva"), 'clave', $("#textoclavenueva"), "El formato debe ser de 8 a 16 caracteres");
+    ValidacionExpresiones($("#clavenuevac"), 'clave', $("#textoclavenuevac"), "El formato debe ser de 8 a 16 caracteres");
 
-
-    $("#clavenuevac").on("keypress", function(e) {
-    validarkeyup(/^.{8,16}$/, e);
-    });
-    
-  $("#clavenuevac").on("keyup", function() {
-      validarCampo($(this),/^.{8,16}$/, $("#textoclavenuevac"), "El formato debe ser entre 8 y 16 caracteres");
-    });
- 
 }
 
 
@@ -268,7 +191,7 @@ $(document).ready(function() {
 
         if (validarFormulario()) {
            
-            activarLoaderBoton('#validar');
+            activarLoaderBoton('#validar',"Validando...");
             var datos = new FormData($('#forclave')[0]);
             datos.append('validar', 'validar');
             enviaAjax(datos);
@@ -291,32 +214,9 @@ $(document).ready(function() {
         }
     });
 
-     $("#correo").on("keypress", function (e) {
-      validarkeypress(/^[a-zA-Z0-9._%+-@\b]*$/, e);
-    });
-
-    $("#correo").on("keyup", function () {
-      validarCampo($(this), /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,60}$/,
-       $("#textocorreo"), "El formato debe incluir @ y ser válido.");
-    });
-
-    $("#clavenueva").on("keypress", function(e) {
-    validarkeyup(/^.{8,16}$/, e);
-    });
-
-     $("#clavenueva").on("keyup", function() {
-      validarCampo($(this),/^.{8,16}$/, $("#textoclavenueva"), "El formato debe ser entre 8 y 16 caracteres");
-    });
-
-
-    $("#clavenuevac").on("keypress", function(e) {
-    validarkeyup(/^.{8,16}$/, e);
-    });
-
-
-     $("#clavenuevac").on("keyup", function() {
-      validarCampo($(this),/^.{8,16}$/, $("#textoclavenuevac"), "El formato debe ser entre 8 y 16 caracteres");
-    });
+    ValidacionExpresiones($("#clavenuevac"), 'clave', $("#textoclavenuevac"), "El formato debe ser de 8 a 16 caracteres");
+    ValidacionExpresiones($("#clavenueva"), 'clave', $("#textoclavenueva"), "El formato debe ser de 8 a 16 caracteres");
+    ValidacionExpresiones($("#correo"), 'correo', $("#textocorreo"), "El formato debe incluir @ y ser válido.");
 
 });
 
@@ -325,7 +225,7 @@ $(document).on("click", "#validarNuevo", function(event) {
 
      if (validarFormulariocodigo()) {
 
-        activarLoaderBoton('#validarNuevo');
+        activarLoaderBoton('#validarNuevo',"Validando...");
         var datos = new FormData($('#forcambio_clave')[0]);
         datos.append('validarcodigo', 'validarcodigo');
         enviaAjax(datos);
@@ -357,7 +257,7 @@ $(document).on("click", "#validarNuevo", function(event) {
 
         if (validarFormularioclave()) {
 
-            activarLoaderBoton('#validarclave');
+            activarLoaderBoton('#validarclave', "Validando...");
              var datos = new FormData($('#forconfirmacion')[0]);
              datos.append('validarclave', 'validarclave');
              enviaAjax(datos);
@@ -422,13 +322,13 @@ function validarFormularioclave() {
     const $errorConfirm = $("#textoclavenuevac");
 
     // Validar formato de cada campo
-    if (!/^.{8,16}$/.test($clave.val())) {
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/.test($clave.val())) {
         $errorClave.text("El formato debe ser entre 8 y 16 caracteres");
         $clave.removeClass("is-valid").addClass("is-invalid");
         validar = false;
     }
 
-    if (!/^.{8,16}$/.test($claveConfirm.val())) {
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/.test($claveConfirm.val())) {
         $errorConfirm.text("El formato debe ser entre 8 y 16 caracteres");
         $claveConfirm.removeClass("is-valid").addClass("is-invalid");
         validar = false;
@@ -444,17 +344,6 @@ function validarFormularioclave() {
     return validar;
 }
 
-
-
-function muestraMensaje(icono, tiempo, titulo, mensaje) {
-  Swal.fire({
-    icon: icono,
-    timer: tiempo,
-    title: titulo,
-    html: mensaje,
-    showConfirmButton: false,
-  });
-}
 
 function reiniciarTemporizador() {
     const nuevoTiempo = new Date().getTime();

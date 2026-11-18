@@ -78,6 +78,45 @@ class Producto extends Conexion {
         return $valor;
     }
 
+    public function validarStockMaximo($valor) {
+        if (!is_scalar($valor) || filter_var($valor, FILTER_VALIDATE_INT) === false) {
+            return false;
+        }
+
+        $valor = (int)$valor;
+        return $valor >= 1 && $valor <= 3000;
+    }
+
+    public function validarCamposNoCero($datos) {
+        $camposEnteros = [
+            'cantidad_mayor' => 'La cantidad al mayor debe ser un entero mayor que 0',
+            'stock_minimo' => 'El stock mínimo debe ser un entero mayor que 0'
+        ];
+
+        foreach ($camposEnteros as $campo => $mensaje) {
+            $valor = $datos[$campo] ?? null;
+            if (!is_scalar($valor) || !preg_match('/^[0-9]{1,8}$/D', (string)$valor) || (int)$valor === 0) {
+                return $mensaje;
+            }
+        }
+
+        $camposPrecios = [
+            'precio_mayor' => 'El precio al mayor debe ser mayor que 0',
+            'precio_detal' => 'El precio al detal debe ser mayor que 0'
+        ];
+
+        foreach ($camposPrecios as $campo => $mensaje) {
+            $valor = $datos[$campo] ?? null;
+            if (!is_scalar($valor)
+                || !preg_match('/^[0-9]{1,8}(?:\.[0-9]{1,2})?$/D', (string)$valor)
+                || (float)$valor <= 0) {
+                return $mensaje;
+            }
+        }
+
+        return null;
+    }
+
     private function validarRutaImagen($ruta)
 {
     if (empty($ruta) || !is_string($ruta)) {
@@ -100,6 +139,16 @@ class Producto extends Conexion {
 
         $operacion = $datos['operacion'];
         $datosProcesar = $datos['datos'];
+
+        if (in_array($operacion, ['registrar', 'actualizar'], true)
+            && ($mensajeValidacion = $this->validarCamposNoCero($datosProcesar)) !== null) {
+            return ['respuesta' => 0, 'accion' => $operacion === 'registrar' ? 'incluir' : 'actualizar', 'mensaje' => $mensajeValidacion];
+        }
+
+        if (in_array($operacion, ['registrar', 'actualizar'], true)
+            && !$this->validarStockMaximo($datosProcesar['stock_maximo'] ?? null)) {
+            return ['respuesta' => 0, 'accion' => $operacion === 'registrar' ? 'incluir' : 'actualizar', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000'];
+        }
 
        
         if (isset($datosProcesar['imagenes']) && is_string($datosProcesar['imagenes'])) {
@@ -176,11 +225,11 @@ class Producto extends Conexion {
             $nombre = $this->sanitizarString($datos['nombre'] ?? '', 100);
             $descripcion = $this->sanitizarString($datos['descripcion'] ?? '', 500);
             $id_marca = $this->sanitizarEntero($datos['id_marca'] ?? 0, 1);
-            $cantidad_mayor = $this->sanitizarEntero($datos['cantidad_mayor'] ?? 0, 0);
-            $precio_mayor = $this->sanitizarDecimal($datos['precio_mayor'] ?? 0, 0);
-            $precio_detal = $this->sanitizarDecimal($datos['precio_detal'] ?? 0, 0);
-            $stock_maximo = $this->sanitizarEntero($datos['stock_maximo'] ?? 0, 0);
-            $stock_minimo = $this->sanitizarEntero($datos['stock_minimo'] ?? 0, 0);
+            $cantidad_mayor = $this->sanitizarEntero($datos['cantidad_mayor'] ?? 0, 1);
+            $precio_mayor = $this->sanitizarDecimal($datos['precio_mayor'] ?? 0, 0.01);
+            $precio_detal = $this->sanitizarDecimal($datos['precio_detal'] ?? 0, 0.01);
+            $stock_maximo = $this->sanitizarEntero($datos['stock_maximo'] ?? 0, 1, 3000);
+            $stock_minimo = $this->sanitizarEntero($datos['stock_minimo'] ?? 0, 1);
             $id_categoria = $this->sanitizarEntero($datos['id_categoria'] ?? 0, 1);
 
             // Validar rutas de imágenes
@@ -250,11 +299,11 @@ class Producto extends Conexion {
             $nombre = $this->sanitizarString($datos['nombre'] ?? '', 100);
             $descripcion = $this->sanitizarString($datos['descripcion'] ?? '', 500);
             $id_marca = $this->sanitizarEntero($datos['id_marca'] ?? 0, 1);
-            $cantidad_mayor = $this->sanitizarEntero($datos['cantidad_mayor'] ?? 0, 0);
-            $precio_mayor = $this->sanitizarDecimal($datos['precio_mayor'] ?? 0, 0);
-            $precio_detal = $this->sanitizarDecimal($datos['precio_detal'] ?? 0, 0);
-            $stock_maximo = $this->sanitizarEntero($datos['stock_maximo'] ?? 0, 0);
-            $stock_minimo = $this->sanitizarEntero($datos['stock_minimo'] ?? 0, 0);
+            $cantidad_mayor = $this->sanitizarEntero($datos['cantidad_mayor'] ?? 0, 1);
+            $precio_mayor = $this->sanitizarDecimal($datos['precio_mayor'] ?? 0, 0.01);
+            $precio_detal = $this->sanitizarDecimal($datos['precio_detal'] ?? 0, 0.01);
+            $stock_maximo = $this->sanitizarEntero($datos['stock_maximo'] ?? 0, 1, 3000);
+            $stock_minimo = $this->sanitizarEntero($datos['stock_minimo'] ?? 0, 1);
             $id_categoria = $this->sanitizarEntero($datos['id_categoria'] ?? 0, 1);
 
             $imagenesNuevas     = $datos['imagenes_nuevas']     ?? [];

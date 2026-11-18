@@ -20,6 +20,13 @@
 <!-- Font Awesome Icons -->
 <link rel="stylesheet" href="assets/fontawesome/css/all.min.css" />
 
+<!-- manifest PWA -->
+    <?php 
+        include_once __DIR__ . '/../../manifest.php'; 
+    ?>
+<link rel="manifest" href="<?php echo $DIR; ?>/manifest.json">
+<meta name="theme-color" content="#000000">
+
 <!-- Estilos y Libreria  -->
 <link rel="stylesheet" href="assets/css/catalogo.css">
 <link rel="stylesheet" href="assets/driver.js/dist/driver.css">    
@@ -74,4 +81,14 @@
                 }, 500);
         }
     });
+
+
+    // SERVICER WORKER DEL PWA
+    if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('<?php echo $DIR; ?>/ServiceWorker.js')
+                    //.then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                   // .catch(err => console.log('Error al registrar:', err));
+            });
+        }
 </script>

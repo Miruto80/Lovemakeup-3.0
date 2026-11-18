@@ -319,7 +319,7 @@ if (isset($_GET['mensaje']) && $_GET['mensaje'] === 'sesion_expirada') {
    <script src="assets/js/libreria/moment.js"></script>
   <script src="assets/js/catalago/js/bootstrap.min.js"></script>
   <script src="assets/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/js/login.js"></script>
+  <script type="module" src="assets/js/login.js"></script>
  
 
   </body>

@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'datos' => [
               
                 'tipo'                => $venta->sanitizarEntero($_POST['tipo'] ?? '2', 1, 10) ?? 2,
-                'fecha'               => date('Y-m-d h:i A'),
+                'fecha'               => date('Y-m-d H:i:s'),
                 'estado'              => $venta->sanitizarEntero($_POST['estado'] ?? '1', 1, 5) ?? 1,
                 'precio_total_usd'    => $precio_total_usd ?? 0,
                 'precio_total_bs'     => $precio_total_bs ?? 0,

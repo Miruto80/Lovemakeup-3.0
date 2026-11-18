@@ -1,3 +1,6 @@
+
+import { activarLoaderBoton, desactivarLoaderBoton, validarkeypress, muestraMensajetost, validarCampo, validarCampoS, muestraMensaje, manejarAlerta, ValidacionExpresiones } from './LoveFunciones.js';
+
 // ||||||||||||||| OJITO ||||||||||||||||||||
 const passwordInput = document.getElementById('pid');
 const showPasswordButton = document.getElementById('show-password');
@@ -14,118 +17,15 @@ showPasswordButton.addEventListener('click', () => {
   }
 });
 
-/*||| Funcion para cambiar el boton a loader |||*/
-function activarLoaderBoton(idBoton, texto) {
-    const $boton = $(idBoton);
-    const textoActual = $boton.html();
-    $boton.data('texto-original', textoActual); // Guarda el texto original
-    $boton.prop('disabled', true);
-    $boton.html(`<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${texto}`);
-}
-
-function desactivarLoaderBoton(idBoton) {
-    const $boton = $(idBoton);
-    const textoOriginal = $boton.data('texto-original');
-    $boton.prop('disabled', false);
-    $boton.html(textoOriginal);
-}
-
-//Función para validar por Keypress
-function validarkeypress(er,e){
-    key = e.keyCode;
-    tecla = String.fromCharCode(key);
-    a = er.test(tecla);
-    if(!a){
-        e.preventDefault();
-    }
-}
-/*
-//Función para validar por keyup
-function validarkeyup(er,etiqueta,etiquetamensaje,mensaje){
-    a = er.test(etiqueta.val());
-    if(a){
-        etiquetamensaje.text("");
-        return 1;
-    }
-    else{
-        etiquetamensaje.text(mensaje);
-        return 0;
-    }
-}
-*/
-function muestraMensajetost(icono, titulo, mensaje, tiempo) {
-  Swal.fire({
-    icon: icono,
-    title: titulo,
-    text: mensaje,
-    toast: true,
-    position: "top",
-    showConfirmButton: false,
-    timer: tiempo,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    }
-  });
-}
-
-/*||| Funcion para validar compas de formulario |||*/
-function validarCampo(campo, regex, textoError, mensaje) {
-  const valor = campo.val();
-
-  if (campo.is("select")) {
-   
-    if (valor === "") {
-      campo.removeClass("is-valid").addClass("is-invalid");
-      textoError.text(mensaje);
-    } else {
-      campo.removeClass("is-invalid").addClass("is-valid");
-      textoError.text("");
-    }
-  } else {
-   
-    if (regex.test(valor)) {
-      campo.removeClass("is-invalid").addClass("is-valid");
-      textoError.text("");
-    } else {
-      campo.removeClass("is-valid").addClass("is-invalid");
-      textoError.text(mensaje);
-    }
-  }
-}
-
-function validarCampoS(campo, regex, textoError, mensaje) {
-  const valor = campo.val();
-
-  if (campo.is("select")) {
-    if (valor === "") {
-      campo.removeClass("input-correcto").addClass("input-incorrecto");
-      textoError.text(mensaje);
-    } else {
-      campo.removeClass("input-incorrecto").addClass("input-correcto");
-      textoError.text("");
-    }
-  } else {
-    if (regex.test(valor)) {
-      campo.removeClass("input-incorrecto").addClass("input-correcto");
-      textoError.text("");
-    } else {
-      campo.removeClass("input-correcto").addClass("input-incorrecto");
-      textoError.text(mensaje);
-    }
-  }
-}
-
 
 function validarFormulario() {
-    validarCampo($("#cedula"), /^[0-9]{7,8}$/, $("#textocedula"), "Formato incorrecto o vacio.");
-    validarCampo($("#telefono"), /^[0-9]{4}[-]{1}[0-9]{7}$/, $("#textotelefono"), "Formato incorrecto o vacio.");
+    validarCampo($("#cedula"), /^[1-9][0-9]{7,9}$/, $("#textocedula"), "Formato incorrecto o vacio.");
+    validarCampo($("#telefono"), /^04(14|24|16|26|12|22)-[0-9]{7}$/, $("#textotelefono"), "Formato incorrecto o vacio.");
     validarCampo($("#nombre"), /^[a-zA-Z]{3,50}$/, $("#textonombre"), "Formato incorrecto o vacio.");
     validarCampo($("#apellido"), /^[a-zA-Z]{3,50}$/, $("#textoapellido"), "Formato incorrecto o vacio.");
     validarCampo($("#correo"), /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,60}$/, $("#textocorreo"), "Formato incorrecto o vacio.");
-    validarCampo($("#recontrasena"), /^.{8,16}$/, $("#textorecontrasena"), "Debe tener entre 8 y 16 caracteres.");
-    validarCampo($("#clave"), /^.{8,16}$/, $("#textoclave"), "Debe tener entre 8 y 16 caracteres.");
+    validarCampo($("#recontrasena"), /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/, $("#textorecontrasena"), "Debe tener entre 8 y 16 caracteres.");
+    validarCampo($("#clave"), /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/, $("#textoclave"), "Debe tener entre 8 y 16 caracteres.");
 
     const clave = $("#clave").val();
     const recontrasena = $("#recontrasena").val();
@@ -138,7 +38,7 @@ function validarFormulario() {
 
 //|||||||||||||| VALIDAR ENVIO cedula ||||||||||||||||||||||
 function validarFor() {
-    validarCampo($("#cedulac"), /^[0-9]{7,8}$/, $("#textocedulac"), "Formato incorrecto o vacio.");
+    validarCampo($("#cedulac"), /^[1-9][0-9]{7,9}$/, $("#textocedulac"), "Formato incorrecto o vacio.");
     return $(".is-invalid").length === 0;
 }
 
@@ -147,7 +47,7 @@ function validarFor() {
 function validarForlogin() {
     let valido = true;
   
-    if (!/^[0-9]{7,8}$/.test($("#usuario").val())) {
+    if (!/^[1-9][0-9]{7,9}$/.test($("#usuario").val())) {
         $("#usuario").removeClass("input-correcto").addClass("input-incorrecto");
         $("#textousuario").text("Formato incorrecto.");
         valido = false;
@@ -156,7 +56,7 @@ function validarForlogin() {
         $("#textousuario").text("");
     }
 
-    if (!/^.{8,16}$/.test($("#pid").val())) {
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/.test($("#pid").val())) {
         $("#pid").removeClass("input-correcto").addClass("input-incorrecto");
         $("#textop").text("Debe tener entre 8 y 16 caracteres.");
         valido = false;
@@ -190,18 +90,13 @@ $(document).ready(function() {
         event.preventDefault(); 
 
         if (validarForlogin()) {
-          /*
-          var recaptchaResponse = grecaptcha.getResponse();
-          if (recaptchaResponse === "") {
-            muestraMensajetost("error", "reCAPTCHA vacío", "Por favor verifica que no eres un robot.", "2000");
-            return; // Detiene el envío
-          }
-            */
+       
           activarLoaderBoton('#ingresar',"Iniciando...");  
           
           var datos = new FormData($('#login')[0]);
           datos.append('ingresar', 'ingresar');
           enviaAjax(datos);
+
         } else {
           muestraMensajetost("error","Formato incorrecto o Vacio", "Debe colocar el formato correcto.", "2000");
         }
@@ -222,102 +117,43 @@ $(document).ready(function() {
         }
     });
 
-  // EXPRESIONES REGULARES 
-  
-  $("#usuario").on("keypress",function(e){
-    validarkeypress(/^[0-9\b]*$/,e);
-  });
-
-
-     $("#usuario").on("keyup", function () {
-    validarCampoS($(this),/^[0-9]{7,8}$/,
-    $("#textousuario"),"El formato debe ser 1222333");
-  });
-  
-
- 
-
-   $("#pid").on("keyup", function() {
-      validarCampoS($(this),/^.{8,16}$/, 
-      $("#textop"), "El formato debe ser entre 8 y 16 caracteres");
+    // --------------------------------- EXPRESIONES REGULARES 
+    $("#usuario").on("keypress",function(e){
+      validarkeypress(/^[0-9\b]*$/,e);
     });
- 
-  $("#cedulac").on("keypress",function(e){
-    validarkeypress(/^[0-9\b]*$/,e);
-  });
 
-   $("#cedulac").on("keyup", function () {
-    validarCampo($(this),/^[0-9]{7,8}$/,
-    $("#textocedulac"),"El formato debe ser 1222333");
-  });
-
-  $("#cedula").on("keypress",function(e){
-    validarkeypress(/^[0-9\b]*$/,e);
-  });
-
-  $("#cedula").on("keyup", function () {
-    validarCampo($(this),/^[0-9]{7,8}$/,
-    $("#textocedula"),"El formato debe ser 1222333");
-  });
-
-   $("#telefono").on("keypress", function (e) {
-      validarkeypress(/^[0-9-\-]*$/, e);
-  });
-  
-   $("#telefono").on("keyup", function () {
-      validarCampo($(this),/^[0-9]{4}[-]{1}[0-9]{7}$/,
-      $("#textotelefono"), "El formato debe ser 0414-0000000");
-    });
-  
-    $("#telefono").on("input", function () {
-      var input = $(this).val().replace(/[^0-9]/g, '');
-      if (input.length > 4) {
-        input = input.substring(0, 4) + '-' + input.substring(4, 11);
+    $("#usuario").on("input", function () {
+      var input = $(this).val().replace(/[^0-9]/g, ''); 
+      if (input.length > 8) {
+        input = input.substring(0, 9);
       }
       $(this).val(input);
     });
 
-     $("#correo").on("keypress", function (e) {
-      validarkeypress(/^[a-zA-Z0-9._%+-@\b]*$/, e);
+    $("#usuario").on("keyup", function () {
+      validarCampoS($(this),/^[1-9][0-9]{7,9}$/,
+      $("#textousuario"),"El formato debe ser 1222333");
+    });
+  
+    $("#pid").on("keyup", function() {
+      validarCampoS($(this), /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/, 
+      $("#textop"), "El formato debe ser entre 8 y 16 caracteres");
     });
 
-    $("#correo").on("keyup", function () {
-      validarCampo($(this), /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,60}$/,
-       $("#textocorreo"), "El formato debe incluir @ y ser válido.");
-    });
+    ValidacionExpresiones($("#cedulac"), 'cedula', $("#textocedulac"), "El formato debe ser de 7 u 8 dígitos");
 
-    $("#nombre").on("keypress", function (e) {
-    validarkeypress(/^[A-Za-z\b\s\u00f1\u00d1\u00E0-\u00FC]*$/, e);
-    });
-
-    $("#nombre").on("keyup", function () {
-      validarCampo($(this),/^[a-zA-Z]{3,30}$/,
-      $("#textonombre"), "El formato debe ser solo letras");
-    });
-
-    $("#apellido").on("keypress", function (e) {
-      validarkeypress(/^[a-z-A-Z-\b]*$/, e);
-    });
-
-    $("#apellido").on("keyup", function () {
-      validarCampo($(this),/^[a-z-A-Z]{3,30}$/,
-      $("#textoapellido"), "El formato debe ser solo letras");
-    });
-
-    $("#clave").on("keyup", function() {
-      validarCampo($(this),/^.{8,16}$/, 
-      $("#textoclave"), "El formato debe ser entre 8 y 16 caracteres");
-    });
-    
-    $("#recontrasena").on("keyup", function() {
-      validarCampo($(this),/^.{8,16}$/, 
-      $("#textorecontrasena"), "El formato debe ser entre 8 y 16 caracteres");
-    });
-
-
+    ValidacionExpresiones($("#cedula"), 'cedula', $("#textocedula"), "El formato debe ser de 7 u 8 dígitos");
+    ValidacionExpresiones($("#telefono"), 'telefono', $("#textotelefono"), "El formato debe ser un prefijo valido (ej: 0414-1234567)");
+    ValidacionExpresiones($("#correo"), 'correo', $("#textocorreo"), "El formato debe ser un correo electrónico válido");
+    ValidacionExpresiones($("#nombre"), 'nombre', $("#textonombre"), "El formato debe ser de 3 a 30 caracteres");
+    ValidacionExpresiones($("#apellido"), 'apellido', $("#textoapellido"), "El formato debe ser de 3 a 30 caracteres");
+    ValidacionExpresiones($("#clave"), 'clave', $("#textoclave"), "El formato debe ser de 8 a 16 caracteres");
+    ValidacionExpresiones($("#recontrasena"), 'clave', $("#textorecontrasena"), "El formato debe ser de 8 a 16 caracteres");
+  
+  
     $('#cedula').on("blur", function () {
         const cedula = $(this).val().trim();
-        const formato = /^[0-9]{7,8}$/;
+        const formato = /^[1-9][0-9]{7,9}$/;
 
         if (formato.test(cedula)) {
           activarLoaderBoton('#registrar');
@@ -340,26 +176,8 @@ $(document).ready(function() {
       });
     
 });
-document.getElementById('fecha').value = moment().format('YYYY-MM-DD');
-// AJAX
-function muestraMensaje(icono, tiempo, titulo, mensaje) {
-  Swal.fire({
-    icon: icono,
-    timer: tiempo,
-    title: titulo,
-    html: mensaje,
-    showConfirmButton: false,
-  });
-}
 
-function manejarAlerta(idCampo, idAlerta, mostrar) {
-  const alerta = document.getElementById(idAlerta);
-  if (mostrar) {
-    alerta.style.display = 'block';
-  } else {
-    alerta.style.display = 'none';
-  }
-}
+document.getElementById('fecha').value = moment().format('YYYY-MM-DD');
 
 function enviaAjax(datos) {
     $.ajax({
@@ -400,6 +218,7 @@ function enviaAjax(datos) {
                 if (lee.respuesta == 1) {
                   muestraMensajetost("success","Inicio de Session", "Exitosamente", "1000"); 
                   desactivarLoaderBoton('#ingresar');
+                  
                     setTimeout(function () {
                      location = '?pagina=catalogo';
                   }, 1000);
@@ -409,6 +228,13 @@ function enviaAjax(datos) {
                    desactivarLoaderBoton('#ingresar');
                    setTimeout(function () {
                       location = '?pagina=home';
+                    }, 1000);
+                
+                }else if (lee.respuesta == 3) {
+                   muestraMensajetost("success","Inicio de Session - Desarrollador", "Exitosamente", "1000");
+                   desactivarLoaderBoton('#ingresar');
+                   setTimeout(function () {
+                      location = '?pagina=root_home';
                     }, 1000);
                 
                 }else{

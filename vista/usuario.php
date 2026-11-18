@@ -471,7 +471,7 @@
              <label for="rol" class="form-label text-g">Estatus</label>
                  <div class="input-group mb-3">
                   <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tag"></i></span>
-                    <select class="form-select" name="estatus">
+                    <select class="form-select" name="estatus" id="estatusmodal">
                       <option id="modalestatus"> </option>
                        <option value="1">Activo</option>
                        <option value="2">Inactivo</option>
@@ -587,7 +587,7 @@ document.getElementById('rolSelectedit').addEventListener('change', function() {
 <?php include 'complementos/footer.php' ?>
 <!-- para el datatable-->
  <script src="assets/js/demo/datatables-demo.js"></script>
- <script src="assets/js/usuario.js"></script>
+ <script type="module" src="assets/js/usuario.js"></script>
 
 </body>
 

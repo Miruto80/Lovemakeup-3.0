@@ -329,7 +329,7 @@
     <?php include 'complementos/footer.php'; ?>
     <!-- para el datatable-->
     <script src="assets/js/demo/datatables-demo.js"></script>
-    <script src="assets/js/tipousuario.js"></script>
+    <script type="module" src="assets/js/tipousuario.js"></script>
 
    
 

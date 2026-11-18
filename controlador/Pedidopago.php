@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['continuar_pago'])) {
             // datos básicos
             'id_persona'       => $id_persona,
             'tipo'              => '2',
-            'fecha'             => date('Y-m-d h:i A'),
+            'fecha'             => date('Y-m-d H:i:s'),
             'estado'            => '1',
             // totales
             'precio_total_usd'  => $precio_total_usd ?? 0,
