@@ -81,7 +81,7 @@ foreach ($imagenes as $imagen) {
     if (
         !is_string($imagen)
         || strlen($imagen) > 4 * 1024 * 1024
-        || !preg_match('/^data:image\/jpeg;base64,[A-Za-z0-9+\/]+=*$/D', $imagen)
+        || !preg_match('/^data:image\/(?:jpeg|png|webp|gif|avif);base64,[A-Za-z0-9+\/]+=*$/D', $imagen)
     ) {
         responderChat(400, ['detail' => 'Una de las imágenes no tiene un formato permitido.']);
     }
