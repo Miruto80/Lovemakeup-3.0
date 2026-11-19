@@ -2,6 +2,7 @@
 
 use LoveMakeup\Proyecto\Modelo\Producto;
 use LoveMakeup\Proyecto\Modelo\Bitacora;
+use LoveMakeup\Proyecto\Modelo\AngelReindexador;
 use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
 
@@ -102,6 +103,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
 
             $resultadoRegistro = $objproducto->procesarProducto(json_encode($datosProducto));
+
+            if (($resultadoRegistro['respuesta'] ?? 0) == 1) {
+                try {
+                    $idProducto = $objproducto->obtenerUltimoIdProducto();
+                    if ($idProducto === null) {
+                        throw new \RuntimeException('No se pudo recuperar el ID del producto recién creado.');
+                    }
+                    $resultadoRegistro['reindexacion'] = AngelReindexador::reindexar('productos', $idProducto);
+                } catch (\Throwable $e) {
+                    error_log('Producto guardado, pero falló su reindexación en Ángel: ' . $e->getMessage());
+                    $resultadoRegistro['reindexacion'] = [
+                        'estado' => 'pendiente',
+                        'mensaje' => 'El producto se guardó, pero Ángel no pudo actualizar su embedding. Use la sincronización manual.',
+                    ];
+                    $resultadoRegistro['mensaje'] .= ' La reindexación de Ángel quedó pendiente.';
+                }
+            }
 
             // Bitácora
             if ($resultadoRegistro['respuesta'] == 1) {
@@ -213,7 +231,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $resultado = $objproducto->procesarProducto(json_encode($datosProducto));
 
-       
+        if (($resultado['respuesta'] ?? 0) == 1) {
+            try {
+                $resultado['reindexacion'] = AngelReindexador::reindexar(
+                    'productos',
+                    (int) $_POST['id_producto']
+                );
+            } catch (\Throwable $e) {
+                error_log('Producto actualizado, pero falló su reindexación en Ángel: ' . $e->getMessage());
+                $resultado['reindexacion'] = [
+                    'estado' => 'pendiente',
+                    'mensaje' => 'El producto se actualizó, pero Ángel no pudo refrescar su embedding. Use la sincronización manual.',
+                ];
+                $resultado['mensaje'] .= ' La reindexación de Ángel quedó pendiente.';
+            }
+        }
+
         if ($resultado['respuesta'] == 1) {
             $bitacora = [
                 'id_persona' => $_SESSION["id"],

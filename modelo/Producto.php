@@ -11,6 +11,7 @@ use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 class Producto extends Conexion {
     private $objcategoria;
     private $objmarca;
+    private ?int $ultimoIdProducto = null;
 
     function __construct() {
         parent::__construct();
@@ -92,6 +93,7 @@ class Producto extends Conexion {
     // --- FIN MÉTODOS DE VALIDACIÓN ---
 
     public function procesarProducto($jsonDatos) {
+        $this->ultimoIdProducto = null;
         $datos = json_decode($jsonDatos, true);
         
         if (!is_array($datos) || !isset($datos['operacion']) || !isset($datos['datos'])) {
@@ -142,6 +144,10 @@ class Producto extends Conexion {
         } catch (\Exception $e) {
             return ['respuesta' => 0, 'mensaje' => $e->getMessage()];
         }
+    }
+
+    public function obtenerUltimoIdProducto(): ?int {
+        return $this->ultimoIdProducto;
     }
 
     private function verificarProductoExistente($nombre, $id_marca) {
@@ -213,6 +219,7 @@ class Producto extends Conexion {
                 'id_categoria' => $id_categoria
             ]);
             $idProducto = $conex->lastInsertId();
+            $this->ultimoIdProducto = (int) $idProducto;
 
             // Insertar imágenes
             if (!empty($imagenes)) {
