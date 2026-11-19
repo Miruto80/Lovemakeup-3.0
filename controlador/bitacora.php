@@ -3,7 +3,15 @@
 use LoveMakeup\Proyecto\Modelo\Bitacora;
 
 // Manejo de solicitudes AJAX - debe ejecutarse antes de cualquier salida
-if (isset($_POST['detalles']) || isset($_POST['limpiar']) || isset($_POST['eliminar_registro']) || isset($_POST['cargar_mas'])) {
+if (
+    isset($_POST['detalles'])
+    || isset($_POST['limpiar'])
+    || isset($_POST['eliminar_registro'])
+    || isset($_POST['cargar_mas'])
+    || isset($_POST['listar_logs'])
+    || isset($_POST['leer_log'])
+    || isset($_POST['descargar_log'])
+) {
     // Iniciar sesión solo si no está ya iniciada
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -35,6 +43,72 @@ if (isset($_POST['detalles']) || isset($_POST['limpiar']) || isset($_POST['elimi
     header('Content-Type: application/json; charset=utf-8');
     
     $objBitacora = new Bitacora();
+
+    $solicitudLogs = isset($_POST['listar_logs'])
+        || isset($_POST['leer_log'])
+        || isset($_POST['descargar_log']);
+    if ($solicitudLogs && !tieneAcceso(15, 4)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tiene permisos para consultar los logs']);
+        exit;
+    }
+
+    if (isset($_POST['listar_logs'])) {
+        try {
+            echo json_encode([
+                'success' => true,
+                'logs' => $objBitacora->listarLogs(),
+            ], JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (\Throwable $e) {
+            error_log('Error al listar logs de consumo: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'No se pudieron consultar los logs']);
+        }
+        exit;
+    }
+
+    if (isset($_POST['leer_log'])) {
+        try {
+            $nombre = is_string($_POST['leer_log']) ? $_POST['leer_log'] : '';
+            $log = $objBitacora->leerLog($nombre);
+            if ($log === null) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'El log solicitado no existe']);
+                exit;
+            }
+
+            echo json_encode(['success' => true, 'log' => $log], JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (\Throwable $e) {
+            error_log('Error al leer log de consumo: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'No se pudo leer el log']);
+        }
+        exit;
+    }
+
+    if (isset($_POST['descargar_log'])) {
+        $nombre = is_string($_POST['descargar_log']) ? $_POST['descargar_log'] : '';
+        $rutaLog = $objBitacora->obtenerRutaLog($nombre);
+        if ($rutaLog === null) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'El log solicitado no existe']);
+            exit;
+        }
+
+        $tamano = filesize($rutaLog);
+        if ($tamano === false) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'No se pudo descargar el log']);
+            exit;
+        }
+
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $nombre . '"');
+        header('Content-Length: ' . $tamano);
+        header('X-Content-Type-Options: nosniff');
+        readfile($rutaLog);
+        exit;
+    }
     
     // Obtener detalles de un registro específico
     if(isset($_POST['detalles'])) {

@@ -1,3 +1,157 @@
+$(function () {
+  const endpointLogs = '?pagina=bitacora';
+  let logSeleccionado = '';
+
+  function mostrarErrorLogs(mensaje) {
+    $('#logsError').text(mensaje).removeClass('d-none');
+  }
+
+  function cargarListaLogs() {
+    logSeleccionado = '';
+    $('#logsError').addClass('d-none').text('');
+    $('#logsLoading').removeClass('d-none');
+    $('#logsEmpty').addClass('d-none');
+    $('#logsTableBody').empty();
+    $('#logPreviewName').text('Selecciona un archivo para visualizarlo.');
+    $('#logPreview').text('Selecciona un archivo de la lista.');
+    $('#logPreviewNotice').addClass('d-none');
+    $('#descargarLog').prop('disabled', true);
+
+    $.ajax({
+      url: endpointLogs,
+      type: 'POST',
+      dataType: 'json',
+      data: { listar_logs: 1 },
+      success: function (respuesta) {
+        if (!respuesta.success || !Array.isArray(respuesta.logs)) {
+          mostrarErrorLogs(respuesta.message || 'No se pudieron cargar los logs.');
+          return;
+        }
+
+        const $tbody = $('#logsTableBody');
+        respuesta.logs.forEach(function (log) {
+          const nombre = String(log.nombre || '');
+          const $fila = $('<tr>');
+          $('<td>').addClass('text-break').text(nombre).appendTo($fila);
+          $('<td>').addClass('text-nowrap').text(log.modificado || '').appendTo($fila);
+
+          const $acciones = $('<td>').addClass('text-end text-nowrap');
+          $('<button>')
+            .attr('type', 'button')
+            .addClass('btn btn-outline-primary btn-sm me-1 js-ver-log')
+            .data('nombre', nombre)
+            .text('Ver')
+            .appendTo($acciones);
+          $('<button>')
+            .attr('type', 'button')
+            .addClass('btn btn-outline-success btn-sm js-descargar-log')
+            .data('nombre', nombre)
+            .attr('aria-label', 'Descargar ' + nombre)
+            .html('<i class="fas fa-download"></i>')
+            .appendTo($acciones);
+          $fila.append($acciones).appendTo($tbody);
+        });
+
+        if (respuesta.logs.length === 0) {
+          $('#logsEmpty').removeClass('d-none');
+        }
+      },
+      error: function (xhr) {
+        mostrarErrorLogs(
+          xhr.responseJSON && xhr.responseJSON.message
+            ? xhr.responseJSON.message
+            : 'No se pudieron cargar los logs.'
+        );
+      },
+      complete: function () {
+        $('#logsLoading').addClass('d-none');
+      }
+    });
+  }
+
+  function cargarLog(nombre) {
+    logSeleccionado = nombre;
+    $('#logPreviewName').text(nombre);
+    $('#logPreview').text('Cargando...');
+    $('#logPreviewNotice').addClass('d-none');
+    $('#descargarLog').prop('disabled', true);
+    $('#logsError').addClass('d-none').text('');
+
+    $.ajax({
+      url: endpointLogs,
+      type: 'POST',
+      dataType: 'json',
+      data: { leer_log: nombre },
+      success: function (respuesta) {
+        if (!respuesta.success || !respuesta.log) {
+          $('#logPreview').text('');
+          mostrarErrorLogs(respuesta.message || 'No se pudo leer el log.');
+          return;
+        }
+
+        $('#logPreview').text(respuesta.log.contenido);
+        $('#logPreviewNotice').toggleClass('d-none', !respuesta.log.truncado);
+        $('#descargarLog').prop('disabled', false);
+      },
+      error: function (xhr) {
+        $('#logPreview').text('');
+        mostrarErrorLogs(
+          xhr.responseJSON && xhr.responseJSON.message
+            ? xhr.responseJSON.message
+            : 'No se pudo leer el log.'
+        );
+      }
+    });
+  }
+
+  function descargarArchivoLog(nombre) {
+    const datos = new FormData();
+    datos.append('descargar_log', nombre);
+    $('#logsError').addClass('d-none').text('');
+
+    fetch(endpointLogs, {
+      method: 'POST',
+      body: datos,
+      credentials: 'same-origin'
+    }).then(function (respuesta) {
+      if (!respuesta.ok) {
+        return respuesta.json().then(function (error) {
+          throw new Error(error.message || 'No se pudo descargar el log.');
+        }, function () {
+          throw new Error('No se pudo descargar el log.');
+        });
+      }
+      return respuesta.blob();
+    }).then(function (archivo) {
+      const url = URL.createObjectURL(archivo);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = nombre;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      window.setTimeout(function () {
+        URL.revokeObjectURL(url);
+      }, 1000);
+    }).catch(function (error) {
+      mostrarErrorLogs(error.message || 'No se pudo descargar el log.');
+    });
+  }
+
+  $('#modalLogs').on('show.bs.modal', cargarListaLogs);
+  $('#logsTableBody').on('click', '.js-ver-log', function () {
+    cargarLog($(this).data('nombre'));
+  });
+  $('#logsTableBody').on('click', '.js-descargar-log', function () {
+    descargarArchivoLog($(this).data('nombre'));
+  });
+  $('#descargarLog').on('click', function () {
+    if (logSeleccionado) {
+      descargarArchivoLog(logSeleccionado);
+    }
+  });
+});
+
 $(document).ready(function () {
   // DataTables se inicializa automáticamente con datatables-demo.js
 
