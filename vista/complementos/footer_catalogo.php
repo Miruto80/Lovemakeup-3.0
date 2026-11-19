@@ -162,7 +162,7 @@
        
 
         <script src="assets/js/catalago/jquery-1.11.0.min.js"></script>
-        <script src="assets/js/catalago/catalogo.js?v=<?= filemtime('assets/js/catalago/catalogo.js') ?>"></script>
+        <script src="assets/js/catalago/catalogo.js?v=<?= filemtime(__DIR__ . '/../../assets/js/catalago/catalogo.js') ?>"></script>
         
         <script>
             function obtenerSaludo(nombreCompleto) {
