@@ -1,10 +1,12 @@
 <?php
-
 use LoveMakeup\Proyecto\Modelo\Producto;
 use LoveMakeup\Proyecto\Modelo\Bitacora;
 use LoveMakeup\Proyecto\Modelo\AngelReindexador;
 use LoveMakeup\Proyecto\Config\CloudinaryConfig;
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ob_get_level() === 0) {
+    ob_start();
+}
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -40,33 +42,41 @@ $categoria = $objproducto->obtenerCategoria();
 $marca = $objproducto->obtenerMarca();
 
 // --- MANEJO DE PETICIONES POST ---
+$responderJsonProducto = static function (array $respuesta): void {
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+};
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // 1. Obtener Imágenes (AJAX)
     if (isset($_POST['accion']) && $_POST['accion'] === 'obtenerImagenes') {
         if (!isset($_SESSION['nivel_rol']) || $_SESSION['nivel_rol'] < 2 || !tieneAcceso(6, 1)) { // requiere nivel >=2 y permiso 1 (ver)
-            echo json_encode(['respuesta' => 0, 'accion' => 'obtenerImagenes', 'mensaje' => 'No tiene permisos para realizar esta acción']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'obtenerImagenes', 'mensaje' => 'No tiene permisos para realizar esta acción']);
             exit;
         }
         $id_producto = $_POST['id_producto'];
         $imagenes = $objproducto->obtenerImagenes($id_producto);
-        echo json_encode(['respuesta' => 1, 'imagenes' => $imagenes]);
+        $responderJsonProducto(['respuesta' => 1, 'imagenes' => $imagenes]);
         exit;
     }
 
     // 2. Registrar Producto
     if (isset($_POST['registrar'])) {
         if (!isset($_SESSION['nivel_rol']) || $_SESSION['nivel_rol'] < 2 || !tieneAcceso(6, 2)) { // requiere nivel >=2 y permiso 2
-            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => 'No tiene permisos para realizar esta acción']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => 'No tiene permisos para realizar esta acción']);
             exit;
         }
         if (!$objproducto->validarStockMaximo($_POST['stock_maximo'] ?? null)) {
-            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000']);
             exit;
         }
         $mensajeValidacion = $objproducto->validarCamposNoCero($_POST);
         if ($mensajeValidacion !== null) {
-            echo json_encode(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => $mensajeValidacion]);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'incluir', 'mensaje' => $mensajeValidacion]);
             exit;
         }
         // Validación básica de campos requeridos
@@ -84,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         try {
                             $imagenes[] = CloudinaryConfig::uploadImage($rutaTemporal);
                         } catch (\Throwable $e) {
-                            echo json_encode([
+                            $responderJsonProducto([
                                 'respuesta' => 0,
                                 'accion' => 'incluir',
                                 'mensaje' => $e->getMessage()
@@ -141,9 +151,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bitacoraObj->registrarOperacion($bitacora['accion'], 'producto', $bitacora);
             }
 
-            echo json_encode($resultadoRegistro);
+            $responderJsonProducto($resultadoRegistro);
         } else {
-            echo json_encode(['respuesta' => 0, 'mensaje' => 'Faltan campos requeridos']);
+            $responderJsonProducto(['respuesta' => 0, 'mensaje' => 'Faltan campos requeridos']);
         }
         exit;
     }
@@ -151,16 +161,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 3. Actualizar Producto
     else if (isset($_POST['actualizar'])) {
         if (!isset($_SESSION['nivel_rol']) || $_SESSION['nivel_rol'] < 2 || !tieneAcceso(6, 3)) { // requiere nivel >=2 y permiso 3
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => 'No tiene permisos para realizar esta acción']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => 'No tiene permisos para realizar esta acción']);
             exit;
         }
         if (!$objproducto->validarStockMaximo($_POST['stock_maximo'] ?? null)) {
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => 'El stock máximo debe ser un número entero entre 1 y 3000']);
             exit;
         }
         $mensajeValidacion = $objproducto->validarCamposNoCero($_POST);
         if ($mensajeValidacion !== null) {
-            echo json_encode(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => $mensajeValidacion]);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'actualizar', 'mensaje' => $mensajeValidacion]);
             exit;
         }
         $imagenes = [];
@@ -205,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     try {
                         $rutaDestino = CloudinaryConfig::uploadImage($rutaTemporal);
                     } catch (\Throwable $e) {
-                        echo json_encode([
+                        $responderJsonProducto([
                             'respuesta' => 0,
                             'accion' => 'actualizar',
                             'mensaje' => $e->getMessage()
@@ -275,14 +285,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bitacoraObj->registrarOperacion($bitacora['accion'], 'producto', $bitacora);
         }
 
-        echo json_encode($resultado);
+        $responderJsonProducto($resultado);
         exit;
     }
 
     // 4. Eliminar Producto
     else if (isset($_POST['eliminar'])) {
         if (!isset($_SESSION['nivel_rol']) || $_SESSION['nivel_rol'] < 2 || !tieneAcceso(6, 4)) { // requiere nivel >=2 y permiso 4
-            echo json_encode(['respuesta' => 0, 'accion' => 'eliminar', 'mensaje' => 'No tiene permisos para realizar esta acción']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'eliminar', 'mensaje' => 'No tiene permisos para realizar esta acción']);
             exit;
         }
         $datosProducto = [
@@ -305,14 +315,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bitacoraObj->registrarOperacion($bitacora['accion'], 'producto', $bitacora);
         }
 
-        echo json_encode($resultado);
+        $responderJsonProducto($resultado);
         exit;
     }
 
     // 5. Cambiar Estatus
     else if (isset($_POST['accion']) && $_POST['accion'] == 'cambiarEstatus') {
         if (!isset($_SESSION['nivel_rol']) || $_SESSION['nivel_rol'] < 2 || !tieneAcceso(6, 5)) { // requiere nivel >=2 y permiso 5
-            echo json_encode(['respuesta' => 0, 'accion' => 'cambiarEstatus', 'mensaje' => 'No tiene permisos para realizar esta acción']);
+            $responderJsonProducto(['respuesta' => 0, 'accion' => 'cambiarEstatus', 'mensaje' => 'No tiene permisos para realizar esta acción']);
             exit;
         }
         $datosProducto = [
@@ -336,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bitacoraObj->registrarOperacion($bitacora['accion'], 'producto', $bitacora);
         }
 
-        echo json_encode($resultado);
+        $responderJsonProducto($resultado);
         exit;
     }
 }

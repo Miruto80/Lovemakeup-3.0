@@ -70,12 +70,11 @@ class AngelReindexador
         if ($curl === false) {
             throw new RuntimeException('No se pudo iniciar la conexión con Ángel.');
         }
-        set_time_limit(320);
         curl_setopt_array($curl, [
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => 300,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT => 10,
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $entradaFirma . '.' . $codificar($firma),
                 'Content-Type: application/json',
