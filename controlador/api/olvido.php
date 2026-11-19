@@ -1,4 +1,9 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -59,7 +64,6 @@ $body = file_get_contents('php://input');
 $dataJson = json_decode($body, true);
 
 $accion = isset($dataJson['accion']) ? (int)$dataJson['accion'] : 0;
-require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
 
 try {
     $correo = '';

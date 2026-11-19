@@ -1,4 +1,59 @@
 <?php  
+
+if (!function_exists('registrarConsumoLog')) {
+    function registrarConsumoLog($statusCode): void
+    {
+        static $registrado = false;
+        if ($registrado) {
+            return;
+        }
+        $registrado = true;
+
+        $logDir = __DIR__ . '/../../logs/';
+
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+
+        $logFile = $logDir . 'API_consumo_' . date('Y-m-d') . '.log';
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'Desconocida';
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
+
+        $platform = $_SERVER['HTTP_X_CLIENT_PLATFORM'] ?? '';
+        $brand = $_SERVER['HTTP_X_CLIENT_BRAND'] ?? '';
+        $model = $_SERVER['HTTP_X_CLIENT_MODEL'] ?? '';
+        $osVersion = $_SERVER['HTTP_X_CLIENT_OS_VERSION'] ?? '';
+
+        if (!empty($platform) || !empty($model)) {
+            $dispositivo = trim("$brand $model ($platform OS $osVersion)");
+        } else {
+            $dispositivo = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+        }
+
+        $dataLog = json_encode([
+            'fecha' => date('Y-m-d H:i:s'),
+            'ip' => $ip,
+            'dispositivo' => $dispositivo,
+            'endpoint' => $_SERVER['REQUEST_URI'] ?? '',
+            'http_code' => $statusCode,
+        ], JSON_UNESCAPED_UNICODE);
+
+        @file_put_contents($logFile, $dataLog . PHP_EOL, FILE_APPEND | LOCK_EX);
+    }
+}
+
+if (defined('API_CONSUME') && API_CONSUME) {
+    register_shutdown_function(static function (): void {
+        $statusCode = http_response_code();
+        registrarConsumoLog(is_int($statusCode) ? $statusCode : 200);
+    });
+}
+
 // FUNCION PARA MENSAJES ECHO JSON
 function MensajeJSON($respuesta, $accion, $texto) {
     echo json_encode([

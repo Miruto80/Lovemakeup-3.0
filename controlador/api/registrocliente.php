@@ -1,4 +1,9 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -51,9 +56,6 @@ if (!$dataJson || !isset($dataJson['cedula']) || !isset($dataJson['nombre']) || 
     echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos']);
     exit;
 }
-
-require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
-
 
 $objlogin = new Login();
 

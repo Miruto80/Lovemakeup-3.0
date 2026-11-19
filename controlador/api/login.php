@@ -1,58 +1,13 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-
-// --- FUNCIÓN PARA GUARDAR EL LOG SIN CLASES ---
-function registrarConsumoLog($statusCode) {
-    // Ruta directa a la carpeta logs que ya creaste en tu servidor
-    $logDir = __DIR__ . '/../../logs/';
-    
-    // Si por alguna razón la carpeta existe, guardamos; si no, validamos
-    if (!is_dir($logDir)) {
-        @mkdir($logDir, 0755, true);
-    }
-
-    // Nombre del archivo dinámico por día (ej: api_requests_2026-06-07.log)
-    $logFile = $logDir . 'API_consumo_' . date('Y-m-d') . '.log';
-
-    // 1. Obtener IP
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'Desconocida';
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    }
-
-    // 2. Obtener Dispositivo con tus cabeceras personalizadas de React Native
-    $platform   = $_SERVER['HTTP_X_CLIENT_PLATFORM'] ?? '';
-    $brand      = $_SERVER['HTTP_X_CLIENT_BRAND'] ?? '';
-    $model      = $_SERVER['HTTP_X_CLIENT_MODEL'] ?? '';
-    $osVersion  = $_SERVER['HTTP_X_CLIENT_OS_VERSION'] ?? '';
-
-    if (!empty($platform) || !empty($model)) {
-        $dispositivo = trim("$brand $model ($platform OS $osVersion)");
-    } else {
-        $dispositivo = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
-    }
-
-    // 3. Endpoint y fecha
-    $endpoint = $_SERVER['REQUEST_URI'] ?? '';
-    $fecha = date('Y-m-d H:i:s');
-
-    // Estructura del log
-    $dataLog = json_encode([
-        'fecha'       => $fecha,
-        'ip'          => $ip,
-        'dispositivo' => $dispositivo,
-        'endpoint'    => $endpoint,
-        'http_code'   => $statusCode
-    ], JSON_UNESCAPED_UNICODE);
-
-    // file_put_contents crea el archivo diario automáticamente si no existe
-    @file_put_contents($logFile, $dataLog . PHP_EOL, FILE_APPEND | LOCK_EX);
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -123,9 +78,6 @@ if (!$dataJson || !isset($dataJson['usuario']) || !isset($dataJson['clave']) || 
     registrarConsumoLog(400);
     exit;
 }
-
-require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
-
 
 $objlogin = new Login();
 

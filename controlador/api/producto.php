@@ -1,4 +1,8 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
