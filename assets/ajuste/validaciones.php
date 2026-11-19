@@ -1,4 +1,59 @@
 <?php  
+
+if (!function_exists('registrarConsumoLog')) {
+    function registrarConsumoLog($statusCode): void
+    {
+        static $registrado = false;
+        if ($registrado) {
+            return;
+        }
+        $registrado = true;
+
+        $logDir = __DIR__ . '/../../logs/';
+
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+
+        $logFile = $logDir . 'API_consumo_' . date('Y-m-d') . '.log';
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'Desconocida';
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
+
+        $platform = $_SERVER['HTTP_X_CLIENT_PLATFORM'] ?? '';
+        $brand = $_SERVER['HTTP_X_CLIENT_BRAND'] ?? '';
+        $model = $_SERVER['HTTP_X_CLIENT_MODEL'] ?? '';
+        $osVersion = $_SERVER['HTTP_X_CLIENT_OS_VERSION'] ?? '';
+
+        if (!empty($platform) || !empty($model)) {
+            $dispositivo = trim("$brand $model ($platform OS $osVersion)");
+        } else {
+            $dispositivo = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
+        }
+
+        $dataLog = json_encode([
+            'fecha' => date('Y-m-d H:i:s'),
+            'ip' => $ip,
+            'dispositivo' => $dispositivo,
+            'endpoint' => $_SERVER['REQUEST_URI'] ?? '',
+            'http_code' => $statusCode,
+        ], JSON_UNESCAPED_UNICODE);
+
+        @file_put_contents($logFile, $dataLog . PHP_EOL, FILE_APPEND | LOCK_EX);
+    }
+}
+
+if (defined('API_CONSUME') && API_CONSUME) {
+    register_shutdown_function(static function (): void {
+        $statusCode = http_response_code();
+        registrarConsumoLog(is_int($statusCode) ? $statusCode : 200);
+    });
+}
+
 // FUNCION PARA MENSAJES ECHO JSON
 function MensajeJSON($respuesta, $accion, $texto) {
     echo json_encode([
@@ -24,7 +79,7 @@ function validarExpresiones($tipo, $valor, $mensaje, $accion) {
         case 'telefono': $valido = preg_match('/^(0414|0424|0416|0426|0412|0422)-[0-9]{7}$/', $valor); break;//l
         case 'rol':      $valido = preg_match('/^[0-9]{1,8}$/', $valor); break;//1
         case 'estatus':  $valido = preg_match('/^[0-9]{1}$/', $valor); break;//l
-        case 'clave':  $valido = preg_match('/^[A-Za-z0-9\.\$\#\*\/]{8,16}$/', $valor); break;//l
+        case 'clave':  $valido = preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/', $valor); break;//l
         case 'codigo_ingresado':  $valido = preg_match('/^[0-9]{6}$/', $valor); break;//l
         case 'nivel_acceso':  $valido = preg_match('/^[2-3]{1}$/', $valor); break;//l
         case 'dolar':  $valido = preg_match('/^\d{1,5}([.,]\d{1,3})?$/', $valor) || strlen(str_replace([',','.'],'',$valor)) < 4 || strlen(str_replace([',','.'],'',$valor)) > 8; break;
@@ -36,6 +91,38 @@ function validarExpresiones($tipo, $valor, $mensaje, $accion) {
             'respuesta' => 0, 
             'accion'    => $accion, 
             'text'      => "$mensaje - ERROR 510"
+        ]);
+        exit;
+    }
+    return true; // Si es válido, continúa el flujo
+}
+
+function validarExpresionesAPP($tipo, $valor, $mensaje) {
+    $valido = false;
+
+    switch ($tipo) {
+        case 'id_usuario':       $valido = preg_match('/^[0-9]{1,8}$/', $valor); break; //l
+        case 'cedula':   $valido = preg_match('/^[1-9][0-9]{7,9}$/', $valor); break;//l
+        case 'documento':      $valido = preg_match('/^[VEJ]{1}$/i', $valor); break;//l
+        case 'apellido': $valido = preg_match('/^[A-Za-z]{3,20}$/', $valor); break;//l
+        case 'nombre':   $valido = preg_match('/^[A-Za-z]{3,20}$/', $valor); break;//l
+        case 'nombre_numero_e':   $valido = preg_match('/^[A-Za-z0-9 ]{3,20}$/', $valor); break;//l
+        case 'correo':   $valido = filter_var($valor, FILTER_VALIDATE_EMAIL) && strlen($valor) >= 5 && strlen($valor) <= 200; break;//l
+        case 'telefono': $valido = preg_match('/^(0414|0424|0416|0426|0412|0422)-[0-9]{7}$/', $valor); break;//l
+        case 'rol':      $valido = preg_match('/^[0-9]{1,3}$/', $valor); break;//1
+        case 'estatus':  $valido = preg_match('/^[0-9]{1}$/', $valor); break;//l
+        case 'clave':  $valido = preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!#*\$.?,=])[A-Za-z\d!#*\$.?,=]{8,16}$/', $valor); break;//l
+        case 'codigo_ingresado':  $valido = preg_match('/^[0-9]{6}$/', $valor); break;//l
+        case 'nivel_acceso':  $valido = preg_match('/^[2-3]{1}$/', $valor); break;//l
+        case 'dolar':  $valido = preg_match('/^\d{1,5}([.,]\d{1,3})?$/', $valor) || strlen(str_replace([',','.'],'',$valor)) < 4 || strlen(str_replace([',','.'],'',$valor)) > 8; break;
+        case 'id_fk':  $valido = preg_match('/^[0-9]+$/', $valor); break;//l
+    }
+
+    if (!$valido) { 
+        http_response_code(401);
+        echo json_encode([
+            'respuesta' => 0, 
+              'mensaje' => "$mensaje - revisar"
         ]);
         exit;
     }

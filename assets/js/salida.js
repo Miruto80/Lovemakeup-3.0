@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Variable para almacenar el ID del cliente
     let clienteActualId = null;
+    let consultaClienteVersion = 0;
+    let consultaTasaVersion = 0;
 
     // Expresiones regulares para validaciones
     const regexSoloNumeros = /^[0-9]+$/;
@@ -85,6 +87,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!cedulaInput || !nombreInput || !apellidoInput || !telefonoInput || !correoInput || !idClienteHidden) {
             return;
         }
+
+        // Invalidar las consultas anteriores
+        consultaClienteVersion++;
+        consultaTasaVersion++;
+
+        // Cancelar consultas pendientes de iniciar
+        clearTimeout(cedulaInput.consultaTimeout);
+
+        // Reiniciar cliente antes de actualizar los botones
+        clienteActualId = null;
         
         // Limpiar campos
         cedulaInput.value = '';
@@ -145,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 primeraFila.querySelector('.cantidad-input-venta').value = '1';
+                primeraFila.querySelector('.cantidad-input-venta').removeAttribute('data-stock');
                 primeraFila.querySelector('.precio-input-venta').value = '0.00';
                 primeraFila.querySelector('.subtotal-venta').textContent = '0.00';
                 primeraFila.querySelector('.stock-info').textContent = '';
@@ -153,15 +166,108 @@ document.addEventListener('DOMContentLoaded', function() {
                     marcaSpan.textContent = 'no seleccionado';
                 }
             }
-            
-            // Actualizar total
-            actualizarTotalVenta();
         }
-        
-        // Actualizar validación del botón siguiente
+
+        // ===== REINICIAR MÉTODOS DE PAGO =====
+
+        // Eliminar filas adicionales y limpiar la primera
+        const filasPago = document.querySelectorAll(
+            '#metodos-pago-container .metodo-pago-fila'
+        );
+
+        filasPago.forEach((fila, indice) => {
+            if (indice > 0) {
+                fila.remove();
+                return;
+            }
+
+            // Eliminar estados y datos guardados
+            fila.classList.remove('metodo-pago-activa');
+
+            Object.keys(fila.dataset).forEach(clave => {
+                delete fila.dataset[clave];
+            });
+
+            // Limpiar método seleccionado
+            const select = fila.querySelector('.metodo-pago-select');
+
+            if (select) {
+                select.value = '';
+
+                Array.from(select.options).forEach(opcion => {
+                    opcion.disabled = false;
+                });
+            }
+
+            // Limpiar monto
+            const monto = fila.querySelector(
+                'input[name="monto_metodopago[]"]'
+            );
+
+            if (monto) {
+                monto.value = '';
+            }
+        });
+
+        // Limpiar campos bancarios y otros datos de pago
+        const camposDinamicos = document.getElementById(
+            'campos-metodo-pago-dinamicos'
+        );
+
+        if (camposDinamicos) {
+            camposDinamicos.querySelectorAll(
+                'input, select, textarea'
+            ).forEach(campo => {
+                if (campo.tagName === 'SELECT') {
+                    campo.selectedIndex = 0;
+                } else {
+                    campo.value = '';
+                }
+            });
+
+            // Ocultar los campos de cada método
+            camposDinamicos.querySelectorAll(
+                '.campos-metodo'
+            ).forEach(campo => {
+                campo.style.display = 'none';
+            });
+
+            camposDinamicos.style.display = 'none';
+        }
+
+        // Limpiar lista de métodos aplicados
+        const listaMetodos = document.getElementById(
+            'lista-metodos-aplicados'
+        );
+
+        const metodosAplicados = document.getElementById(
+            'metodos-aplicados-container'
+        );
+
+        if (listaMetodos) {
+            listaMetodos.style.display = 'none';
+        }
+
+        if (metodosAplicados) {
+            metodosAplicados.innerHTML = '';
+        }
+
+        // Eliminar mensajes de la operación anterior
+        [
+            'info-conversion',
+            'pago-completo-mensaje',
+            'sobrepago-mensaje'
+        ].forEach(id => {
+            const elemento = document.getElementById(id);
+
+            if (elemento) {
+                elemento.remove();
+            }
+        });
+
+        // Actualizar totales y navegación
+        actualizarTotalVenta();
         actualizarBotonesNavegacion();
-        
-        clienteActualId = null;
     }
 
     // Evento para cuando se abre el modal de registro
@@ -198,9 +304,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Destruir Select2 al cerrar el modal para evitar problemas
+        // Destruir únicamente los Select2 inicializados
         registroModal.addEventListener('hidden.bs.modal', function() {
-            $('.producto-select-venta').select2('destroy');
+            $('.producto-select-venta.select2-hidden-accessible').select2('destroy');
         });
     }
 
@@ -535,28 +641,35 @@ document.addEventListener('DOMContentLoaded', function() {
     if (formVenta) {
         formVenta.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Eliminar filas de métodos de pago vacías o con monto 0
-            document.querySelectorAll('.metodo-pago-fila').forEach(fila => {
-                const select = fila.querySelector('.metodo-pago-select');
-                const montoInput = fila.querySelector('input[name="monto_metodopago[]"]');
-                if (!select.value || !montoInput.value || parseFloat(montoInput.value) <= 0) {
-                    fila.remove();
-                }
-            });
-            
+
             // Solo validar si estamos en el paso 4 (confirmación)
             if (pasoActual === 4) {
                 // Validar que la suma de métodos de pago coincida con el total
                 if (!validarTotalMetodosPago()) {
                     return;
                 }
-                
+
+                // Comprobar que el pago cubra el total antes del registro
+                const totalConfirmar = parseFloat(
+                    document.getElementById('total-general-venta').textContent.replace('$', '')
+                ) || 0;
+
+                const pagadoConfirmar = calcularTotalMetodosPago().total;
+
+                if (pagadoConfirmar <= 0 || Math.abs(pagadoConfirmar - totalConfirmar) > 0.01) {
+                    Swal.fire(
+                        'Error',
+                        'La suma de los métodos de pago debe coincidir con el total de la venta.',
+                        'error'
+                    );
+                    return;
+                }
+
                 // Validar campos específicos de métodos de pago
                 if (!validarCamposMetodoPago()) {
                     return;
                 }
-                
+
                 // Mostrar confirmación final
                 Swal.fire({
                     title: '¿Confirmar venta?',
@@ -567,6 +680,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
+
+                        // Eliminar filas de métodos de pago vacías solo al confirmar
+                        document.querySelectorAll('.metodo-pago-fila').forEach(fila => {
+                            const select = fila.querySelector('.metodo-pago-select');
+                            const montoInput = fila.querySelector('input[name="monto_metodopago[]"]');
+
+                            if (!select.value || !montoInput.value || parseFloat(montoInput.value) <= 0) {
+                                fila.remove();
+                            }
+                        });
+
                         registrarVenta();
                     }
                 });
@@ -583,6 +707,11 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 // Preparar datos del formulario
                 const formData = new FormData(formVenta);
+
+                // Evitar duplicar los métodos de pago y sus montos
+                formData.delete('id_metodopago[]');
+                formData.delete('monto_metodopago[]');
+
                 formData.append('registrar', '1');
 
                 // Si no hay cliente registrado, agregar los datos del cliente al formulario
@@ -653,27 +782,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Agregar datos básicos del método
                     formData.append('id_metodopago[]', select.value);
                     formData.append('monto_metodopago[]', montoInput.value);
-                    
+
+                    // Mantener alineados los datos de cada método de pago
+                    if (nombreMetodo !== 'Pago Movil') {
+                        formData.append('banco_emisor_pm[]', '');
+                        formData.append('banco_receptor_pm[]', '');
+                        formData.append('referencia_pm[]', '');
+                        formData.append('telefono_emisor_pm[]', '');
+                        formData.append('monto_pm_bs[]', '0.00');
+                    }
+
+                    if (nombreMetodo !== 'Punto de Venta') {
+                        formData.append('referencia_pv[]', '');
+                        formData.append('monto_pv_bs[]', '0.00');
+                    }
+
+                    if (nombreMetodo !== 'Transferencia Bancaria') {
+                        formData.append('referencia_tb[]', '');
+                        formData.append('monto_tb_bs[]', '0.00');
+                    }
+
                     // Agregar detalles específicos según el método
                     // Usar valores guardados en la fila si existen, sino usar los campos actuales
                     switch(nombreMetodo) {
                         case 'Divisas $':
                             // No necesitamos campo específico, ya usamos monto_metodopago[]
                             break;
-                            
+
                         case 'Efectivo Bs':
-                            const montoEfectivoBs = document.querySelector('input[name="monto_efectivo_bs"]')?.value || '0.00';
+                            const montoEfectivoBs = fila.dataset.montoBs || document.querySelector('input[name="monto_efectivo_bs"]')?.value || '0.00';
                             formData.append('monto_efectivo_bs', montoEfectivoBs);
                             break;
-                            
+
                         case 'Pago Movil':
                             // Usar valores guardados en la fila o los campos actuales
                             const bancoEmisor = fila.dataset.bancoEmisor || document.querySelector('select[name="banco_emisor_pm"]')?.value || '';
                             const bancoReceptor = fila.dataset.bancoReceptor || document.querySelector('select[name="banco_receptor_pm"]')?.value || '';
                             const referenciaPm = fila.dataset.referencia || document.querySelector('input[name="referencia_pm"]')?.value || '';
                             const telefonoEmisor = fila.dataset.telefonoEmisor || document.querySelector('input[name="telefono_emisor_pm"]')?.value || '';
-                            const montoPmBs = document.querySelector('input[name="monto_pm_bs"]')?.value || '0.00';
-                            
+                            const montoPmBs = fila.dataset.montoBs || document.querySelector('input[name="monto_pm_bs"]')?.value || '0.00';
+
                             // Enviar como arrays indexados para permitir múltiples métodos del mismo tipo
                             formData.append('banco_emisor_pm[]', bancoEmisor);
                             formData.append('banco_receptor_pm[]', bancoReceptor);
@@ -681,22 +829,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             formData.append('telefono_emisor_pm[]', telefonoEmisor);
                             formData.append('monto_pm_bs[]', montoPmBs);
                             break;
-                            
+
                         case 'Punto de Venta':
                             // Usar valor guardado en la fila o el campo actual
                             const referenciaPv = fila.dataset.referencia || document.querySelector('input[name="referencia_pv"]')?.value || '';
-                            const montoPvBs = document.querySelector('input[name="monto_pv_bs"]')?.value || '0.00';
-                            
+                            const montoPvBs = fila.dataset.montoBs || document.querySelector('input[name="monto_pv_bs"]')?.value || '0.00';
+
                             // Enviar como arrays indexados
                             formData.append('referencia_pv[]', referenciaPv);
                             formData.append('monto_pv_bs[]', montoPvBs);
                             break;
-                            
+
                         case 'Transferencia Bancaria':
                             // Usar valor guardado en la fila o el campo actual
                             const referenciaTb = fila.dataset.referencia || document.querySelector('input[name="referencia_tb"]')?.value || '';
-                            const montoTbBs = document.querySelector('input[name="monto_tb_bs"]')?.value || '0.00';
-                            
+                            const montoTbBs = fila.dataset.montoBs || document.querySelector('input[name="monto_tb_bs"]')?.value || '0.00';
+
                             // Enviar como arrays indexados
                             formData.append('referencia_tb[]', referenciaTb);
                             formData.append('monto_tb_bs[]', montoTbBs);
@@ -716,32 +864,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!cedula || !nombre || !apellido || !telefono || !correo) {
                 Swal.fire('Error', 'Complete todos los datos del cliente antes de continuar', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                desactivarLoaderBoton('#btnRegistrarVenta');
                 return;
             }
 
             // Validar formato de cédula
             if (!regexCedula.test(cedula)) {
                 Swal.fire('Error', 'Formato de cédula inválido', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                desactivarLoaderBoton('#btnRegistrarVenta');
                 return;
             }
 
             // Validar formato de teléfono
             if (!regexTelefono.test(telefono)) {
                 Swal.fire('Error', 'Formato de teléfono inválido', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                desactivarLoaderBoton('#btnRegistrarVenta');
                 return;
             }
 
             // Validar formato de correo
             if (!regexCorreo.test(correo)) {
                 Swal.fire('Error', 'Formato de correo inválido', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                desactivarLoaderBoton('#btnRegistrarVenta');
                 return;
             }
         }
@@ -752,9 +896,64 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Eventos para productos
     function inicializarEventosProducto() {
+        // Permitir únicamente números en el campo Cantidad
+        const teclasPermitidasCantidad = [
+            'Backspace', 'Delete', 'Tab',
+            'ArrowLeft', 'ArrowRight',
+            'ArrowUp', 'ArrowDown',
+            'Home', 'End'
+        ];
+
+        document.addEventListener('keydown', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            if (
+                /^[0-9]$/.test(e.key) ||
+                teclasPermitidasCantidad.includes(e.key) ||
+                e.ctrlKey || e.metaKey || e.altKey
+            ) {
+                return;
+            }
+
+            e.preventDefault();
+        });
+
+        // Bloquear caracteres incorrectos en teclados móviles
+        document.addEventListener('beforeinput', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            if (e.data && !/^[0-9]+$/.test(e.data)) {
+                e.preventDefault();
+            }
+        });
+
+        // Impedir pegar letras, símbolos o decimales
+        document.addEventListener('paste', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            const texto = e.clipboardData?.getData('text') || '';
+
+            if (!/^[0-9]+$/.test(texto)) {
+                e.preventDefault();
+            }
+        });
+
+        // Control adicional para entradas no previstas
+        document.addEventListener('input', function(e) {
+            if (!e.target.classList.contains('cantidad-input-venta')) return;
+
+            const campo = e.target;
+
+            if (campo.validity.badInput || !/^[0-9]*$/.test(campo.value)) {
+                campo.value = '';
+            }
+
+            calcularSubtotalVenta(campo.closest('tr'));
+        });
+
         // Evento para agregar producto
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('agregar-producto-venta')) {
+            if (e.target.closest('.agregar-producto-venta')) {
                 const fila = e.target.closest('tr');
                 
                 // Obtener el select original para preservar las opciones
@@ -1055,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            if (e.target.classList.contains('remover-producto-venta')) {
+            if (e.target.closest('.remover-producto-venta')) {
                 const filas = contenedorProductos.querySelectorAll('tr.producto-fila');
                 const filaActual = e.target.closest('tr');
                 const esPrimeraFila = filaActual === filas[0];
@@ -1154,7 +1353,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function calcularSubtotalVenta(fila) {
-        const cantidad = parseFloat(fila.querySelector('.cantidad-input-venta').value) || 0;
+        const cantidadTexto = fila.querySelector('.cantidad-input-venta').value.trim();
+        const cantidad = /^[0-9]+$/.test(cantidadTexto)
+            ? Number(cantidadTexto)
+            : 0;
         const precio = parseFloat(fila.querySelector('.precio-input-venta').value) || 0;
         const subtotal = cantidad * precio;
         fila.querySelector('.subtotal-venta').textContent = subtotal.toFixed(2);
@@ -1517,6 +1719,19 @@ document.addEventListener('DOMContentLoaded', function() {
     cedulaInput.addEventListener('input', function() {
         // Limpiar cualquier caracter que no sea número
         this.value = this.value.replace(/[^0-9]/g, '');
+
+        // Invalidar consultas del cliente anterior
+        consultaClienteVersion++;
+
+        // Cancelar una consulta programada anteriormente
+        clearTimeout(this.consultaTimeout);
+
+        // Limpiar la identidad del cliente anterior
+        clienteActualId = null;
+        idClienteHidden.value = '';
+
+        // Limpiar los datos anteriores del cliente
+        limpiarCamposCliente();
         
         if (this.value.length > 0) {
             if (!regexCedula.test(this.value)) {
@@ -1527,9 +1742,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Si la cédula es válida y tiene 7-8 dígitos, consultar si existe
                 if (this.value.length >= 7) {
                     // Agregar un pequeño delay para evitar consultas innecesarias
-                    clearTimeout(this.consultaTimeout);
+                    const cedulaParaConsulta = this.value;
+
                     this.consultaTimeout = setTimeout(() => {
-                        consultarClientePorCedula(this.value);
+                        consultarClientePorCedula(cedulaParaConsulta);
                     }, 500);
                     
                     // Mostrar campos de cliente si no están visibles
@@ -1562,6 +1778,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para consultar cliente por cédula
     async function consultarClientePorCedula(cedula) {
+        const versionConsulta = consultaClienteVersion;
+
         try {
             const formData = new FormData();
             formData.append('buscar_cliente', '1');
@@ -1578,6 +1796,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
+
+            // Ignorar una respuesta que ya no corresponde al cliente actual
+            if (
+                versionConsulta !== consultaClienteVersion ||
+                cedulaInput.value.trim() !== cedula ||
+                !registroModal?.classList.contains('show')
+            ) {
+                return;
+            }
 
             if (data.respuesta === 1 && data.cliente) {
                 // Cliente existe, llenar campos automáticamente
@@ -1641,6 +1868,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 100);
             }
         } catch (error) {
+            // Ignorar errores de consultas que ya no están vigentes
+            if (
+                versionConsulta !== consultaClienteVersion ||
+                cedulaInput.value.trim() !== cedula ||
+                !registroModal?.classList.contains('show')
+            ) {
+                return;
+            }
+
             console.error('Error al consultar cliente:', error);
             // En caso de error, permitir edición manual
             limpiarCamposCliente();
@@ -2006,8 +2242,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Obtener tasa de cambio y actualizar conversión
                     obtenerTasaCambio().then(tasaCambio => {
                         if (tasaCambio) {
-                            const montoBs = montoActual * tasaCambio;
-                            
+                            // Calcular con el monto actual del campo
+                            const montoVigente = parseFloat(montoInput.value) || 0;
+                            const montoBs = montoVigente * tasaCambio;
+
+                            // Guardar la conversión de este método de pago
+                            fila.dataset.montoBs = montoBs.toFixed(2);
+
                             // Actualizar campos específicos según el método
                             if (nombreMetodo === 'Efectivo Bs') {
                                 // Solo calcular el equivalente en Bs
@@ -2213,6 +2454,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function obtenerTasaCambio() {
+        const versionTasa = consultaTasaVersion;
+
+        const filaTasa = document.querySelector('.metodo-pago-fila.metodo-pago-activa');
+
+        const metodoTasa = filaTasa?.querySelector('.metodo-pago-select')?.value || '';
+
         try {
             // Intentar obtener la tasa desde la API primero
             // Crear un AbortController para timeout de 5 segundos
@@ -2234,6 +2481,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = await response.json();
+
+            // Ignorar respuestas de consultas anteriores
+            if (
+                versionTasa !== consultaTasaVersion ||
+                !registroModal?.classList.contains('show') ||
+                filaTasa !== document.querySelector('.metodo-pago-fila.metodo-pago-activa') ||
+                metodoTasa !== (filaTasa?.querySelector('.metodo-pago-select')?.value || '')
+            ) {
+                return null;
+            }
             
             if (!data.promedio || data.promedio <= 0) {
                 throw new Error('No se pudo obtener una tasa de cambio válida desde la API');
@@ -2247,6 +2504,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return tasaCambio;
             
         } catch (error) {
+            // Ignorar respuestas de consultas anteriores
+            if (
+                versionTasa !== consultaTasaVersion ||
+                !registroModal?.classList.contains('show') ||
+                filaTasa !== document.querySelector('.metodo-pago-fila.metodo-pago-activa') ||
+                metodoTasa !== (filaTasa?.querySelector('.metodo-pago-select')?.value || '')
+            ) {
+                return null;
+            }
+
             // Si falla la API, intentar obtener la tasa desde la base de datos
             console.warn('Error al obtener tasa de cambio desde API, intentando desde base de datos:', error);
             
@@ -2264,6 +2531,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 const data = await response.json();
+
+                // Ignorar respuestas de consultas anteriores
+                if (
+                    versionTasa !== consultaTasaVersion ||
+                    !registroModal?.classList.contains('show') ||
+                    filaTasa !== document.querySelector('.metodo-pago-fila.metodo-pago-activa') ||
+                    metodoTasa !== (filaTasa?.querySelector('.metodo-pago-select')?.value || '')
+                ) {
+                    return null;
+                }
                 
                 if (data.respuesta === 1 && data.tasa && data.tasa > 0) {
                     const tasaCambio = parseFloat(data.tasa);
@@ -2292,6 +2569,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
             } catch (dbError) {
+                // Ignorar respuestas de consultas anteriores
+                if (
+                    versionTasa !== consultaTasaVersion ||
+                    !registroModal?.classList.contains('show') ||
+                    filaTasa !== document.querySelector('.metodo-pago-fila.metodo-pago-activa') ||
+                    metodoTasa !== (filaTasa?.querySelector('.metodo-pago-select')?.value || '')
+                ) {
+                    return null;
+                }
+
                 console.error('Error al obtener tasa de cambio desde base de datos:', dbError);
                 Swal.fire({
                     icon: 'warning',
@@ -2320,7 +2607,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // console.log eliminado
         
         // Obtener el monto ingresado en el campo principal de método de pago
-        const montoMetodoPago = document.querySelector('input[name="monto_metodopago[]"]');
+        // Obtener el monto del método de pago activo
+        const filaActiva = document.querySelector('.metodo-pago-fila.metodo-pago-activa');
+
+        const montoMetodoPago = filaActiva?.querySelector('input[name="monto_metodopago[]"]')
+            || document.querySelector('input[name="monto_metodopago[]"]');
+
         const montoIngresado = parseFloat(montoMetodoPago?.value) || 0;
         
         // console.log eliminado
@@ -2330,7 +2622,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Calcular el monto en bolívares
         const montosBs = montoAConvertir * tasaCambio;
-        
+
+        // Conservar el monto convertido en la fila correspondiente
+        if (filaActiva) {
+            filaActiva.dataset.montoBs = montosBs.toFixed(2);
+        }
+
         // console.log eliminado
         
         // Actualizar montos en Bs para cada método que lo requiera
@@ -2880,9 +3177,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     const valorSelect = obtenerValorSelect(select);
-                    const cantidadValor = parseFloat(cantidad.value) || 0;
+                    const cantidadTexto = cantidad.value.trim();
+                    const cantidadValor = Number(cantidadTexto);
+
+                    const cantidadValida =
+                        /^[0-9]+$/.test(cantidadTexto) &&
+                        Number.isSafeInteger(cantidadValor) &&
+                        cantidadValor >= 1 &&
+                        cantidadValor <= 9999;
                     
-                    if (valorSelect && valorSelect !== '' && cantidadValor > 0) {
+                    if (valorSelect && valorSelect !== '' && cantidadValida) {
                         productosValidos++;
                     }
                 });
@@ -3013,16 +3317,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 // El elemento no es visible, intentar más tarde
                 return;
             }
-            
+
             // Verificar que el select tenga opciones antes de inicializar
             if (!select.options || select.options.length <= 1) {
                 // Continuar para permitir que Select2 se inicialice y muestre el placeholder
             }
-            
-            // Verificar si Select2 ya está inicializado
+
+            // Evitar inicializaciones repetidas
             if ($(select).hasClass('select2-hidden-accessible')) {
-                $(select).select2('destroy');
+                return;
             }
+
+            // Limpiar únicamente los eventos propios de Venta
+            $(select).off('.ventaSelect2');
             
             // Encontrar el modal padre si existe
             const modal = $(select).closest('.modal');
@@ -3083,7 +3390,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 10);
                 
                 // Asegurar que el campo de búsqueda sea interactuable
-                $(select).on('select2:open', function() {
+                $(select).on('select2:open.ventaSelect2', function() {
                     setTimeout(function() {
                         const searchField = $('.select2-search__field');
                         if (searchField.length) {
@@ -3099,9 +3406,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error al inicializar Select2:', error);
             }
-            
+
             // Configurar evento de cambio para Select2
-            $(select).on('select2:select', function(e) {
+            $(select).on('select2:select.ventaSelect2', function(e) {
                 const fila = $(this).closest('tr')[0];
                 const selectedValue = $(this).val();
                 const option = $(this).find('option[value="' + selectedValue + '"]')[0];
@@ -3124,7 +3431,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Configurar evento cuando se limpia la selección
-            $(select).on('select2:clear', function() {
+            $(select).on('select2:clear.ventaSelect2', function() {
                 const fila = $(this).closest('tr')[0];
                 fila.querySelector('.precio-input-venta').value = '0.00';
                 fila.querySelector('.cantidad-input-venta').removeAttribute('data-stock');

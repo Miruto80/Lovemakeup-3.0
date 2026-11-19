@@ -62,7 +62,7 @@ if (
         } catch (\Throwable $e) {
             error_log('Error al listar logs de consumo: ' . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'No se pudieron consultar los logs']);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
         exit;
     }
@@ -81,7 +81,7 @@ if (
         } catch (\Throwable $e) {
             error_log('Error al leer log de consumo: ' . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'No se pudo leer el log']);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
         exit;
     }

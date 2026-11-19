@@ -1,4 +1,9 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -6,6 +11,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
+    registrarConsumoLog(200);
     exit;
 }
 
@@ -34,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Retry-After: ' . $reintentarEn);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['respuesta' => 0, 'accion' => 'error', 'text' => $mensaje429]);
+        registrarConsumoLog(429);
         exit;
     }
 } 
@@ -43,6 +50,7 @@ $privateKeyPath = __DIR__ . '/../../config/jwt_private.pem';
 if (!file_exists($privateKeyPath)) {
     http_response_code(500);
     echo json_encode(['error' => 'Private key not found. Configure jwt_private.pem in config/']);
+    registrarConsumoLog(500);
     exit;
 }
 
@@ -56,6 +64,7 @@ function base64url_encode($data) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
+    registrarConsumoLog(405);
     exit;
 }
 
@@ -66,13 +75,15 @@ $dataJson = json_decode($body, true);
 if (!$dataJson || !isset($dataJson['usuario']) || !isset($dataJson['clave']) || !isset($dataJson['tipo_documento'])) {
     http_response_code(400);
     echo json_encode(['respuesta' => 0, 'mensaje' => 'Datos incompletos o JSON inválido']);
+    registrarConsumoLog(400);
     exit;
 }
 
-require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
-
-
 $objlogin = new Login();
+
+        validarExpresionesAPP('cedula', $dataJson['usuario'], "Cédula (F) invalida");
+        validarExpresionesAPP('documento', $dataJson['tipo_documento'], "Documento (F) invalido");
+        validarExpresionesAPP('clave', $dataJson['clave'], "Clave (F) invalida");
 
         $ipCliente = obtenerIP();
                                 
@@ -87,102 +98,104 @@ $objlogin = new Login();
         $bloqueado = $objlogin->procesarLogin(json_encode($datosLogin));
         
         if (isset($bloqueado['respuesta']) && $bloqueado['respuesta'] == 0) {
-            // La IP está bloqueada o hubo un error previo -> Imprime el JSON y corta la ejecución
             http_response_code(403);
             echo json_encode(['respuesta' => 0, 'mensaje' => 'Lo sentimos, su cuenta está Bloqueada.']);
+            registrarConsumoLog(403);
             exit;
             
         }
 
+        // Estructuramos el payload idéntico a como lo espera tu modelo
+        $datosLogin = [
+            'operacion' => 'verificar',
+            'datos' => [
+                'tipo_documento' => $dataJson['tipo_documento'],
+                'cedula' => $dataJson['usuario'],
+                'ip' => $ipCliente,
+                'clave' => $dataJson['clave']
+            ]
+        ];
 
+        try {
+            // Enviamos el JSON al modelo
+            $resultado = $objlogin->procesarLogin(json_encode($datosLogin));
 
-    // Estructuramos el payload idéntico a como lo espera tu modelo
-    $datosLogin = [
-        'operacion' => 'verificar',
-        'datos' => [
-            'tipo_documento' => $dataJson['tipo_documento'],
-            'cedula' => $dataJson['usuario'],
-            'ip' => $ipCliente,
-            'clave' => $dataJson['clave']
-        ]
-    ];
+            // Si el usuario existe y las credenciales son validas
+            if ($resultado && isset($resultado->cedula)) {
+                
+                if ((int)$resultado->estatus === 2) {
+                    http_response_code(403);
+                    echo json_encode(['respuesta' => 0, 'mensaje' => 'Lo sentimos, su cuenta está suspendida.']);
+                    registrarConsumoLog(403);
+                    exit;
+                }
 
+                if ((int)$resultado->estatus === 1) {
+                    
+                    // --- GENERAR EL JWT ASIMETRICO (RS256) ---
+                    $privKeyId = openssl_get_privatekey($privateKey);
+                    if ($privKeyId === false) {
+                        http_response_code(500);
+                        echo json_encode(['error' => 'Invalid private key configuration']);
+                        registrarConsumoLog(500);
+                        exit;
+                    }
 
-try {
-    // Enviamos el JSON al modelo
-    $resultado = $objlogin->procesarLogin(json_encode($datosLogin));
+                    $header = ['alg' => 'RS256', 'typ' => 'JWT'];
+                    $duration = 86400; // 1 día de duración útil
 
-    // Si el usuario existe y las credenciales son válidas
-    if ($resultado && isset($resultado->cedula)) {
-        
-        if ((int)$resultado->estatus === 2) {
-            http_response_code(403);
-            echo json_encode(['respuesta' => 0, 'mensaje' => 'Lo sentimos, su cuenta está suspendida.']);
-            exit;
-        }
+                    $payload = [
+                        'sub'  => $resultado->cedula,
+                        'iat'  => time(),
+                        'exp'  => time() + $duration,
+                        'data' => [ // Data útil para que tu frontend o endpoints identifiquen al usuario
+                            'id_usuario' => $resultado->id_usuario,
+                            'cedula'     => $resultado->cedula,
+                            'nombre'     => $resultado->nombre,
+                            'apellido'   => $resultado->apellido,
+                            'correo'     => $resultado->correo,
+                            'telefono'   => $resultado->telefono,
+                            'id_rol'     => $resultado->id_rol,
+                            'tipo_documento' => $resultado->tipo_documento,
+                            'nivel_rol'  => $resultado->nivel
+                        ]
+                    ];
 
-        if ((int)$resultado->estatus === 1) {
-            
-            // --- GENERAR EL JWT ASIMÉTRICO (RS256) ---
-            $privKeyId = openssl_get_privatekey($privateKey);
-            if ($privKeyId === false) {
-                http_response_code(500);
-                echo json_encode(['error' => 'Invalid private key configuration']);
+                    $rawHeader = base64url_encode(json_encode($header));
+                    $rawPayload = base64url_encode(json_encode($payload));
+                    $signingInput = $rawHeader . '.' . $rawPayload;
+
+                    // Firmamos el token usando OpenSSL local con la clave privada (.pem)
+                    openssl_sign($signingInput, $signature, $privKeyId, OPENSSL_ALGO_SHA256);
+                    openssl_free_key($privKeyId);
+
+                    $jwt = $signingInput . '.' . base64url_encode($signature);
+
+                    // Respuesta limpia y exitosa para la app móvil
+                    http_response_code(200);
+                    echo json_encode([
+                        'respuesta' => 1,
+                        'token'     => $jwt,
+                        'usuario'   => [
+                            'cedula'   => $resultado->cedula,
+                            'nombre'   => $resultado->nombre,
+                            'apellido' => $resultado->apellido,
+                            'rol'      => $resultado->nombre_rol
+                        ]
+                    ]);
+                    registrarConsumoLog(200);
+                    exit;
+                }
+            } else {
+                http_response_code(401);
+                echo json_encode(['respuesta' => 0, 'mensaje' => 'Cédula y/o Clave inválida.']);
+                registrarConsumoLog(401);
                 exit;
             }
 
-            $header = ['alg' => 'RS256', 'typ' => 'JWT'];
-            $duration = 86400; // 1 día de duración útil
-
-            $payload = [
-                'sub'  => $resultado->cedula,
-                'iat'  => time(),
-                'exp'  => time() + $duration,
-                'data' => [ // Data útil para que tu frontend o endpoints identifiquen al usuario
-                    'id_usuario' => $resultado->id_usuario,
-                    'cedula'     => $resultado->cedula,
-                    'nombre'     => $resultado->nombre,
-                    'apellido'   => $resultado->apellido,
-                    'correo'     => $resultado->correo,
-                    'telefono'   => $resultado->telefono,
-                    'id_rol'     => $resultado->id_rol,
-                    'tipo_documento'     => $resultado->tipo_documento,
-                    'nivel_rol'  => $resultado->nivel
-                ]
-            ];
-
-            $rawHeader = base64url_encode(json_encode($header));
-            $rawPayload = base64url_encode(json_encode($payload));
-            $signingInput = $rawHeader . '.' . $rawPayload;
-
-            // Firmamos el token usando OpenSSL local con la clave privada (.pem)
-            openssl_sign($signingInput, $signature, $privKeyId, OPENSSL_ALGO_SHA256);
-            openssl_free_key($privKeyId);
-
-            $jwt = $signingInput . '.' . base64url_encode($signature);
-
-            // Respuesta limpia y exitosa para la app móvil
-            http_response_code(200);
-            echo json_encode([
-                'respuesta' => 1,
-                'token'     => $jwt,
-                'usuario'   => [
-                    'cedula'   => $resultado->cedula,
-                    'nombre'   => $resultado->nombre,
-                    'apellido' => $resultado->apellido,
-                    'rol'      => $resultado->nombre_rol
-                ]
-            ]);
-            exit;
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
+            registrarConsumoLog(500);
         }
-    } else {
-        http_response_code(401);
-        echo json_encode(['respuesta' => 0, 'mensaje' => 'Cédula y/o Clave inválida.']);
-        exit;
-    }
-
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['respuesta' => 0, 'mensaje' => $e->getMessage()]);
-}
 ?>

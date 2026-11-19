@@ -1,4 +1,9 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -53,6 +58,14 @@ if (!$dataJson || !isset($dataJson['cedula']) || !isset($dataJson['nombre']) || 
 }
 
 $objlogin = new Login();
+
+    validarExpresionesAPP('nombre', $dataJson['nombre'], "Nombre Ingresada (F) invalido");
+    validarExpresionesAPP('apellido', $dataJson['apellido'], "Apellido Ingresada (F) invalido");
+    validarExpresionesAPP('cedula', $dataJson['cedula'], "Cedula Ingresada (F) invalido");
+    validarExpresionesAPP('telefono', $dataJson['telefono'], "Telefono Ingresada (F) invalido");
+    validarExpresionesAPP('correo', $dataJson['correo'], "Correo Ingresada (F) invalido");
+    validarExpresionesAPP('documento', $dataJson['tipo_documento'], "documento Ingresada (F) invalido");
+    validarExpresionesAPP('clave', $dataJson['clave'], "Clave Ingresada (F) invalido");
 
 $datosRegistro = [
     'operacion' => 'registrar',

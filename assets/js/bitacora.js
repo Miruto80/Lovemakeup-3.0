@@ -138,7 +138,7 @@ $(function () {
     });
   }
 
-  $('#modalLogs').on('show.bs.modal', cargarListaLogs);
+  $('#Bitacora').on('click', cargarListaLogs);
   $('#logsTableBody').on('click', '.js-ver-log', function () {
     cargarLog($(this).data('nombre'));
   });

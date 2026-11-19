@@ -1,8 +1,6 @@
-const CACHE_NAME = 'pwa-love-v1';
+const CACHE_NAME = 'pwa-love-v4';
 
 const urlsToCache = [
-  './',
-  './index.php',
   './manifest.json'
 ];
 
@@ -12,6 +10,7 @@ self.addEventListener('install', event => {
       .then(cache => {
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -25,7 +24,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 

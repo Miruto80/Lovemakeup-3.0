@@ -24,6 +24,7 @@ public function generarDePedidos(): int
         FROM pedido p
    LEFT JOIN notificaciones n ON n.id_pedido = p.id_pedido
        WHERE p.tipo IN (2,3)
+     AND p.fecha IS NOT NULL
          AND n.id_pedido IS NULL
     ";
     $stmt    = $conex->query($sql);

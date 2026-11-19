@@ -34,9 +34,10 @@ class Reporte {
 
     private static function emitirPdfCloudinary(string $nombreArchivo, Dompdf $pdf): void
     {
+        $contenidoPdf = $pdf->output();
         $rutaTemporal = tempnam(sys_get_temp_dir(), 'lovemakeup-reporte-');
         if ($rutaTemporal === false) {
-            $pdf->stream($nombreArchivo, ['Attachment' => false]);
+            self::enviarPdfAlNavegador($nombreArchivo, $contenidoPdf);
             return;
         }
 
@@ -44,12 +45,11 @@ class Reporte {
         rename($rutaTemporal, $rutaPdf);
 
         try {
-            file_put_contents($rutaPdf, $pdf->output());
+            file_put_contents($rutaPdf, $contenidoPdf);
             $resultado = CloudinaryConfig::uploadReportPdf($rutaPdf, $nombreArchivo);
 
             if (!empty($resultado['url_archivo'])) {
-                header('Location: ' . $resultado['url_archivo']);
-                exit;
+                error_log('Reporte::emitirPdfCloudinary archivado en Cloudinary: ' . $resultado['url_archivo']);
             }
         } catch (\Throwable $e) {
             error_log('Reporte::emitirPdfCloudinary error: ' . $e->getMessage());
@@ -59,7 +59,16 @@ class Reporte {
             }
         }
 
-        $pdf->stream($nombreArchivo, ['Attachment' => false]);
+        self::enviarPdfAlNavegador($nombreArchivo, $contenidoPdf);
+    }
+
+    private static function enviarPdfAlNavegador(string $nombreArchivo, string $contenidoPdf): void
+    {
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . basename($nombreArchivo) . '"');
+        header('Content-Length: ' . strlen($contenidoPdf));
+        echo $contenidoPdf;
+        exit;
     }
 
 public static function compra(
@@ -498,9 +507,8 @@ public static function compra(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        self::emitirPdfCloudinary('Reporte_Compras.pdf', $pdf);
-
         $conex->commit();
+        self::emitirPdfCloudinary('Reporte_Compras.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -804,9 +812,8 @@ public static function producto(
         $pdf->loadHtml($html);
         $pdf->setPaper('A4','portrait');
         $pdf->render();
-        self::emitirPdfCloudinary('Reporte_Productos.pdf', $pdf);
-
         $conex->commit();
+        self::emitirPdfCloudinary('Reporte_Productos.pdf', $pdf);
     } catch (\Throwable $e) {
         $conex->rollBack();
         throw $e;
@@ -1084,13 +1091,6 @@ public static function venta(
             );
             $marcaSt->execute([':marca' => $marcaId]);
             $filtroParts[] = 'Marca: '.htmlspecialchars($marcaSt->fetchColumn());
-        }
-        if ($provId) {
-            $provSt = $conex->prepare(
-                'SELECT nombre FROM proveedor WHERE id_proveedor = :prov'
-            );
-            $provSt->execute([':prov' => $provId]);
-            $filtroParts[] = 'Proveedor: '.htmlspecialchars($provSt->fetchColumn());
         }
         if ($metodoPago) {
             $metodoPagoText = '';
@@ -1442,13 +1442,6 @@ public static function pedidoWeb(
             );
             $marcaSt->execute([':marca' => $marcaId]);
             $filtroParts[] = 'Marca: '.htmlspecialchars($marcaSt->fetchColumn());
-        }
-        if ($catId) {
-            $cSt = $conex->prepare(
-                'SELECT nombre FROM categoria WHERE id_categoria = :cid'
-            );
-            $cSt->execute([':cid' => $catId]);
-            $filtroParts[] = 'Categoría: '.htmlspecialchars($cSt->fetchColumn());
         }
         if ($estado !== null) {
             $estados = [
@@ -1941,5 +1934,3 @@ public static function countPedidoWeb($start = null, $end = null, $prodId = null
 
 
 }
-
-

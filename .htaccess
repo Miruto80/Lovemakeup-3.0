@@ -1,7 +1,7 @@
 RewriteEngine On
 
 # 1. ARCHIVOS SENSIBLES
-<FilesMatch "^\.|\.(env|ini|log|git|pem|md|sql|lock|json|yaml)$">
+<FilesMatch "^\.|\.(env|ini|git|pem|md|sql|lock|json|yaml)$">
     Order allow,deny
     Deny from all
 </FilesMatch>

@@ -28,7 +28,7 @@
 <meta name="theme-color" content="#000000">
 
 <!-- Estilos y Libreria  -->
-<link rel="stylesheet" href="assets/css/catalogo.css">
+<link rel="stylesheet" href="assets/css/catalogo.css?v=<?= filemtime(__DIR__ . '/../../assets/css/catalogo.css') ?>">
 <link rel="stylesheet" href="assets/driver.js/dist/driver.css">    
 
 <!-- Tailwind CSS CDN -->

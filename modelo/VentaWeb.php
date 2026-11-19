@@ -36,7 +36,7 @@ class VentaWeb extends Conexion
      
             $idPedido = $this->registrarPedido([
                 'tipo' => $d['tipo'],
-                'fecha' => $d['fecha'],
+                'fecha' => date('Y-m-d H:i:s'),
                 'estatus' => $d['estado'],
                 'precio_total_usd' => $d['precio_total_usd'],
                 'precio_total_bs' => $d['precio_total_bs'],

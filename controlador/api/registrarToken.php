@@ -1,4 +1,9 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 /**
  * API de registro de token Expo para LoveApp.
  * Ubicar en: controlador/api/registrarToken.php

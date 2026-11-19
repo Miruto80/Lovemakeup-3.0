@@ -1,4 +1,9 @@
 <?php
+if (!defined('API_CONSUME')) {
+    define('API_CONSUME', true);
+}
+require_once __DIR__ . '/../../assets/ajuste/validaciones.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -193,6 +198,15 @@ try {
         }
 
         $datos = $decodedData['datos'];
+
+        // DEF-01: el carrito es obligatorio — no se aceptan pedidos vacíos
+        $carritoAudit = $datos['carrito'] ?? null;
+        if (!is_array($carritoAudit) || count($carritoAudit) === 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'El carrito está vacío o no es válido.']);
+            exit;
+        }
+
         $idMetodoentrega = (int)($datos['id_metodoentrega'] ?? 0);
 
         if (!in_array($idMetodoentrega, [1, 2, 3, 4], true)) {
