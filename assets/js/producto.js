@@ -182,7 +182,7 @@ if (marcaSelect !== undefined) {
 
     
    $.post('', { accion: 'obtenerImagenes', id_producto }, function(respuesta) {
-  const data = JSON.parse(respuesta);
+  const data = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
   if (data.respuesta == 1) {
     const preview = $('#preview');
     preview.html(''); 
@@ -294,7 +294,7 @@ function cambiarEstatusProducto(id_producto, estatus_actual) {
       console.log(respuesta);
       var lee;
       try {
-        lee = JSON.parse(respuesta);
+        lee = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
       } catch (parseError) {
         console.error('Error parseando JSON del servidor:', parseError, respuesta);
         muestraMensaje("error", 2000, "Error", "Respuesta inválida del servidor. Intente nuevamente.");
