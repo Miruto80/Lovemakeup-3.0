@@ -187,6 +187,7 @@ class ProductoTest extends TestCase {
             fwrite(STDOUT, json_encode($resultado, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL);
 
             $this->assertSame(1, $resultado['respuesta']);
+            $this->assertIsInt($producto->obtenerUltimoIdProducto());
 
             $respuestaJson = json_encode($resultado, JSON_THROW_ON_ERROR);
             $respuestaDecodificada = json_decode($respuestaJson, true, 512, JSON_THROW_ON_ERROR);
