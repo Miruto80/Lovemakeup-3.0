@@ -54,7 +54,6 @@ class AngelReindexador
         if (!openssl_sign($entradaFirma, $firma, $clavePrivada, OPENSSL_ALGO_SHA256)) {
             throw new RuntimeException('No se pudo firmar el token de reindexación de Ángel.');
         }
-        openssl_free_key($clavePrivada);
 
         $solicitud = ['tipo' => $tipo];
         if ($id !== null) {
