@@ -290,7 +290,7 @@
 
 
 <!-- Script para el manejo de bitácora -->
-<script src="assets/js/bitacora.js"></script>
+<script src="assets/js/bitacora.js?v=2"></script>
 
 
 </body>

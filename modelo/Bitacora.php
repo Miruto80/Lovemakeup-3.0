@@ -358,38 +358,47 @@ class Bitacora extends Conexion {
 
     public function listarLogs(): array
     {
-        $directorio = $this->obtenerDirectorioLogs();
-        if ($directorio === null) {
-            return [];
+        $directorios = $this->obtenerDirectoriosLogs();
+        if ($directorios === []) {
+            throw new \RuntimeException('No se encontró una carpeta logs accesible en la raíz del sitio.');
         }
 
-        $archivos = glob($directorio . DIRECTORY_SEPARATOR . 'API_consumo_*.log');
-        if ($archivos === false) {
-            throw new \RuntimeException('No se pudo consultar el directorio de logs.');
-        }
-
-        $logs = [];
-        foreach ($archivos as $archivo) {
-            $nombre = basename($archivo);
-            $ruta = $this->obtenerRutaLog($nombre);
-            if ($ruta === null) {
-                continue;
+        $logsPorNombre = [];
+        foreach ($directorios as $directorio) {
+            $archivos = scandir($directorio);
+            if ($archivos === false) {
+                throw new \RuntimeException('No se pudo consultar el directorio de logs.');
             }
 
-            $tamano = filesize($ruta);
-            $modificado = filemtime($ruta);
-            if ($tamano === false || $modificado === false) {
-                throw new \RuntimeException('No se pudo obtener la información de un log.');
-            }
+            foreach ($archivos as $nombre) {
+                if (!preg_match('/^API_consumo_[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$/D', $nombre)) {
+                    continue;
+                }
+                if (isset($logsPorNombre[$nombre])) {
+                    continue;
+                }
 
-            $logs[] = [
-                'nombre' => $nombre,
-                'tamano_bytes' => $tamano,
-                'modificado' => date('Y-m-d H:i:s', $modificado),
-                'orden' => $modificado,
-            ];
+                $ruta = $this->obtenerRutaLog($nombre);
+                if ($ruta === null) {
+                    continue;
+                }
+
+                $tamano = filesize($ruta);
+                $modificado = filemtime($ruta);
+                if ($tamano === false || $modificado === false) {
+                    throw new \RuntimeException('No se pudo obtener la información de un log.');
+                }
+
+                $logsPorNombre[$nombre] = [
+                    'nombre' => $nombre,
+                    'tamano_bytes' => $tamano,
+                    'modificado' => date('Y-m-d H:i:s', $modificado),
+                    'orden' => $modificado,
+                ];
+            }
         }
 
+        $logs = array_values($logsPorNombre);
         usort($logs, static function (array $a, array $b): int {
             return $b['orden'] <=> $a['orden'];
         });
@@ -455,28 +464,48 @@ class Bitacora extends Conexion {
             return null;
         }
 
-        $directorio = $this->obtenerDirectorioLogs();
-        if ($directorio === null) {
-            return null;
+        foreach ($this->obtenerDirectoriosLogs() as $directorio) {
+            $rutaCandidata = $directorio . DIRECTORY_SEPARATOR . $nombre;
+            if (is_link($rutaCandidata)) {
+                continue;
+            }
+
+            $ruta = realpath($rutaCandidata);
+            if ($ruta !== false && is_file($ruta) && dirname($ruta) === $directorio) {
+                return $ruta;
+            }
         }
 
-        $rutaCandidata = $directorio . DIRECTORY_SEPARATOR . $nombre;
-        if (is_link($rutaCandidata)) {
-            return null;
-        }
-
-        $ruta = realpath($rutaCandidata);
-        if ($ruta === false || !is_file($ruta) || dirname($ruta) !== $directorio) {
-            return null;
-        }
-
-        return $ruta;
+        return null;
     }
 
-    private function obtenerDirectorioLogs(): ?string
+    private function obtenerDirectoriosLogs(): array
     {
-        $directorio = realpath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs');
-        return $directorio !== false && is_dir($directorio) ? $directorio : null;
+        $candidatos = [];
+        $scriptFilename = $_SERVER['SCRIPT_FILENAME'] ?? '';
+        if (is_string($scriptFilename) && $scriptFilename !== '') {
+            $candidatos[] = dirname($scriptFilename) . DIRECTORY_SEPARATOR . 'logs';
+        }
+        $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        if (is_string($documentRoot) && $documentRoot !== '') {
+            $candidatos[] = rtrim($documentRoot, '/\\') . DIRECTORY_SEPARATOR . 'logs';
+        }
+        $candidatos[] = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs';
+
+        $directorios = [];
+        foreach (array_unique($candidatos) as $candidato) {
+            $directorio = realpath($candidato);
+            if ($directorio !== false && is_dir($directorio)) {
+                if (!is_readable($directorio)) {
+                    throw new \RuntimeException('La carpeta logs no tiene permisos de lectura para el servidor.');
+                }
+                if (!in_array($directorio, $directorios, true)) {
+                    $directorios[] = $directorio;
+                }
+            }
+        }
+
+        return $directorios;
     }
 
     // Getters y Setters
