@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 $angelBasePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php')), '/');
 $angelApiUrl = $angelBasePath . '/controlador/api/chat.php';
+$angelAvatarUrl = 'assets/img/angel2.png?v=' . filemtime(__DIR__ . '/../../assets/img/angel2.png');
 $angelUsuarioLogueado = !empty($_SESSION['id']);
 ?>
 
@@ -11,7 +12,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
 <div class="bot-widget-container" id="botWidgetContainer">
     <!-- Trigger Avatar Flotante -->
     <div class="bot-avatar-trigger" id="avatarTrigger" onclick="abrirchat()">
-        <img src="assets/img/angel2.png" alt="Angel Avatar">
+        <img src="<?= htmlspecialchars($angelAvatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Angel Avatar">
     </div>
 
     <!-- Ventana del Chat -->
@@ -20,7 +21,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
         <div class="chat-header">
             <div class="chat-header-info" onclick="abrirModalInfo()">
                 <div class="story-ring-container">
-                    <img src="assets/img/angel2.png" alt="Angel Avatar">
+                    <img src="<?= htmlspecialchars($angelAvatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Angel Avatar">
                 </div>
                 <div class="chat-header-text">
                     <h4>Angel, Asesor de Belleza</h4>
@@ -33,7 +34,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
         <!-- Historial / Cuerpo -->
         <div class="chat-body" id="chatBody">
             <div class="chat-row bot">
-                <img src="assets/img/angel2.png" class="avatar-chat-small" alt="Angel">
+                <img src="<?= htmlspecialchars($angelAvatarUrl, ENT_QUOTES, 'UTF-8') ?>" class="avatar-chat-small" alt="Angel">
                 <div class="message-bubble bot">
                     ¡Hola! Soy Angel, Asesor de Belleza. ¿En qué puedo ayudarte hoy?
                 </div>
@@ -72,7 +73,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
             <i class="fa-solid fa-xmark"></i>
         </button>
         <div class="card-story-ring">
-            <img src="assets/img/angel2.png" alt="Angel">
+            <img src="<?= htmlspecialchars($angelAvatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Angel">
         </div>
         <h3 class="card-title">Asesor de Belleza IA</h3>
         <span class="card-subtitle">LoveMakeup C.A</span>
@@ -115,6 +116,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
   // CONFIGURACIÓN Y CONSTANTES
 
   const ANGEL_API_URL = <?= json_encode($angelApiUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+  const ANGEL_AVATAR_URL = <?= json_encode($angelAvatarUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
   const ANGEL_USUARIO_LOGUEADO = <?= json_encode($angelUsuarioLogueado); ?>;
 
   const MAX_IMAGENES = 3;
@@ -207,7 +209,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
 
     if (sender === 'bot') {
       const avatar = document.createElement('img');
-      avatar.src = 'assets/img/angel2.png';
+      avatar.src = ANGEL_AVATAR_URL;
       avatar.classList.add('avatar-chat-small');
       avatar.alt = 'Angel';
       row.appendChild(avatar);
@@ -258,7 +260,7 @@ $angelUsuarioLogueado = !empty($_SESSION['id']);
     row.classList.add('chat-row', 'bot');
 
     const avatar = document.createElement('img');
-    avatar.src = 'assets/img/angel2.png';
+    avatar.src = ANGEL_AVATAR_URL;
     avatar.classList.add('avatar-chat-small');
     avatar.alt = 'Angel';
 
