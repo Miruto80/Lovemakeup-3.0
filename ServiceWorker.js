@@ -1,8 +1,6 @@
-const CACHE_NAME = 'pwa-love-v2';
+const CACHE_NAME = 'pwa-love-v4';
 
 const urlsToCache = [
-  './',
-  './index.php',
   './manifest.json'
 ];
 
@@ -31,14 +29,6 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
   event.respondWith(
     caches.match(event.request)
       .then(response => {
