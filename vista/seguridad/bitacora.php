@@ -61,6 +61,10 @@
                   <button type="button" class="btn btn-warning btn-sm" id="limpiarBitacora" title="Limpiar bitácora antigua">
                     <i class="fas fa-broom me-1"></i> Limpiar
                   </button>
+                
+                  <button type="button" class="btn btn-info btn-sm" id="Bitacora" data-bs-toggle="modal" data-bs-target="#modalLogs">
+                    <i class="fas fa-file-lines me-1"></i> LOG
+                  </button>
                 </div>
               <?php endif; ?>
               </div>
@@ -220,6 +224,56 @@
                 <div id="detalle-descripcion"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de logs -->
+<div class="modal fade" id="modalLogs" tabindex="-1" aria-labelledby="modalLogsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-color">
+        <h5 class="modal-title text-white" id="modalLogsLabel">
+          <i class="fas fa-file-lines me-2"></i>Logs de consumo de la API
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="logsError" class="alert alert-danger d-none" role="alert"></div>
+        <div id="logsLoading" class="text-center text-muted py-3 d-none">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Cargando logs...
+        </div>
+        <div class="row g-3">
+          <div class="col-lg-5">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Archivo</th>
+                    <th>Modificado</th>
+                    <th class="text-end">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+              </table>
+            </div>
+            <p id="logsEmpty" class="text-muted text-center d-none">No hay archivos de log disponibles.</p>
+          </div>
+          <div class="col-lg-7">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <strong id="logPreviewName" class="text-break">Selecciona un archivo para visualizarlo.</strong>
+              <button type="button" class="btn btn-success btn-sm ms-2 flex-shrink-0" id="descargarLog" disabled>
+                <i class="fas fa-download me-1"></i> Descargar
+              </button>
+            </div>
+            <div id="logPreviewNotice" class="alert alert-warning py-2 d-none" role="status">
+              Vista previa limitada a las últimas 512 KB. Descarga el archivo para ver el contenido completo.
+            </div>
+            <pre id="logPreview" class="bg-light border rounded p-3 mb-0" style="min-height: 18rem; max-height: 55vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;">Selecciona un archivo de la lista.</pre>
           </div>
         </div>
       </div>

@@ -356,6 +356,129 @@ class Bitacora extends Conexion {
         }
     }
 
+    public function listarLogs(): array
+    {
+        $directorio = $this->obtenerDirectorioLogs();
+        if ($directorio === null) {
+            return [];
+        }
+
+        $archivos = glob($directorio . DIRECTORY_SEPARATOR . 'API_consumo_*.log');
+        if ($archivos === false) {
+            throw new \RuntimeException('No se pudo consultar el directorio de logs.');
+        }
+
+        $logs = [];
+        foreach ($archivos as $archivo) {
+            $nombre = basename($archivo);
+            $ruta = $this->obtenerRutaLog($nombre);
+            if ($ruta === null) {
+                continue;
+            }
+
+            $tamano = filesize($ruta);
+            $modificado = filemtime($ruta);
+            if ($tamano === false || $modificado === false) {
+                throw new \RuntimeException('No se pudo obtener la información de un log.');
+            }
+
+            $logs[] = [
+                'nombre' => $nombre,
+                'tamano_bytes' => $tamano,
+                'modificado' => date('Y-m-d H:i:s', $modificado),
+                'orden' => $modificado,
+            ];
+        }
+
+        usort($logs, static function (array $a, array $b): int {
+            return $b['orden'] <=> $a['orden'];
+        });
+
+        foreach ($logs as &$log) {
+            unset($log['orden']);
+        }
+        unset($log);
+
+        return $logs;
+    }
+
+    public function leerLog(string $nombre): ?array
+    {
+        $ruta = $this->obtenerRutaLog($nombre);
+        if ($ruta === null) {
+            return null;
+        }
+
+        $tamano = filesize($ruta);
+        if ($tamano === false) {
+            throw new \RuntimeException('No se pudo obtener el tamaño del log.');
+        }
+
+        $maxBytes = 512 * 1024;
+        $offset = max(0, $tamano - $maxBytes);
+        $archivo = fopen($ruta, 'rb');
+        if ($archivo === false) {
+            throw new \RuntimeException('No se pudo abrir el log.');
+        }
+
+        try {
+            if ($offset > 0 && fseek($archivo, $offset) !== 0) {
+                throw new \RuntimeException('No se pudo leer el log.');
+            }
+
+            $contenido = fread($archivo, max(1, min($maxBytes, $tamano - $offset)));
+            if ($contenido === false) {
+                throw new \RuntimeException('No se pudo leer el log.');
+            }
+        } finally {
+            fclose($archivo);
+        }
+
+        if ($offset > 0) {
+            $inicioLinea = strpos($contenido, "\n");
+            $contenido = $inicioLinea === false ? '' : substr($contenido, $inicioLinea + 1);
+        }
+
+        return [
+            'nombre' => $nombre,
+            'contenido' => $contenido,
+            'truncado' => $offset > 0,
+        ];
+    }
+
+    public function obtenerRutaLog(string $nombre): ?string
+    {
+        if (
+            basename($nombre) !== $nombre
+            || !preg_match('/^API_consumo_[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$/D', $nombre)
+        ) {
+            return null;
+        }
+
+        $directorio = $this->obtenerDirectorioLogs();
+        if ($directorio === null) {
+            return null;
+        }
+
+        $rutaCandidata = $directorio . DIRECTORY_SEPARATOR . $nombre;
+        if (is_link($rutaCandidata)) {
+            return null;
+        }
+
+        $ruta = realpath($rutaCandidata);
+        if ($ruta === false || !is_file($ruta) || dirname($ruta) !== $directorio) {
+            return null;
+        }
+
+        return $ruta;
+    }
+
+    private function obtenerDirectorioLogs(): ?string
+    {
+        $directorio = realpath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs');
+        return $directorio !== false && is_dir($directorio) ? $directorio : null;
+    }
+
     // Getters y Setters
     public function get_Idbitacora() {
         return $this->id_bitacora;
